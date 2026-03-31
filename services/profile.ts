@@ -1,0 +1,124 @@
+import { supabase } from '@/lib/supabase';
+import type { Database } from '@/types/database';
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+
+export async function fetchProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  if (error) return null;
+  return data as Profile;
+}
+
+export async function updateProfile(userId: string, patch: ProfileUpdate) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', userId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Profile;
+}
+
+export async function searchProfiles(query: string, excludeId: string) {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, display_name, avatar_url, total_aura')
+    .neq('id', excludeId)
+    .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+    .limit(30);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchProfileStats(userId: string) {
+  const { data: completions } = await supabase
+    .from('quest_completions')
+    .select('id, quest_id, completed_at')
+    .eq('user_id', userId)
+    .eq('status', 'active');
+
+  const { data: quests } = await supabase.from('quests').select('id, category');
+
+  const questMap = new Map((quests ?? []).map((q) => [q.id, q.category]));
+  const cats = new Set<string>();
+  (completions ?? []).forEach((c) => {
+    const cat = questMap.get(c.quest_id);
+    if (cat) cats.add(cat);
+  });
+
+  const { count: savedCount } = await supabase
+    .from('saved_quests')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId);
+
+  const totalQuestCategories = new Set((quests ?? []).map((q) => q.category)).size;
+
+  return {
+    questsCompleted: completions?.length ?? 0,
+    categoriesExplored: cats.size,
+    categoryCompletionPct:
+      totalQuestCategories > 0 ? Math.round((cats.size / totalQuestCategories) * 100) : 0,
+    lifeListCount: savedCount ?? 0,
+  };
+}
+
+/** Last 7 days completion counts (index 0 = 6 days ago, 6 = today) + period totals */
+export async function fetchActivityChart(userId: string) {
+  const since = new Date();
+  since.setDate(since.getDate() - 7);
+  since.setHours(0, 0, 0, 0);
+  const { data: rows, error } = await supabase
+    .from('quest_completions')
+    .select('completed_at, aura_earned')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .gte('completed_at', since.toISOString());
+  if (error) throw error;
+  const list = rows ?? [];
+  const buckets = [0, 0, 0, 0, 0, 0, 0];
+  const startToday = new Date();
+  startToday.setHours(0, 0, 0, 0);
+  const weekMs = 7 * 86400000;
+  const monthStart = new Date(startToday.getFullYear(), startToday.getMonth(), 1);
+  let weekAura = 0;
+  let monthAura = 0;
+  const weekCut = Date.now() - weekMs;
+  for (const r of list) {
+    const t = new Date(r.completed_at).getTime();
+    const day = new Date(r.completed_at);
+    day.setHours(0, 0, 0, 0);
+    const dayDiff = Math.floor((startToday.getTime() - day.getTime()) / 86400000);
+    if (dayDiff >= 0 && dayDiff < 7) {
+      buckets[6 - dayDiff] += 1;
+    }
+    if (t >= weekCut) weekAura += r.aura_earned ?? 0;
+    if (new Date(r.completed_at) >= monthStart) monthAura += r.aura_earned ?? 0;
+  }
+  return {
+    buckets,
+    weekAura,
+    monthAura,
+    weekCompletions: list.filter((r) => new Date(r.completed_at).getTime() >= weekCut).length,
+  };
+}
+
+export async function fetchRecentCompletions(userId: string, limit = 8) {
+  const { data: rows, error } = await supabase
+    .from('quest_completions')
+    .select('id, aura_earned, completed_at, quest_id')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .order('completed_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  const list = rows ?? [];
+  if (list.length === 0) return [];
+  const qids = [...new Set(list.map((r) => r.quest_id))];
+  const { data: quests } = await supabase.from('quests').select('id, title_en, title_es').in('id', qids);
+  const qmap = new Map((quests ?? []).map((q) => [q.id, q]));
+  return list.map((r) => ({ ...r, quests: qmap.get(r.quest_id) }));
+}

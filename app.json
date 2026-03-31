@@ -4,23 +4,21 @@
     "slug": "rupta",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/ruptav1.png",
     "scheme": "rupta",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0A0A0F"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/ruptav1.png",
+        "backgroundColor": "#0A0A0F"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -30,7 +28,21 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Rupta needs photo access to attach SideQuest proof."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Rupta saves your story card when you choose Save.",
+          "savePhotosPermission": "Rupta saves your story card when you choose Save."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
