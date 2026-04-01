@@ -1,18 +1,21 @@
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { Pencil } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { BookmarkMinus, Pencil } from 'lucide-react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { auraLevelFromTotal, auraProgressInCurrentLevel, auraToNextLevel } from '@/lib/aura';
+import { isLifeListRowDone, lifeListDoneCount, maxCompletionsAllowed } from '@/lib/questCompletionRules';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLifeList, useLifeListCompletionCounts, useToggleSave } from '@/hooks/useQuests';
 import { fetchActivityChart, fetchProfileStats, fetchRecentCompletions } from '@/services/profile';
+import type { QuestRow } from '@/services/quests';
 import { questTitle } from '@/utils/questCopy';
 
 export default function ProfileTab() {
@@ -22,6 +25,21 @@ export default function ProfileTab() {
   const { profile, session, refreshProfile } = useAuth();
   const uid = session?.user?.id;
   const [tab, setTab] = useState<'stats' | 'life'>('stats');
+  const { data: lifeRows = [] } = useLifeList(uid);
+  const lifeQuestIds = useMemo(
+    () => (lifeRows as { quest_id: string }[]).map((r) => r.quest_id),
+    [lifeRows],
+  );
+  const { data: lifeCounts } = useLifeListCompletionCounts(uid, lifeQuestIds);
+  const lifeProgress = useMemo(() => {
+    const rows = (lifeRows as { quest_id: string; quests?: QuestRow }[]).map((item) => ({
+      quest: item.quests,
+      quest_id: item.quest_id,
+      count: lifeCounts?.get(item.quest_id) ?? 0,
+    }));
+    return lifeListDoneCount(rows);
+  }, [lifeRows, lifeCounts]);
+  const toggle = useToggleSave(uid);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,43 +72,48 @@ export default function ProfileTab() {
   const next = auraToNextLevel(profile.total_aura);
   const maxBar = Math.max(...(activity?.buckets ?? [0]), 1);
 
+  const profileHeader = (
+    <>
+      <View className="flex-row items-center gap-4 px-4 pt-3">
+        <View className="relative">
+          <Avatar url={profile.avatar_url} name={profile.display_name} size={80} />
+          <Pressable
+            onPress={() => router.push('/(main)/edit-profile')}
+            className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-surface border border-border items-center justify-center"
+          >
+            <Pencil color="#A78BFA" size={16} />
+          </Pressable>
+        </View>
+        <View className="flex-1">
+          <Text className="text-foreground text-2xl font-bold">{profile.display_name}</Text>
+          <Text className="text-muted">@{profile.username}</Text>
+        </View>
+      </View>
+
+      <View className="flex-row gap-2 mt-6 px-4">
+        <Pressable
+          onPress={() => setTab('stats')}
+          className={`flex-1 py-2.5 rounded-xl border items-center ${tab === 'stats' ? 'border-primary bg-primary/10' : 'border-border'}`}
+        >
+          <Text className="text-foreground font-semibold">{t('profile.tabStats')}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setTab('life')}
+          className={`flex-1 py-2.5 rounded-xl border items-center ${tab === 'life' ? 'border-primary bg-primary/10' : 'border-border'}`}
+        >
+          <Text className="text-foreground font-semibold">{t('profile.tabLife')}</Text>
+        </Pressable>
+      </View>
+    </>
+  );
+
   return (
     <View className="flex-1 bg-background">
       <MainAppHeader variant="profile" />
-      <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16, paddingTop: 12 }}>
-        <View className="flex-row items-center gap-4">
-          <View className="relative">
-            <Avatar url={profile.avatar_url} name={profile.display_name} size={80} />
-            <Pressable
-              onPress={() => router.push('/(main)/edit-profile')}
-              className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-surface border border-border items-center justify-center"
-            >
-              <Pencil color="#A78BFA" size={16} />
-            </Pressable>
-          </View>
-          <View className="flex-1">
-            <Text className="text-foreground text-2xl font-bold">{profile.display_name}</Text>
-            <Text className="text-muted">@{profile.username}</Text>
-          </View>
-        </View>
-
-        <View className="flex-row gap-2 mt-6">
-          <Pressable
-            onPress={() => setTab('stats')}
-            className={`flex-1 py-2.5 rounded-xl border items-center ${tab === 'stats' ? 'border-primary bg-primary/10' : 'border-border'}`}
-          >
-            <Text className="text-foreground font-semibold">{t('profile.tabStats')}</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setTab('life')}
-            className={`flex-1 py-2.5 rounded-xl border items-center ${tab === 'life' ? 'border-primary bg-primary/10' : 'border-border'}`}
-          >
-            <Text className="text-foreground font-semibold">{t('profile.tabLife')}</Text>
-          </Pressable>
-        </View>
-
-        {tab === 'stats' ? (
-          <>
+      {tab === 'stats' ? (
+        <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingTop: 12 }}>
+          {profileHeader}
+          <View className="px-4">
             <Card className="mt-4">
               <Text className="text-muted text-xs uppercase">{t('common.auraLevel')}</Text>
               <Text className="text-primary text-4xl font-black mt-1">{level}</Text>
@@ -163,17 +186,69 @@ export default function ProfileTab() {
             ))}
 
             <Text className="text-muted text-sm mt-6 text-center">{t('profile.ranksFriends')}</Text>
-          </>
-        ) : (
-          <Card className="mt-4">
-            <Text className="text-foreground font-semibold">{t('common.lifeList')}</Text>
-            <Text className="text-muted mt-2 leading-6">{t('profile.openLifeList')}</Text>
-            <Button className="mt-4" variant="secondary" onPress={() => router.push('/(main)/life-list')}>
-              {t('common.lifeList')}
-            </Button>
-          </Card>
-        )}
-      </ScrollView>
+          </View>
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={lifeRows as { quest_id: string; quests?: QuestRow }[]}
+          keyExtractor={(item) => item.quest_id}
+          ListHeaderComponent={
+            <View>
+              <View className="pb-2">{profileHeader}</View>
+              {lifeProgress.total > 0 ? (
+                <Card className="mb-4 py-3">
+                  <Text className="text-muted text-xs uppercase">{t('profile.lifeListProgressLabel')}</Text>
+                  <Text className="text-foreground text-3xl font-black mt-1">
+                    {Math.round((lifeProgress.done / lifeProgress.total) * 100)}%
+                  </Text>
+                  <Text className="text-muted text-sm mt-1">
+                    {t('profile.lifeListProgressDetail', {
+                      done: lifeProgress.done,
+                      total: lifeProgress.total,
+                    })}
+                  </Text>
+                </Card>
+              ) : null}
+            </View>
+          }
+          contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16, paddingTop: 12 }}
+          ListEmptyComponent={<Text className="text-muted text-center mt-8 px-4">{t('feed.empty')}</Text>}
+          renderItem={({ item }) => {
+            const q = item.quests;
+            const cnt = lifeCounts?.get(item.quest_id) ?? 0;
+            const max = q ? maxCompletionsAllowed(q) : null;
+            const rowDone = q ? isLifeListRowDone(q, cnt) : false;
+            return (
+              <Card className="mb-2 flex-row items-center gap-2 py-3">
+                <Pressable
+                  onPress={() => router.push(`/(main)/quest/${item.quest_id}`)}
+                  className="flex-1 min-w-0"
+                >
+                  <View className="flex-row flex-wrap items-center gap-2">
+                    <Text className="text-foreground font-bold flex-shrink">
+                      {q ? questTitle(q, lang) : 'Quest'}
+                    </Text>
+                    {rowDone ? <Badge tone="secondary">{t('quest.lifeListRowDone')}</Badge> : null}
+                  </View>
+                  {q && (max != null || cnt > 0) ? (
+                    <Text className="text-muted text-xs mt-1">
+                      {max != null ? `${cnt}/${max}` : t('quest.yourCompletions', { count: cnt })}
+                    </Text>
+                  ) : null}
+                </Pressable>
+                <Pressable
+                  onPress={() => uid && toggle.mutate({ questId: item.quest_id, currentlySaved: true })}
+                  className="p-2 shrink-0"
+                  hitSlop={8}
+                  accessibilityLabel={t('profile.removeFromLifeList')}
+                >
+                  <BookmarkMinus color="#94A3B8" size={22} />
+                </Pressable>
+              </Card>
+            );
+          }}
+        />
+      )}
     </View>
   );
 }

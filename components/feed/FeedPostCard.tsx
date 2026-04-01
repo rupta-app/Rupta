@@ -18,8 +18,11 @@ export type FeedPost = {
   aura_earned: number;
   caption: string | null;
   completed_at: string;
+  quest_source_type?: string;
   profiles?: { username: string; display_name: string; avatar_url: string | null };
   quests?: { title_en: string; title_es: string; category: string } | null;
+  group_quests?: { title: string } | null;
+  groups?: { id: string; name: string } | null;
   quest_media?: { media_url: string }[];
   respectCount?: number;
   commentCount?: number;
@@ -41,7 +44,11 @@ function FeedPostActions({
   const gave = social?.gaveRespect ?? false;
   const counts = social?.counts ?? { respects: post.respectCount ?? 0, comments: post.commentCount ?? 0 };
 
-  const title = post.quests ? questTitle(post.quests as Parameters<typeof questTitle>[0], lang) : 'SideQuest';
+  const title = post.group_quests?.title
+    ? post.group_quests.title
+    : post.quests
+      ? questTitle(post.quests as Parameters<typeof questTitle>[0], lang)
+      : 'SideQuest';
   const uname = post.profiles?.username ?? 'rupta';
 
   const openShare = () => {
@@ -98,9 +105,14 @@ export function FeedPostCard({
   lang: string;
   viewerId?: string;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const media = post.quest_media?.[0]?.media_url;
-  const title = post.quests ? questTitle(post.quests as Parameters<typeof questTitle>[0], lang) : 'SideQuest';
+  const title = post.group_quests?.title
+    ? post.group_quests.title
+    : post.quests
+      ? questTitle(post.quests as Parameters<typeof questTitle>[0], lang)
+      : 'SideQuest';
 
   return (
     <Card className="mb-4 p-0 overflow-hidden">
@@ -111,10 +123,17 @@ export function FeedPostCard({
             <Text className="text-foreground font-semibold">{post.profiles?.display_name}</Text>
             <Text className="text-muted text-xs">@{post.profiles?.username}</Text>
           </View>
-          <Badge tone="primary">+{post.aura_earned} AURA</Badge>
+          <View className="items-end gap-1">
+            {post.quest_source_type === 'group' ? (
+              <Badge tone="secondary">{post.groups?.name ?? t('feed.groupQuest')}</Badge>
+            ) : null}
+            <Badge tone="primary">+{post.aura_earned} AURA</Badge>
+          </View>
         </View>
         {media ? (
-          <Image source={{ uri: media }} className="w-full h-56 bg-surfaceElevated" resizeMode="cover" />
+          <View className="mx-4 overflow-hidden rounded-2xl bg-surfaceElevated">
+            <Image source={{ uri: media }} className="w-full h-56" resizeMode="cover" />
+          </View>
         ) : null}
         <View className="p-4 pt-2">
           <Text className="text-foreground text-lg font-bold">{title}</Text>
@@ -122,6 +141,8 @@ export function FeedPostCard({
             <Text className="text-muted text-xs uppercase mt-1 tracking-wide">
               {formatCategoryLabel(post.quests.category, lang)}
             </Text>
+          ) : post.group_quests ? (
+            <Text className="text-muted text-xs uppercase mt-1 tracking-wide">{t('feed.groupQuest')}</Text>
           ) : null}
           {post.caption ? <Text className="text-muted mt-2">{post.caption}</Text> : null}
         </View>

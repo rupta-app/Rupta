@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addComment,
   createCompletion,
+  createGroupQuestCompletion,
   fetchComments,
   fetchCompletionById,
   fetchCompletionCounts,
@@ -72,9 +73,29 @@ export function useCreateCompletion(userId: string | undefined) {
     mutationFn: createCompletion,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['feed'] });
+      void qc.invalidateQueries({ queryKey: ['group-feed'] });
+      void qc.invalidateQueries({ queryKey: ['group-lb'] });
+      void qc.invalidateQueries({ queryKey: ['challenge-lb'] });
       void qc.invalidateQueries({ queryKey: ['profile-stats', userId] });
       void qc.invalidateQueries({ queryKey: ['profile-recent', userId] });
       void qc.invalidateQueries({ queryKey: ['profile-activity', userId] });
+      void qc.invalidateQueries({ queryKey: ['quest-official-count'] });
+      void qc.invalidateQueries({ queryKey: ['life-completion-counts'] });
+    },
+  });
+}
+
+export function useCreateGroupQuestCompletion(userId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createGroupQuestCompletion,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['feed'] });
+      void qc.invalidateQueries({ queryKey: ['group-feed'] });
+      void qc.invalidateQueries({ queryKey: ['group-lb'] });
+      void qc.invalidateQueries({ queryKey: ['challenge-lb'] });
+      void qc.invalidateQueries({ queryKey: ['group-quests'] });
+      void qc.invalidateQueries({ queryKey: ['profile-recent', userId] });
     },
   });
 }

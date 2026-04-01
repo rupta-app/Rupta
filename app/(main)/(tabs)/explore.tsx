@@ -27,48 +27,6 @@ export default function ExploreScreen() {
   const { data: saved = new Set<string>() } = useSavedQuestIds(uid);
   const toggle = useToggleSave(uid);
 
-  const ListHeader = useCallback(
-    () => (
-      <>
-        <MainAppHeader variant="explore" />
-        <View className="px-4 pt-2 pb-3">
-          <Input value={search} onChangeText={setSearch} placeholder={t('common.search')} />
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingBottom: 12,
-            gap: 8,
-            alignItems: 'center',
-            minHeight: 48,
-          }}
-        >
-          <Pressable
-            onPress={() => setCategory(undefined)}
-            className={`px-4 py-2.5 rounded-full border ${!category ? 'border-primary bg-primary/15' : 'border-border bg-surface'}`}
-          >
-            <Text className="text-foreground text-sm font-medium">All</Text>
-          </Pressable>
-          {QUEST_CATEGORIES.map((c) => {
-            const active = category === c;
-            return (
-              <Pressable
-                key={c}
-                onPress={() => setCategory(c)}
-                className={`px-4 py-2.5 rounded-full border ${active ? 'border-primary bg-primary/15' : 'border-border bg-surface'}`}
-              >
-                <Text className="text-foreground text-sm font-medium">{formatCategoryLabel(c, lang)}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </>
-    ),
-    [category, lang, search, t],
-  );
-
   const ListFooter = useCallback(
     () => (
       <View className="py-10 px-2">
@@ -81,12 +39,71 @@ export default function ExploreScreen() {
         </Card>
       </View>
     ),
-    [router, t],
+    [go, t],
+  );
+
+  const ListHeader = useCallback(
+    () => (
+      <View>
+        <View className="px-4 pt-2 pb-2">
+          <Card className="border-primary/40">
+            <Text className="text-foreground font-bold">{t('explore.generatorCtaTitle')}</Text>
+            <Text className="text-muted text-sm mt-1">{t('explore.generatorCtaBody')}</Text>
+            <Button className="mt-3" onPress={() => go('/(main)/generator')}>
+              {t('explore.generatorCtaButton')}
+            </Button>
+          </Card>
+        </View>
+        <View className="px-4 pb-1">
+          <Input value={search} onChangeText={setSearch} placeholder={t('common.search')} />
+        </View>
+        <View className="bg-background">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+            style={{ flexGrow: 0 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 2,
+              paddingBottom: 6,
+              gap: 8,
+              alignItems: 'center',
+              flexDirection: 'row',
+            }}
+          >
+            <Pressable
+              onPress={() => setCategory(undefined)}
+              className={`px-4 py-2.5 rounded-full border ${!category ? 'border-primary bg-primary/15' : 'border-border bg-surface'}`}
+            >
+              <Text className="text-foreground text-sm font-medium">All</Text>
+            </Pressable>
+            {QUEST_CATEGORIES.map((c) => {
+              const active = category === c;
+              return (
+                <Pressable
+                  key={c}
+                  onPress={() => setCategory(c)}
+                  className={`px-4 py-2.5 rounded-full border ${active ? 'border-primary bg-primary/15' : 'border-border bg-surface'}`}
+                >
+                  <Text className="text-foreground text-sm font-medium">{formatCategoryLabel(c, lang)}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+        <View className="h-3" />
+      </View>
+    ),
+    [category, go, lang, search, t],
   );
 
   return (
     <View className="flex-1 bg-background">
+      <MainAppHeader variant="explore" />
       <FlatList
+        style={{ flex: 1 }}
         data={quests}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={ListHeader}
@@ -94,6 +111,7 @@ export default function ExploreScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshing={isRefetching}
         onRefresh={() => refetch()}
+        keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           isLoading ? (
             <ActivityIndicator color="#8B5CF6" className="mt-8" />

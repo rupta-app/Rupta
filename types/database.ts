@@ -3,7 +3,21 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type ProfileStatus = 'normal' | 'warned' | 'flagged_cheater';
 export type CompletionStatus = 'active' | 'under_review' | 'removed';
 export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
-export type GroupRole = 'owner' | 'member';
+export type GroupRole = 'owner' | 'admin' | 'member';
+export type QuestSourceType = 'official' | 'group';
+export type AuraScope = 'official' | 'group';
+export type AchievementVisibility = 'public' | 'friends' | 'group' | 'private';
+export type GroupQuestStatus =
+  | 'draft'
+  | 'active'
+  | 'archived'
+  | 'submitted_for_review'
+  | 'approved_as_official'
+  | 'rejected';
+export type ChallengeStatus = 'active' | 'completed' | 'cancelled';
+export type ChallengeScoringMode = 'official_only' | 'group_only' | 'mixed';
+export type QuestCreationRule = 'anyone' | 'admin_only' | 'admin_approval';
+export type UserPlan = 'free' | 'pro';
 export type ReportReason =
   | 'fake_proof'
   | 'stolen_image'
@@ -38,6 +52,8 @@ export interface Database {
           status: ProfileStatus;
           onboarding_completed: boolean;
           is_admin: boolean;
+          /** Present after DB migration; treat missing as free in app code */
+          plan?: UserPlan;
           created_at: string;
           updated_at: string;
         };
@@ -74,7 +90,13 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          quest_id: string;
+          quest_id: string | null;
+          group_quest_id: string | null;
+          group_id: string | null;
+          challenge_id: string | null;
+          quest_source_type: QuestSourceType;
+          visibility: AchievementVisibility;
+          aura_scope: AuraScope;
           caption: string | null;
           rating: number | null;
           aura_earned: number;
@@ -84,7 +106,13 @@ export interface Database {
         };
         Insert: {
           user_id: string;
-          quest_id: string;
+          quest_id?: string | null;
+          group_quest_id?: string | null;
+          group_id?: string | null;
+          challenge_id?: string | null;
+          quest_source_type?: QuestSourceType;
+          visibility?: AchievementVisibility;
+          aura_scope?: AuraScope;
           caption?: string | null;
           rating?: number | null;
           status?: CompletionStatus;
@@ -183,6 +211,114 @@ export interface Database {
         };
         Update: Partial<Omit<Database['public']['Tables']['groups']['Row'], 'id' | 'owner_id'>>;
       };
+      group_settings: {
+        Row: {
+          id: string;
+          group_id: string;
+          quest_creation_rule: QuestCreationRule;
+          is_public: boolean;
+          created_at: string;
+        };
+        Insert: {
+          group_id: string;
+          quest_creation_rule?: QuestCreationRule;
+          is_public?: boolean;
+        };
+        Update: Partial<
+          Pick<Database['public']['Tables']['group_settings']['Row'], 'quest_creation_rule' | 'is_public'>
+        >;
+      };
+      group_quests: {
+        Row: {
+          id: string;
+          group_id: string;
+          creator_id: string;
+          title: string;
+          description: string | null;
+          image_url: string | null;
+          aura_reward: number;
+          category: string | null;
+          proof_type: string;
+          repeatability_type: string;
+          max_completions_per_user: number | null;
+          repeat_interval: string | null;
+          visibility: string;
+          status: GroupQuestStatus;
+          created_at: string;
+        };
+        Insert: {
+          group_id: string;
+          creator_id: string;
+          title: string;
+          description?: string | null;
+          image_url?: string | null;
+          aura_reward?: number;
+          category?: string | null;
+          proof_type?: string;
+          repeatability_type?: string;
+          max_completions_per_user?: number | null;
+          repeat_interval?: string | null;
+          visibility?: string;
+          status?: GroupQuestStatus;
+        };
+        Update: Partial<
+          Omit<Database['public']['Tables']['group_quests']['Row'], 'id' | 'group_id' | 'creator_id' | 'created_at'>
+        >;
+      };
+      group_challenges: {
+        Row: {
+          id: string;
+          group_id: string;
+          creator_id: string;
+          title: string;
+          description: string | null;
+          start_date: string;
+          end_date: string;
+          prize_description: string | null;
+          scoring_mode: ChallengeScoringMode;
+          status: ChallengeStatus;
+          created_at: string;
+        };
+        Insert: {
+          group_id: string;
+          creator_id: string;
+          title: string;
+          description?: string | null;
+          start_date: string;
+          end_date: string;
+          prize_description?: string | null;
+          scoring_mode?: ChallengeScoringMode;
+          status?: ChallengeStatus;
+        };
+        Update: Partial<
+          Omit<
+            Database['public']['Tables']['group_challenges']['Row'],
+            'id' | 'group_id' | 'creator_id' | 'created_at'
+          >
+        >;
+      };
+      group_member_scores: {
+        Row: {
+          id: string;
+          group_id: string;
+          user_id: string;
+          total_group_aura: number;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+      };
+      challenge_scores: {
+        Row: {
+          id: string;
+          challenge_id: string;
+          user_id: string;
+          score: number;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+      };
       group_members: {
         Row: {
           id: string;
@@ -191,7 +327,7 @@ export interface Database {
           role: GroupRole;
           joined_at: string;
         };
-        Insert: never;
+        Insert: { group_id: string; user_id: string; role?: GroupRole };
         Update: never;
       };
       group_invites: {

@@ -11,8 +11,10 @@ export default function MainLayout() {
       <Stack.Screen name="user/[id]" />
       <Stack.Screen name="friends" />
       <Stack.Screen name="friend-requests" />
-      <Stack.Screen name="groups" />
       <Stack.Screen name="group/[id]" />
+      <Stack.Screen name="group-quest/[id]" />
+      <Stack.Screen name="complete-group-quest/[questId]" />
+      <Stack.Screen name="generator" />
       <Stack.Screen name="create-group" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="settings" />

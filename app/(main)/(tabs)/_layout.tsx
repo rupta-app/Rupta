@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Compass, Home, Sparkles, Trophy, User } from 'lucide-react-native';
+import { Compass, Home, Trophy, User, Users } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 export default function TabsLayout() {
@@ -31,23 +31,23 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="generator"
+        name="groups"
         options={{
-          title: t('tabs.generator'),
-          tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size} />,
+          title: t('tabs.groups'),
+          tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="leaderboard"
         options={{
-          title: t('tabs.leaderboard'),
+          title: t('tabs.ranks'),
           tabBarIcon: ({ color, size }) => <Trophy color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: t('tabs.profile'),
+          title: t('tabs.you'),
           tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
         }}
       />

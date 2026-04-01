@@ -1,17 +1,17 @@
 import { useRouter } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-
-import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { QUEST_CATEGORIES } from '@/constants/categories';
 import { useAuth } from '@/providers/AuthProvider';
-import { useQuests, useSavedQuestIds, useToggleSave } from '@/hooks/useQuests';
+import { useSavedQuestIds, useToggleSave } from '@/hooks/useQuests';
 import { pickQuestFromCatalog, type GeneratorInput } from '@/services/generator';
 import { fetchQuests } from '@/services/quests';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
@@ -23,6 +23,7 @@ const COSTS = ['free', 'low', 'medium', 'high', 'any'] as const;
 export default function GeneratorScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const go = (path: string) => (router as { push: (p: string) => void }).push(path);
   const lang = i18n.language.startsWith('es') ? 'es' : 'en';
   const { session } = useAuth();
@@ -60,10 +61,17 @@ export default function GeneratorScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <MainAppHeader variant="generator" />
+      <View
+        className="flex-row items-center border-b border-border px-1 min-h-[48px]"
+        style={{ paddingTop: Math.max(insets.top, 8) }}
+      >
+        <Pressable onPress={() => router.back()} className="p-2" hitSlop={8}>
+          <ChevronLeft color="#F8FAFC" size={28} />
+        </Pressable>
+        <Text className="text-foreground font-bold text-lg">{t('generator.title')}</Text>
+      </View>
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16, paddingTop: 12 }}>
-        <Text className="text-foreground text-2xl font-bold">{t('generator.title')}</Text>
-        <Text className="text-muted mt-1">{t('generator.subtitle')}</Text>
+        <Text className="text-muted">{t('generator.subtitle')}</Text>
 
         <Text className="text-muted text-xs uppercase mt-6 mb-2">{t('generator.budget')}</Text>
         <View className="flex-row flex-wrap gap-2">

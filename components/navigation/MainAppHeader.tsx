@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Bell, MessageCircle, Plus, Search, Settings } from 'lucide-react-native';
+import { Bell, MessageCircle, Plus, Settings, Users } from 'lucide-react-native';
 import { Image, Pressable, Text, View } from 'react-native';
 
 import { logoMark } from '@/constants/branding';
@@ -9,7 +9,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/providers/AuthProvider';
 
-export type MainHeaderVariant = 'home' | 'explore' | 'generator' | 'ranks' | 'profile';
+export type MainHeaderVariant = 'home' | 'explore' | 'generator' | 'groups' | 'ranks' | 'profile';
 
 export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
   const router = useRouter();
@@ -21,9 +21,11 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
   const unread = notifs.filter((n: { is_read: boolean }) => !n.is_read).length;
 
   const showAvatar = variant !== 'ranks' && variant !== 'profile';
-  const showSearch = variant !== 'profile';
-  const showMessages = variant === 'home' || variant === 'explore';
-  const showNotifications = variant === 'home' || variant === 'explore';
+  const showSearch = true;
+  const showMessages = variant === 'home' || variant === 'groups' || variant === 'ranks';
+  const showQuickComplete = variant === 'explore';
+  const showNotifications =
+    variant === 'home' || variant === 'explore' || variant === 'groups' || variant === 'ranks';
   const showPlusOnly = variant === 'generator';
   const showProfileActions = variant === 'profile';
 
@@ -37,15 +39,20 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
           {showAvatar && profile ? (
             <Pressable
               onPress={() => go('/(main)/(tabs)/profile')}
-              className="p-1"
+              className="p-1 shrink-0"
               hitSlop={8}
             >
               <Avatar url={profile.avatar_url} name={profile.display_name} size={36} />
             </Pressable>
           ) : null}
           {showSearch ? (
-            <Pressable onPress={() => go('/(main)/unified-search')} className="p-2.5" hitSlop={8}>
-              <Search color="#F8FAFC" size={22} strokeWidth={2} />
+            <Pressable
+              onPress={() => go('/(main)/unified-search')}
+              className="p-2.5 shrink-0"
+              hitSlop={8}
+              accessibilityLabel="Friends and groups search"
+            >
+              <Users color="#F8FAFC" size={22} strokeWidth={2} />
             </Pressable>
           ) : null}
         </View>
@@ -84,6 +91,13 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
             <Pressable onPress={() => go('/(main)/quick-complete')} className="p-2.5" hitSlop={8}>
               <View className="w-9 h-9 rounded-full border-2 border-primary items-center justify-center">
                 <Plus color="#8B5CF6" size={22} strokeWidth={2.5} />
+              </View>
+            </Pressable>
+          ) : null}
+          {showQuickComplete ? (
+            <Pressable onPress={() => go('/(main)/quick-complete')} className="p-2.5" hitSlop={8}>
+              <View className="w-8 h-8 rounded-full border-2 border-primary items-center justify-center">
+                <Plus color="#8B5CF6" size={20} strokeWidth={2.5} />
               </View>
             </Pressable>
           ) : null}

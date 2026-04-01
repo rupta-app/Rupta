@@ -60,14 +60,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, s) => {
+    } = supabase.auth.onAuthStateChange((event, s) => {
+      if (!mounted) return;
+
+      // Keep existing tokens in sync without re-fetching profile or toggling loading.
+      if (event === 'TOKEN_REFRESHED') {
+        setSession(s);
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
       setSession(s);
       if (s?.user?.id) {
-        void loadProfile(s.user.id);
+        void loadProfile(s.user.id).finally(() => {
+          if (mounted) setLoading(false);
+        });
       } else {
         setProfile(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => {

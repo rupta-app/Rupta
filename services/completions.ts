@@ -1,4 +1,19 @@
+import type { AchievementVisibility } from '@/types/database';
+
 import { supabase } from '@/lib/supabase';
+
+function parseOptionalRating(raw: number | null | undefined): number | null {
+  if (raw == null) return null;
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(n)) {
+    throw new Error('Rating must be a number between 1 and 5');
+  }
+  const r = Math.round(n);
+  if (r < 1 || r > 5) {
+    throw new Error('Rating must be between 1 and 5');
+  }
+  return r;
+}
 
 export async function createCompletion(payload: {
   userId: string;
@@ -7,14 +22,76 @@ export async function createCompletion(payload: {
   rating?: number | null;
   mediaUrl: string;
   participantIds: string[];
+  groupId?: string | null;
+  challengeId?: string | null;
+  visibility?: AchievementVisibility;
 }) {
+  const rating = parseOptionalRating(payload.rating ?? null);
   const { data: completion, error: cErr } = await supabase
     .from('quest_completions')
     .insert({
       user_id: payload.userId,
       quest_id: payload.questId,
+      quest_source_type: 'official',
+      group_quest_id: null,
+      group_id: payload.groupId ?? null,
+      challenge_id: payload.challengeId ?? null,
+      visibility: payload.visibility ?? 'public',
+      aura_scope: 'official',
       caption: payload.caption ?? null,
-      rating: payload.rating ?? null,
+      rating,
+      status: 'active',
+    })
+    .select()
+    .single();
+
+  if (cErr) throw cErr;
+
+  const { error: mErr } = await supabase.from('quest_media').insert({
+    completion_id: completion.id,
+    media_url: payload.mediaUrl,
+    media_type: 'photo',
+    order_index: 0,
+  });
+  if (mErr) throw mErr;
+
+  for (const uid of payload.participantIds) {
+    if (uid === payload.userId) continue;
+    const { error: pErr } = await supabase.from('completion_participants').insert({
+      completion_id: completion.id,
+      user_id: uid,
+    });
+    if (pErr) throw pErr;
+  }
+
+  return completion;
+}
+
+export async function createGroupQuestCompletion(payload: {
+  userId: string;
+  groupQuestId: string;
+  groupId: string;
+  caption?: string | null;
+  rating?: number | null;
+  mediaUrl: string;
+  participantIds: string[];
+  challengeId?: string | null;
+  visibility?: AchievementVisibility;
+}) {
+  const rating = parseOptionalRating(payload.rating ?? null);
+  const { data: completion, error: cErr } = await supabase
+    .from('quest_completions')
+    .insert({
+      user_id: payload.userId,
+      quest_id: null,
+      group_quest_id: payload.groupQuestId,
+      group_id: payload.groupId,
+      challenge_id: payload.challengeId ?? null,
+      quest_source_type: 'group',
+      visibility: payload.visibility ?? 'group',
+      aura_scope: 'group',
+      caption: payload.caption ?? null,
+      rating,
       status: 'active',
     })
     .select()
@@ -46,13 +123,30 @@ export async function fetchCompletionById(id: string) {
   const { data: row, error } = await supabase.from('quest_completions').select('*').eq('id', id).single();
   if (error) throw error;
 
-  const [{ data: profile }, { data: quest }, { data: media }] = await Promise.all([
+  const isGroup = row.quest_source_type === 'group' && row.group_quest_id;
+
+  const [{ data: profile }, questResult, gqResult, groupResult, { data: media }] = await Promise.all([
     supabase.from('profiles').select('id, username, display_name, avatar_url').eq('id', row.user_id).single(),
-    supabase.from('quests').select('*').eq('id', row.quest_id).single(),
+    row.quest_id
+      ? supabase.from('quests').select('*').eq('id', row.quest_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    isGroup
+      ? supabase.from('group_quests').select('*').eq('id', row.group_quest_id!).maybeSingle()
+      : Promise.resolve({ data: null }),
+    row.group_id
+      ? supabase.from('groups').select('id, name').eq('id', row.group_id).maybeSingle()
+      : Promise.resolve({ data: null }),
     supabase.from('quest_media').select('*').eq('completion_id', id).order('order_index'),
   ]);
 
-  return { ...row, profiles: profile, quests: quest, quest_media: media ?? [] };
+  return {
+    ...row,
+    profiles: profile,
+    quests: questResult.data,
+    group_quests: gqResult.data,
+    groups: groupResult.data,
+    quest_media: media ?? [],
+  };
 }
 
 export async function fetchCompletionCounts(completionIds: string[]) {

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchFriendIds, fetchHomeFeed, fetchSuggestedQuest } from '@/services/feed';
+import type { HomeFeedFilter } from '@/services/feed';
+import { fetchFriendIds, fetchGroupFeed, fetchHomeFeed, fetchSuggestedQuest } from '@/services/feed';
 
 export function useFriendIds(userId: string | undefined) {
   return useQuery({
@@ -10,11 +11,23 @@ export function useFriendIds(userId: string | undefined) {
   });
 }
 
-export function useHomeFeed(userId: string | undefined, friendIds: string[]) {
+export function useHomeFeed(
+  userId: string | undefined,
+  friendIds: string[],
+  filter: HomeFeedFilter = 'all',
+) {
   return useQuery({
-    queryKey: ['feed', userId, friendIds.join(',')],
-    queryFn: () => fetchHomeFeed(userId!, friendIds),
+    queryKey: ['feed', userId, friendIds.join(','), filter],
+    queryFn: () => fetchHomeFeed(userId!, friendIds, filter),
     enabled: Boolean(userId),
+  });
+}
+
+export function useGroupFeed(groupId: string | undefined) {
+  return useQuery({
+    queryKey: ['group-feed', groupId],
+    queryFn: () => fetchGroupFeed(groupId!),
+    enabled: Boolean(groupId),
   });
 }
 

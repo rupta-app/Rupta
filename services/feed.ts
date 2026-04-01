@@ -20,36 +20,62 @@ export async function fetchBlockedIds(userId: string) {
   return new Set((data ?? []).map((r) => r.blocked_id));
 }
 
-export async function fetchHomeFeed(userId: string, friendIds: string[]) {
+export type HomeFeedFilter = 'all' | 'official' | 'unofficial';
+
+export async function fetchHomeFeed(
+  userId: string,
+  friendIds: string[],
+  filter: HomeFeedFilter = 'all',
+) {
   const blocked = await fetchBlockedIds(userId);
   const ids = [...friendIds, userId].filter((id) => !blocked.has(id));
   if (ids.length === 0) return [];
 
-  const { data: completions, error } = await supabase
+  let q = supabase
     .from('quest_completions')
     .select('*')
     .in('user_id', ids)
     .eq('status', 'active')
     .order('completed_at', { ascending: false })
     .limit(50);
+
+  if (filter === 'official') {
+    q = q.eq('quest_source_type', 'official');
+  } else if (filter === 'unofficial') {
+    q = q.eq('quest_source_type', 'group').in('visibility', ['public', 'friends']);
+  }
+
+  const { data: completions, error } = await q;
   if (error) throw error;
   const rows = (completions ?? []).filter((r) => !blocked.has(r.user_id as string));
   if (rows.length === 0) return [];
 
   const pIds = [...new Set(rows.map((r) => r.user_id))];
-  const qIds = [...new Set(rows.map((r) => r.quest_id))];
+  const officialQids = [...new Set(rows.map((r) => r.quest_id).filter(Boolean))] as string[];
+  const groupQids = [...new Set(rows.map((r) => r.group_quest_id).filter(Boolean))] as string[];
+  const groupIds = [...new Set(rows.map((r) => r.group_id).filter(Boolean))] as string[];
   const cIds = rows.map((r) => r.id);
 
-  const [{ data: profiles }, { data: quests }, { data: medias }] = await Promise.all([
+  const [profilesRes, questsRes, groupQuestsRes, groupsRes, mediasRes] = await Promise.all([
     supabase.from('profiles').select('id, username, display_name, avatar_url').in('id', pIds),
-    supabase.from('quests').select('*').in('id', qIds),
+    officialQids.length
+      ? supabase.from('quests').select('*').in('id', officialQids)
+      : Promise.resolve({ data: [] as { id: string }[] }),
+    groupQids.length
+      ? supabase.from('group_quests').select('*').in('id', groupQids)
+      : Promise.resolve({ data: [] as { id: string }[] }),
+    groupIds.length
+      ? supabase.from('groups').select('id, name').in('id', groupIds)
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
     supabase.from('quest_media').select('*').in('completion_id', cIds),
   ]);
 
-  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-  const questMap = new Map((quests ?? []).map((q) => [q.id, q]));
+  const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+  const questMap = new Map((questsRes.data ?? []).map((q) => [q.id, q]));
+  const groupQuestMap = new Map((groupQuestsRes.data ?? []).map((gq) => [gq.id, gq]));
+  const groupMap = new Map((groupsRes.data ?? []).map((g) => [g.id, g]));
   const mediaByC = new Map<string, { media_url: string; media_type: string }[]>();
-  (medias ?? []).forEach((m) => {
+  (mediasRes.data ?? []).forEach((m) => {
     const list = mediaByC.get(m.completion_id) ?? [];
     list.push(m);
     mediaByC.set(m.completion_id, list);
@@ -58,7 +84,56 @@ export async function fetchHomeFeed(userId: string, friendIds: string[]) {
   return rows.map((r) => ({
     ...r,
     profiles: profileMap.get(r.user_id),
-    quests: questMap.get(r.quest_id),
+    quests: r.quest_id ? questMap.get(r.quest_id) : undefined,
+    group_quests: r.group_quest_id ? groupQuestMap.get(r.group_quest_id) : undefined,
+    groups: r.group_id ? groupMap.get(r.group_id) : undefined,
+    quest_media: mediaByC.get(r.id) ?? [],
+  }));
+}
+
+export async function fetchGroupFeed(groupId: string) {
+  const { data: completions, error } = await supabase
+    .from('quest_completions')
+    .select('*')
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+    .order('completed_at', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  const rows = completions ?? [];
+  if (rows.length === 0) return [];
+
+  const pIds = [...new Set(rows.map((r) => r.user_id))];
+  const officialQids = [...new Set(rows.map((r) => r.quest_id).filter(Boolean))] as string[];
+  const groupQids = [...new Set(rows.map((r) => r.group_quest_id).filter(Boolean))] as string[];
+  const cIds = rows.map((r) => r.id);
+
+  const [profilesRes, questsRes, groupQuestsRes, mediasRes] = await Promise.all([
+    supabase.from('profiles').select('id, username, display_name, avatar_url').in('id', pIds),
+    officialQids.length
+      ? supabase.from('quests').select('*').in('id', officialQids)
+      : Promise.resolve({ data: [] as { id: string }[] }),
+    groupQids.length
+      ? supabase.from('group_quests').select('*').in('id', groupQids)
+      : Promise.resolve({ data: [] as { id: string }[] }),
+    supabase.from('quest_media').select('*').in('completion_id', cIds),
+  ]);
+
+  const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+  const questMap = new Map((questsRes.data ?? []).map((q) => [q.id, q]));
+  const groupQuestMap = new Map((groupQuestsRes.data ?? []).map((gq) => [gq.id, gq]));
+  const mediaByC = new Map<string, { media_url: string; media_type: string }[]>();
+  (mediasRes.data ?? []).forEach((m) => {
+    const list = mediaByC.get(m.completion_id) ?? [];
+    list.push(m);
+    mediaByC.set(m.completion_id, list);
+  });
+
+  return rows.map((r) => ({
+    ...r,
+    profiles: profileMap.get(r.user_id),
+    quests: r.quest_id ? questMap.get(r.quest_id) : undefined,
+    group_quests: r.group_quest_id ? groupQuestMap.get(r.group_quest_id) : undefined,
     quest_media: mediaByC.get(r.id) ?? [],
   }));
 }

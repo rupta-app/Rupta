@@ -50,6 +50,37 @@ export async function toggleSavedQuest(userId: string, questId: string, saved: b
   }
 }
 
+/** Active official completions per quest (for caps / Life List progress). */
+export async function fetchOfficialCompletionCountsByQuestIds(userId: string, questIds: string[]) {
+  const map = new Map<string, number>();
+  if (questIds.length === 0) return map;
+  const { data, error } = await supabase
+    .from('quest_completions')
+    .select('quest_id')
+    .eq('user_id', userId)
+    .eq('quest_source_type', 'official')
+    .eq('status', 'active')
+    .in('quest_id', questIds);
+  if (error) throw error;
+  for (const row of data ?? []) {
+    const qid = row.quest_id as string;
+    map.set(qid, (map.get(qid) ?? 0) + 1);
+  }
+  return map;
+}
+
+export async function fetchOfficialCompletionCountForQuest(userId: string, questId: string) {
+  const { count, error } = await supabase
+    .from('quest_completions')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('quest_id', questId)
+    .eq('quest_source_type', 'official')
+    .eq('status', 'active');
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function fetchLifeListQuests(userId: string) {
   const { data: saved, error } = await supabase
     .from('saved_quests')

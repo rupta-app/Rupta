@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QuestFilters } from '@/services/quests';
 import {
   fetchLifeListQuests,
+  fetchOfficialCompletionCountForQuest,
+  fetchOfficialCompletionCountsByQuestIds,
   fetchQuestById,
   fetchQuests,
   fetchSavedQuestIds,
@@ -51,5 +53,22 @@ export function useLifeList(userId: string | undefined) {
     queryKey: ['life-list', userId],
     queryFn: () => fetchLifeListQuests(userId!),
     enabled: Boolean(userId),
+  });
+}
+
+export function useOfficialCompletionCount(userId: string | undefined, questId: string | undefined) {
+  return useQuery({
+    queryKey: ['quest-official-count', userId, questId],
+    queryFn: () => fetchOfficialCompletionCountForQuest(userId!, questId!),
+    enabled: Boolean(userId && questId),
+  });
+}
+
+export function useLifeListCompletionCounts(userId: string | undefined, questIds: string[]) {
+  const sortedKey = [...questIds].sort().join(',');
+  return useQuery({
+    queryKey: ['life-completion-counts', userId, sortedKey],
+    queryFn: () => fetchOfficialCompletionCountsByQuestIds(userId!, questIds),
+    enabled: Boolean(userId) && questIds.length > 0,
   });
 }

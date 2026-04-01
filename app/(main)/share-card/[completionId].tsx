@@ -54,7 +54,7 @@ export default function ShareCardScreen() {
     }
   };
 
-  if (isLoading || !data || !data.quests || !data.profiles) {
+  if (isLoading || !data || !data.profiles || (!data.quests && !data.group_quests)) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
@@ -63,6 +63,8 @@ export default function ShareCardScreen() {
   }
 
   const bg = data.quest_media?.[0]?.media_url;
+  const simpleTitle = data.group_quests?.title;
+  const simpleCategory = data.group_quests ? t('feed.groupQuest') : undefined;
 
   return (
     <ScrollView
@@ -73,11 +75,13 @@ export default function ShareCardScreen() {
       <ViewShot ref={ref} options={{ format: 'png', quality: 1 }}>
         <View className="items-center py-8 bg-background">
           <CompletedStoryCard
-            quest={data.quests}
+            quest={data.quests ?? undefined}
+            simpleTitle={simpleTitle}
+            simpleCategory={simpleCategory}
             auraEarned={data.aura_earned}
             username={data.profiles.username}
             displayName={data.profiles.display_name}
-            category={data.quests.category}
+            category={data.quests?.category}
             lang={lang}
             backgroundUri={bg}
           />

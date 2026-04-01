@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Flag } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -54,7 +54,7 @@ export default function CompletionDetailScreen() {
   const [reportReason, setReportReason] =
     useState<Database['public']['Tables']['reports']['Row']['reason']>('spam');
 
-  if (isLoading || !data?.quests || !data.profiles) {
+  if (isLoading || !data?.profiles || (!data.quests && !data.group_quests)) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
@@ -65,7 +65,11 @@ export default function CompletionDetailScreen() {
   const media = data.quest_media?.[0]?.media_url;
   const gave = social?.gaveRespect ?? false;
   const counts = social?.counts ?? { respects: 0, comments: 0 };
-  const qTitle = questTitle(data.quests, lang);
+  const qTitle = data.group_quests?.title
+    ? data.group_quests.title
+    : data.quests
+      ? questTitle(data.quests, lang)
+      : 'SideQuest';
   const shareMsg = buildCompletionShareMessage(qTitle, data.profiles.username);
 
   const openShare = () => {
@@ -113,7 +117,11 @@ export default function CompletionDetailScreen() {
           </View>
           <Text className="text-foreground text-2xl font-black mt-4">{qTitle}</Text>
           <Text className="text-muted text-xs uppercase mt-2 tracking-wide">
-            {formatCategoryLabel(data.quests.category, lang)}
+            {data.quests
+              ? formatCategoryLabel(data.quests.category, lang)
+              : data.group_quests
+                ? t('feed.groupQuest')
+                : ''}
           </Text>
           {data.caption ? <Text className="text-muted mt-2">{data.caption}</Text> : null}
           <View className="flex-row items-center gap-3 mt-4 flex-wrap">
@@ -139,9 +147,13 @@ export default function CompletionDetailScreen() {
           </View>
 
           {uid && uid !== data.user_id ? (
-            <Button variant="ghost" className="mt-2" onPress={() => setReportOpen(true)}>
-              {t('report.title')}
-            </Button>
+            <Pressable
+              onPress={() => setReportOpen(true)}
+              className="mt-5 flex-row items-center gap-3 py-3 px-1 rounded-xl border border-danger/40 bg-danger/5"
+            >
+              <Flag color="#F87171" size={22} strokeWidth={2} />
+              <Text className="text-danger font-semibold flex-1">{t('report.flagSuspicious')}</Text>
+            </Pressable>
           ) : null}
         </View>
 

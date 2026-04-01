@@ -39,7 +39,8 @@ export async function fetchProfileStats(userId: string) {
     .from('quest_completions')
     .select('id, quest_id, completed_at')
     .eq('user_id', userId)
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .eq('quest_source_type', 'official');
 
   const { data: quests } = await supabase.from('quests').select('id, category');
 
@@ -76,6 +77,7 @@ export async function fetchActivityChart(userId: string) {
     .select('completed_at, aura_earned')
     .eq('user_id', userId)
     .eq('status', 'active')
+    .eq('quest_source_type', 'official')
     .gte('completed_at', since.toISOString());
   if (error) throw error;
   const list = rows ?? [];
@@ -109,7 +111,7 @@ export async function fetchActivityChart(userId: string) {
 export async function fetchRecentCompletions(userId: string, limit = 8) {
   const { data: rows, error } = await supabase
     .from('quest_completions')
-    .select('id, aura_earned, completed_at, quest_id')
+    .select('id, aura_earned, completed_at, quest_id, group_quest_id, quest_source_type')
     .eq('user_id', userId)
     .eq('status', 'active')
     .order('completed_at', { ascending: false })
@@ -117,8 +119,21 @@ export async function fetchRecentCompletions(userId: string, limit = 8) {
   if (error) throw error;
   const list = rows ?? [];
   if (list.length === 0) return [];
-  const qids = [...new Set(list.map((r) => r.quest_id))];
-  const { data: quests } = await supabase.from('quests').select('id, title_en, title_es').in('id', qids);
+  const officialIds = [...new Set(list.map((r) => r.quest_id).filter(Boolean))] as string[];
+  const groupQids = [...new Set(list.map((r) => r.group_quest_id).filter(Boolean))] as string[];
+  const [{ data: quests }, { data: groupQuests }] = await Promise.all([
+    officialIds.length
+      ? supabase.from('quests').select('id, title_en, title_es').in('id', officialIds)
+      : Promise.resolve({ data: [] as { id: string; title_en: string; title_es: string }[] }),
+    groupQids.length
+      ? supabase.from('group_quests').select('id, title').in('id', groupQids)
+      : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+  ]);
   const qmap = new Map((quests ?? []).map((q) => [q.id, q]));
-  return list.map((r) => ({ ...r, quests: qmap.get(r.quest_id) }));
+  const gqmap = new Map((groupQuests ?? []).map((q) => [q.id, q]));
+  return list.map((r) => ({
+    ...r,
+    quests: r.quest_id ? qmap.get(r.quest_id) : undefined,
+    group_quests: r.group_quest_id ? gqmap.get(r.group_quest_id) : undefined,
+  }));
 }
