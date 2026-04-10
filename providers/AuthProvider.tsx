@@ -106,3 +106,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   return useContext(Ctx);
 }
+
+/** Shorthand for the current user's ID (undefined when not signed in). */
+export function useUserId(): string | undefined {
+  const { session } = useAuth();
+  return session?.user?.id;
+}

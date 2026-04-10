@@ -5,3 +5,12 @@ export function isSpontaneousAuraPending(
 ): boolean {
   return questSourceType === 'spontaneous' && auraEarned === 0;
 }
+
+/** Returns a formatted AURA string, showing a pending label for unreviewed spontaneous quests. */
+export function formatAuraDisplay(
+  sourceType: string | undefined | null,
+  aura: number,
+  pendingLabel: string,
+): string {
+  return isSpontaneousAuraPending(sourceType, aura) ? pendingLabel : `+${aura} AURA`;
+}
