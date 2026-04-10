@@ -12,7 +12,7 @@ export type QuestFilters = {
 };
 
 export async function fetchQuests(filters: QuestFilters = {}) {
-  let q = supabase.from('quests').select('*').eq('is_active', true);
+  let q = supabase.from('quests').select('*').eq('is_active', true).eq('is_spontaneous', false);
 
   if (filters.category) q = q.eq('category', filters.category);
   if (filters.difficulty) q = q.eq('difficulty', filters.difficulty);

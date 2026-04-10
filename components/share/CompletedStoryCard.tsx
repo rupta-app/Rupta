@@ -1,4 +1,5 @@
 import { Image, ImageBackground, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { logoMark } from '@/constants/branding';
 import type { QuestRow } from '@/services/quests';
@@ -16,9 +17,12 @@ export function CompletedStoryCard({
   backgroundUri,
   simpleTitle,
   simpleCategory,
+  auraPending,
 }: {
   quest?: QuestRow | null;
   auraEarned: number;
+  /** Spontaneous post before reviewers award AURA */
+  auraPending?: boolean;
   username: string;
   displayName: string;
   category?: string;
@@ -28,6 +32,7 @@ export function CompletedStoryCard({
   simpleTitle?: string;
   simpleCategory?: string;
 }) {
+  const { t } = useTranslation();
   const title = simpleTitle ?? (quest ? questTitle(quest, lang) : 'SideQuest');
   const inner = (
     <View className="flex-1 p-5 justify-between bg-black/55">
@@ -46,7 +51,11 @@ export function CompletedStoryCard({
         </Text>
       </View>
       <View>
-        <Text className="text-respect text-4xl font-black">+{auraEarned}</Text>
+        {auraPending ? (
+          <Text className="text-white text-xl font-bold leading-7">{t('complete.storyAuraPending')}</Text>
+        ) : (
+          <Text className="text-respect text-4xl font-black">+{auraEarned}</Text>
+        )}
         <Text className="text-white/80 text-sm font-medium">{displayName}</Text>
         <Text className="text-white/50 text-xs">@{username}</Text>
       </View>

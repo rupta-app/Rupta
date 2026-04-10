@@ -16,6 +16,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useLifeList, useLifeListCompletionCounts, useToggleSave } from '@/hooks/useQuests';
 import { fetchActivityChart, fetchProfileStats, fetchRecentCompletions } from '@/services/profile';
 import type { QuestRow } from '@/services/quests';
+import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 import { questTitle } from '@/utils/questCopy';
 
 export default function ProfileTab() {
@@ -174,16 +175,33 @@ export default function ProfileTab() {
             ) : null}
 
             <Text className="text-foreground font-bold mt-8 mb-2">{t('profile.recent')}</Text>
-            {recent.map((row: { id: string; quests?: { title_en: string; title_es: string }; aura_earned: number }) => (
-              <Pressable key={row.id} onPress={() => router.push(`/(main)/completion/${row.id}`)}>
-                <Card className="mb-2 py-3">
-                  <Text className="text-foreground font-semibold">
-                    {row.quests ? questTitle(row.quests, lang) : 'Quest'}
-                  </Text>
-                  <Text className="text-primary text-sm">+{row.aura_earned} AURA</Text>
-                </Card>
-              </Pressable>
-            ))}
+            {recent.map(
+              (row: {
+                id: string;
+                quests?: { title_en: string; title_es: string };
+                aura_earned: number;
+                quest_source_type?: string;
+              }) => (
+                <Pressable key={row.id} onPress={() => router.push(`/(main)/completion/${row.id}`)}>
+                  <Card className="mb-2 py-3">
+                    <Text className="text-foreground font-semibold">
+                      {row.quests ? questTitle(row.quests, lang) : 'Quest'}
+                    </Text>
+                    <Text
+                      className={
+                        isSpontaneousAuraPending(row.quest_source_type, row.aura_earned)
+                          ? 'text-muted text-sm'
+                          : 'text-primary text-sm'
+                      }
+                    >
+                      {isSpontaneousAuraPending(row.quest_source_type, row.aura_earned)
+                        ? t('feed.auraPendingReview')
+                        : `+${row.aura_earned} AURA`}
+                    </Text>
+                  </Card>
+                </Pressable>
+              ),
+            )}
 
             <Text className="text-muted text-sm mt-6 text-center">{t('profile.ranksFriends')}</Text>
           </View>
@@ -212,7 +230,7 @@ export default function ProfileTab() {
             </View>
           }
           contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16, paddingTop: 12 }}
-          ListEmptyComponent={<Text className="text-muted text-center mt-8 px-4">{t('feed.empty')}</Text>}
+          ListEmptyComponent={<Text className="text-muted text-center mt-8 px-4">{t('profile.emptyLifeList')}</Text>}
           renderItem={({ item }) => {
             const q = item.quests;
             const cnt = lifeCounts?.get(item.quest_id) ?? 0;

@@ -30,7 +30,7 @@ export default function LifeListScreen() {
         data={rows as { quest_id: string; quests: Parameters<typeof questTitle>[0] }[]}
         keyExtractor={(item) => item.quest_id}
         contentContainerStyle={{ padding: 16 }}
-        ListEmptyComponent={<Text className="text-muted text-center mt-8">{t('feed.empty')}</Text>}
+        ListEmptyComponent={<Text className="text-muted text-center mt-8">{t('profile.emptyLifeList')}</Text>}
         renderItem={({ item }) => (
           <Pressable onPress={() => router.push(`/(main)/quest/${item.quest_id}`)}>
             <Card className="mb-2">

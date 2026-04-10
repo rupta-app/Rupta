@@ -40,8 +40,8 @@ export default function GroupDetailScreen() {
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
   const lang = i18n.language.startsWith('es') ? 'es' : 'en';
-  const { session } = useAuth();
-  const uid = session?.user?.id!;
+  const { session, profile } = useAuth();
+  const uid = session?.user?.id ?? profile?.id;
   const [section, setSection] = useState<Section>('rankings');
 
   const { data, isLoading } = useGroupDetail(id);

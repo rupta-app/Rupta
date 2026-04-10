@@ -1,5 +1,14 @@
 import { useId } from 'react';
-import { Keyboard, Platform, InputAccessoryView, Pressable, Text, TextInput, View } from 'react-native';
+import {
+  Keyboard,
+  Platform,
+  InputAccessoryView,
+  Pressable,
+  Text,
+  TextInput,
+  type TextInputProps,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 export function Input({
@@ -11,6 +20,7 @@ export function Input({
   error,
   multiline,
   autoCapitalize = 'none',
+  keyboardType,
 }: {
   label?: string;
   value: string;
@@ -20,6 +30,7 @@ export function Input({
   error?: string;
   multiline?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?: TextInputProps['keyboardType'];
 }) {
   const { t } = useTranslation();
   const rid = useId();
@@ -45,6 +56,7 @@ export function Input({
         secureTextEntry={secureTextEntry}
         multiline={multiline}
         autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
         inputAccessoryViewID={accessoryId}
         returnKeyType={multiline ? 'default' : 'done'}
         blurOnSubmit={!multiline}

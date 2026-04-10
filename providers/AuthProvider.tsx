@@ -78,6 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(s);
       if (s?.user?.id) {
+        // OAuth / password sign-in: session updates before profile is fetched. Without this,
+        // `loading` stays false and index treats `profile === null` as "needs onboarding".
+        if (event === 'SIGNED_IN') {
+          setLoading(true);
+        }
         void loadProfile(s.user.id).finally(() => {
           if (mounted) setLoading(false);
         });

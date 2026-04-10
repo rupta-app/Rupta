@@ -23,6 +23,10 @@ export const es: TranslationKeys = {
     login: 'Entrar',
     register: 'Crear cuenta',
     registerHint: 'En las siguientes pantallas eliges usuario y foto.',
+    oauthLoginSubtitle: 'Entra con Google o Apple. Sin contraseña ni enlace por correo.',
+    oauthRegisterSubtitle: 'Usa Google o Apple. Después configuras tu perfil.',
+    continueWithGoogle: 'Continuar con Google',
+    continueWithApple: 'Continuar con Apple',
     email: 'Correo',
     password: 'Contraseña',
     forgotPassword: '¿Olvidaste la contraseña?',
@@ -76,6 +80,8 @@ export const es: TranslationKeys = {
     filterOfficial: 'Oficial',
     filterUnofficial: 'No oficial',
     groupQuest: 'Quest de grupo',
+    spontaneousQuest: 'Espontáneo',
+    auraPendingReview: 'AURA pendiente de aprobación',
   },
   explore: {
     suggestTitle: '¿No encontraste lo que buscabas?',
@@ -110,10 +116,26 @@ export const es: TranslationKeys = {
     comingBody: 'Podrás chatear con amigos y mandarles retos SideQuest. Lo estamos construyendo.',
   },
   quickComplete: {
-    title: 'Completar un quest',
+    title: 'Desde el catálogo',
     placeholder: 'Buscar SideQuests…',
-    hint: '¿Ya hiciste algo del catálogo? Regístralo aquí con foto.',
+    hint: 'Elige un SideQuest oficial que ya completaste — añade foto como prueba.',
     empty: 'Escribe para buscar en el catálogo.',
+  },
+  spontaneous: {
+    title: 'SideQuest espontáneo',
+    quote: '“A veces los mejores SideQuests son los que nadie escribió en una lista.”',
+    explainer:
+      'Publica algo que hiciste de verdad y no está en el catálogo. Aparece en Todo y No oficial mientras el equipo lo revisa. El AURA se suma a tu perfil solo después de la aprobación (por ejemplo si pasa a SideQuest oficial).',
+    sidequestTitle: '¿Qué hiciste?',
+    titlePlaceholder: 'ej. Mortal hacia atrás desde el muelle al atardecer',
+    suggestedAura: 'AURA sugerido (para el equipo)',
+    auraHint: 'Sugiere un valor si se aprueba (1–500). Solo ganas AURA cuando el equipo lo apruebe.',
+    post: 'Publicar en el feed',
+    fromCatalog: 'O completa algo del catálogo',
+    titleTooShort: 'Añade un poco más de detalle al título.',
+    titleTooLong: 'El título es muy largo — máximo 200 caracteres.',
+    photoRequired: 'Añade una foto como prueba.',
+    auraInvalid: 'Escribe un número entre 1 y 500.',
   },
   suggestQuest: {
     title: 'Sugerir SideQuest',
@@ -128,6 +150,11 @@ export const es: TranslationKeys = {
   completion: {
     share: 'Compartir',
     downloadImage: 'Guardar foto',
+    deletePost: 'Eliminar publicación',
+    deleteTitle: '¿Eliminar esta publicación?',
+    deleteMessage:
+      'Se quitará la completación del feed y de los rankings. El AURA de esta publicación se revertirá.',
+    deleteConfirm: 'Eliminar',
   },
   quest: {
     catalog: 'SideQuests',
@@ -158,6 +185,7 @@ export const es: TranslationKeys = {
     rating: '¿Cómo estuvo? (1–5)',
     coparticipants: 'Amigos que vinieron',
     submit: 'Enviar y ganar AURA',
+    storyAuraPending: 'AURA al aprobar',
     shareStory: 'Compartir a Historia',
     saveCard: 'Guardar tarjeta',
   },
@@ -175,6 +203,10 @@ export const es: TranslationKeys = {
     accept: 'Aceptar',
     reject: 'Rechazar',
     addFriend: 'Agregar amigo',
+    friendAddedTitle: 'Amistad aceptada',
+    friendAddedBody: 'Ya sois amigos.',
+    alreadyFriends: 'Sois amigos',
+    requestNotFound: 'Esa solicitud ya no está disponible.',
   },
   groups: {
     title: 'Grupos',
@@ -188,6 +220,7 @@ export const es: TranslationKeys = {
     join: 'Unirse',
     invitesSection: 'Invitaciones',
     myGroups: 'Mis grupos',
+    emptyMyGroups: 'Crea un grupo o únete a uno público para empezar.',
     sectionRankings: 'Rankings',
     sectionFeed: 'Feed',
     sectionQuests: 'Quests',
@@ -252,6 +285,8 @@ export const es: TranslationKeys = {
     nextLevelSuffix: 'AURA para el siguiente nivel',
     lifeListProgressLabel: 'Progreso Life List',
     lifeListProgressDetail: '{{done}} de {{total}} listos',
+    emptyLifeList:
+      'Tu Life List está vacía. Guarda SideQuests desde Explorar o la ficha de un quest para seguirlos aquí.',
   },
   leaderboard: {
     global: 'Global',

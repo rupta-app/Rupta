@@ -21,6 +21,10 @@ export const en = {
     login: 'Log in',
     register: 'Create account',
     registerHint: 'You will choose your username and photo on the next screens.',
+    oauthLoginSubtitle: 'Sign in with Google or Apple. No password or email link.',
+    oauthRegisterSubtitle: 'Use Google or Apple. You will set up your profile next.',
+    continueWithGoogle: 'Continue with Google',
+    continueWithApple: 'Continue with Apple',
     email: 'Email',
     password: 'Password',
     forgotPassword: 'Forgot password?',
@@ -74,6 +78,8 @@ export const en = {
     filterOfficial: 'Official',
     filterUnofficial: 'Unofficial',
     groupQuest: 'Group quest',
+    spontaneousQuest: 'Spontaneous',
+    auraPendingReview: 'AURA pending approval',
   },
   explore: {
     suggestTitle: "Didn't find what you were looking for?",
@@ -108,10 +114,26 @@ export const en = {
     comingBody: 'You will be able to DM friends and ping them with SideQuest challenges. Building this next.',
   },
   quickComplete: {
-    title: 'Complete a quest',
+    title: 'From the catalog',
     placeholder: 'Search SideQuests…',
-    hint: 'Already did something from the catalog? Log it here with photo proof.',
+    hint: 'Pick an official SideQuest you already completed — add photo proof.',
     empty: 'Type to search the catalog.',
+  },
+  spontaneous: {
+    title: 'Spontaneous SideQuest',
+    quote: '“The best SideQuests are often the ones you don\'t plan.”',
+    explainer:
+      'Post something you did that is not in our catalog. It shows in All and Unofficial while the team reviews it. AURA is added to your profile only after approval (for example when it becomes an official SideQuest).',
+    sidequestTitle: 'What did you do?',
+    titlePlaceholder: 'e.g. Backflip off the dock at sunset',
+    suggestedAura: 'Suggested AURA (for reviewers)',
+    auraHint: 'Suggest what it could be worth if approved (1–500). You only earn AURA after the team approves.',
+    post: 'Post to feed',
+    fromCatalog: 'Or complete something from the catalog',
+    titleTooShort: 'Add a bit more detail to the title.',
+    titleTooLong: 'Title is too long — keep it under 200 characters.',
+    photoRequired: 'Add a photo as proof.',
+    auraInvalid: 'Enter a number between 1 and 500.',
   },
   suggestQuest: {
     title: 'Suggest a SideQuest',
@@ -126,6 +148,11 @@ export const en = {
   completion: {
     share: 'Share',
     downloadImage: 'Save photo',
+    deletePost: 'Delete post',
+    deleteTitle: 'Delete this post?',
+    deleteMessage:
+      'This removes the completion from your feed and rankings. AURA from this post will be taken back.',
+    deleteConfirm: 'Delete',
   },
   quest: {
     catalog: 'SideQuests',
@@ -156,6 +183,7 @@ export const en = {
     rating: 'How was it? (1–5)',
     coparticipants: 'Friends who joined',
     submit: 'Submit & earn AURA',
+    storyAuraPending: 'AURA when approved',
     shareStory: 'Share to Story',
     saveCard: 'Save card',
   },
@@ -173,6 +201,10 @@ export const en = {
     accept: 'Accept',
     reject: 'Reject',
     addFriend: 'Add friend',
+    friendAddedTitle: 'Friend added',
+    friendAddedBody: "You're now connected.",
+    alreadyFriends: "You're friends",
+    requestNotFound: 'That request is no longer available.',
   },
   groups: {
     title: 'Groups',
@@ -186,6 +218,7 @@ export const en = {
     join: 'Join',
     invitesSection: 'Invites',
     myGroups: 'My groups',
+    emptyMyGroups: 'Create a group or join a public one to get started.',
     sectionRankings: 'Ranks',
     sectionFeed: 'Feed',
     sectionQuests: 'Quests',
@@ -250,6 +283,8 @@ export const en = {
     nextLevelSuffix: 'AURA to next level',
     lifeListProgressLabel: 'Life List progress',
     lifeListProgressDetail: '{{done}} of {{total}} cleared',
+    emptyLifeList:
+      'Your Life List is empty. Save SideQuests from Explore or a quest detail page to track them here.',
   },
   leaderboard: {
     global: 'Global',

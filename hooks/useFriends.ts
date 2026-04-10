@@ -43,6 +43,8 @@ export function useRespondFriendRequest() {
       void qc.invalidateQueries({ queryKey: ['friend-requests-in'] });
       void qc.invalidateQueries({ queryKey: ['friends'] });
       void qc.invalidateQueries({ queryKey: ['friend-ids'] });
+      void qc.invalidateQueries({ queryKey: ['friend-relation'] });
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 }

@@ -119,6 +119,103 @@ export async function createGroupQuestCompletion(payload: {
   return completion;
 }
 
+const SPONT_TITLE_MIN = 3;
+const SPONT_TITLE_MAX = 200;
+
+export async function createSpontaneousCompletion(payload: {
+  userId: string;
+  title: string;
+  suggestedAura: number;
+  caption?: string | null;
+  rating?: number | null;
+  mediaUrl: string;
+  participantIds: string[];
+  visibility?: AchievementVisibility;
+}) {
+  const title = payload.title.trim();
+  if (title.length < SPONT_TITLE_MIN) {
+    throw new Error('Title too short');
+  }
+  if (title.length > SPONT_TITLE_MAX) {
+    throw new Error('Title too long');
+  }
+  const auraReward = Math.min(500, Math.max(1, Math.round(Number(payload.suggestedAura)) || 1));
+  const rating = parseOptionalRating(payload.rating ?? null);
+
+  const { data: quest, error: qErr } = await supabase
+    .from('quests')
+    .insert({
+      title_en: title,
+      title_es: title,
+      description_en: '',
+      description_es: '',
+      category: 'random',
+      aura_reward: auraReward,
+      difficulty: 'easy',
+      repeatability_type: 'once',
+      max_completions_per_user: 1,
+      repeat_interval: null,
+      proof_type: 'photo',
+      cost_range: 'free',
+      location_type: 'any',
+      is_active: true,
+      is_spontaneous: true,
+      created_by: payload.userId,
+      spontaneous_review_status: 'pending_catalog',
+    })
+    .select()
+    .single();
+
+  if (qErr) throw qErr;
+
+  const { data: completion, error: cErr } = await supabase
+    .from('quest_completions')
+    .insert({
+      user_id: payload.userId,
+      quest_id: quest.id,
+      quest_source_type: 'spontaneous',
+      group_quest_id: null,
+      group_id: null,
+      challenge_id: null,
+      visibility: payload.visibility ?? 'public',
+      aura_scope: 'official',
+      caption: payload.caption ?? null,
+      rating,
+      status: 'active',
+    })
+    .select()
+    .single();
+
+  if (cErr) {
+    await supabase.from('quests').delete().eq('id', quest.id);
+    throw cErr;
+  }
+
+  const { error: mErr } = await supabase.from('quest_media').insert({
+    completion_id: completion.id,
+    media_url: payload.mediaUrl,
+    media_type: 'photo',
+    order_index: 0,
+  });
+  if (mErr) throw mErr;
+
+  for (const uid of payload.participantIds) {
+    if (uid === payload.userId) continue;
+    const { error: pErr } = await supabase.from('completion_participants').insert({
+      completion_id: completion.id,
+      user_id: uid,
+    });
+    if (pErr) throw pErr;
+  }
+
+  return completion;
+}
+
+export async function deleteCompletion(completionId: string) {
+  const { error } = await supabase.from('quest_completions').delete().eq('id', completionId);
+  if (error) throw error;
+}
+
 export async function fetchCompletionById(id: string) {
   const { data: row, error } = await supabase.from('quest_completions').select('*').eq('id', id).single();
   if (error) throw error;

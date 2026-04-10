@@ -22,8 +22,8 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
 
   const showAvatar = variant !== 'ranks' && variant !== 'profile';
   const showSearch = true;
-  const showMessages = variant === 'home' || variant === 'groups' || variant === 'ranks';
-  const showQuickComplete = variant === 'explore';
+  const showMessages = variant === 'groups' || variant === 'ranks';
+  const showSpontaneousShortcut = variant === 'home' || variant === 'explore';
   const showNotifications =
     variant === 'home' || variant === 'explore' || variant === 'groups' || variant === 'ranks';
   const showPlusOnly = variant === 'generator';
@@ -77,7 +77,7 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
         <View className="flex-row items-center justify-end flex-1 gap-0.5 min-w-0">
           {showProfileActions ? (
             <>
-              <Pressable onPress={() => go('/(main)/quick-complete')} className="p-2.5" hitSlop={8}>
+              <Pressable onPress={() => go('/(main)/spontaneous-sidequest')} className="p-2.5" hitSlop={8}>
                 <View className="w-8 h-8 rounded-full border-2 border-primary items-center justify-center">
                   <Plus color="#8B5CF6" size={20} strokeWidth={2.5} />
                 </View>
@@ -88,14 +88,14 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
             </>
           ) : null}
           {showPlusOnly ? (
-            <Pressable onPress={() => go('/(main)/quick-complete')} className="p-2.5" hitSlop={8}>
+            <Pressable onPress={() => go('/(main)/spontaneous-sidequest')} className="p-2.5" hitSlop={8}>
               <View className="w-9 h-9 rounded-full border-2 border-primary items-center justify-center">
                 <Plus color="#8B5CF6" size={22} strokeWidth={2.5} />
               </View>
             </Pressable>
           ) : null}
-          {showQuickComplete ? (
-            <Pressable onPress={() => go('/(main)/quick-complete')} className="p-2.5" hitSlop={8}>
+          {showSpontaneousShortcut ? (
+            <Pressable onPress={() => go('/(main)/spontaneous-sidequest')} className="p-2.5" hitSlop={8}>
               <View className="w-8 h-8 rounded-full border-2 border-primary items-center justify-center">
                 <Plus color="#8B5CF6" size={20} strokeWidth={2.5} />
               </View>

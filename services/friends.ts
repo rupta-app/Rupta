@@ -20,6 +20,54 @@ export async function respondFriendRequest(requestId: string, accept: boolean) {
   if (error) throw error;
 }
 
+export type FriendRequestRelation =
+  | { kind: 'incoming'; requestId: string }
+  | { kind: 'outgoing'; requestId: string }
+  | { kind: 'none' };
+
+export async function fetchFriendRequestRelation(
+  currentUserId: string,
+  otherUserId: string,
+): Promise<FriendRequestRelation> {
+  const { data: inc, error: incErr } = await supabase
+    .from('friend_requests')
+    .select('id')
+    .eq('receiver_id', currentUserId)
+    .eq('sender_id', otherUserId)
+    .eq('status', 'pending')
+    .maybeSingle();
+  if (incErr) throw incErr;
+  if (inc?.id) return { kind: 'incoming', requestId: inc.id };
+
+  const { data: out, error: outErr } = await supabase
+    .from('friend_requests')
+    .select('id')
+    .eq('sender_id', currentUserId)
+    .eq('receiver_id', otherUserId)
+    .eq('status', 'pending')
+    .maybeSingle();
+  if (outErr) throw outErr;
+  if (out?.id) return { kind: 'outgoing', requestId: out.id };
+
+  return { kind: 'none' };
+}
+
+/** Fallback when notification JSON has no request_id (older rows). */
+export async function findPendingIncomingRequestId(
+  receiverId: string,
+  senderId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('friend_requests')
+    .select('id')
+    .eq('receiver_id', receiverId)
+    .eq('sender_id', senderId)
+    .eq('status', 'pending')
+    .maybeSingle();
+  if (error) throw error;
+  return data?.id ?? null;
+}
+
 export async function fetchIncomingRequests(userId: string) {
   const { data: reqs, error } = await supabase
     .from('friend_requests')

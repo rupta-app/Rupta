@@ -25,6 +25,7 @@ export default function MainLayout() {
       <Stack.Screen name="upgrade" />
       <Stack.Screen name="messages" />
       <Stack.Screen name="quick-complete" />
+      <Stack.Screen name="spontaneous-sidequest" />
       <Stack.Screen name="suggest-quest" />
     </Stack>
   );

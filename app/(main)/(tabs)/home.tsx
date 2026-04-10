@@ -93,7 +93,14 @@ export default function HomeScreen() {
         ) : posts.length === 0 ? (
           <Text className="text-muted text-center mt-10 px-4">{t('feed.empty')}</Text>
         ) : (
-          posts.map((p) => <FeedPostCard key={p.id} post={p} lang={lang} viewerId={session?.user?.id} />)
+          posts.map((p) => (
+            <FeedPostCard
+              key={p.id}
+              post={p}
+              lang={lang}
+              viewerId={session?.user?.id ?? profile?.id}
+            />
+          ))
         )}
       </ScrollView>
     </View>

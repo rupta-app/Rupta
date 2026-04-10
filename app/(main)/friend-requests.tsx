@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -41,14 +41,34 @@ export default function FriendRequestsScreen() {
             </View>
             <View className="gap-2">
               <Button
-                onPress={() => respond.mutate({ requestId: item.id, accept: true })}
+                loading={respond.isPending}
+                onPress={() =>
+                  respond.mutate(
+                    { requestId: item.id, accept: true },
+                    {
+                      onSuccess: () =>
+                        Alert.alert(t('friends.friendAddedTitle'), t('friends.friendAddedBody')),
+                      onError: (e) =>
+                        Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e)),
+                    },
+                  )
+                }
                 className="py-2 px-3 min-h-0"
               >
                 {t('friends.accept')}
               </Button>
               <Button
                 variant="ghost"
-                onPress={() => respond.mutate({ requestId: item.id, accept: false })}
+                loading={respond.isPending}
+                onPress={() =>
+                  respond.mutate(
+                    { requestId: item.id, accept: false },
+                    {
+                      onError: (e) =>
+                        Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e)),
+                    },
+                  )
+                }
                 className="py-2 px-3 min-h-0"
               >
                 {t('friends.reject')}

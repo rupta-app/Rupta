@@ -1,73 +1,40 @@
-import { Link, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
 
-import { logoMark } from '@/constants/branding';
+import { AuthScreenShell } from '@/components/auth/AuthScreenShell';
+import { SocialSignInButtons } from '@/components/auth/SocialSignInButtons';
+import { useSocialSignIn } from '@/hooks/useSocialSignIn';
 import { useTranslation } from 'react-i18next';
-
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { loginSchema } from '@/schemas/auth';
-import { supabase } from '@/lib/supabase';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const onSubmit = async () => {
-    setError('');
-    const parsed = loginSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      setError(parsed.error.errors[0]?.message ?? t('common.error'));
-      return;
-    }
-    setLoading(true);
-    const { error: e } = await supabase.auth.signInWithPassword(parsed.data);
-    setLoading(false);
-    if (e) {
-      setError(e.message);
-      return;
-    }
-    router.replace('/');
-  };
+  const { error, loading, showApple, signInWithGoogle, signInWithApple } = useSocialSignIn();
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      className="flex-1 bg-background"
-    >
-      <ScrollView contentContainerClassName="px-6 pt-16 pb-10" keyboardShouldPersistTaps="handled">
-        <Image
-          source={logoMark}
-          accessibilityLabel="Rupta"
-          resizeMode="contain"
-          style={{ width: 200, height: 56, marginBottom: 4 }}
+    <View className="flex-1 bg-background">
+      <AuthScreenShell
+        title={t('auth.login')}
+        subtitle={t('auth.oauthLoginSubtitle')}
+        footer={
+          <Pressable onPress={() => router.push('/(auth)/register')} hitSlop={12}>
+            <Text className="text-muted text-base text-center">
+              {t('auth.noAccount')}{' '}
+              <Text className="text-primary font-semibold">{t('auth.register')}</Text>
+            </Text>
+          </Pressable>
+        }
+      >
+        <SocialSignInButtons
+          onGoogle={signInWithGoogle}
+          onApple={signInWithApple}
+          loading={loading}
+          showApple={showApple}
         />
-        <Text className="text-muted text-lg mt-2">{t('auth.login')}</Text>
-        <View className="mt-10">
-          <Input label={t('auth.email')} value={email} onChangeText={setEmail} autoCapitalize="none" />
-          <Input
-            label={t('auth.password')}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          {error ? <Text className="text-danger mb-4">{error}</Text> : null}
-          <Button onPress={onSubmit} loading={loading}>
-            {t('auth.login')}
-          </Button>
-        </View>
-        <Link href="/(auth)/forgot-password" className="text-primary mt-6">
-          {t('auth.forgotPassword')}
-        </Link>
-        <Link href="/(auth)/register" className="text-muted mt-4">
-          {t('auth.noAccount')} {t('auth.register')}
-        </Link>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        {error ? (
+          <Text className="text-danger text-center text-sm mt-4 leading-5">{error}</Text>
+        ) : null}
+      </AuthScreenShell>
+    </View>
   );
 }

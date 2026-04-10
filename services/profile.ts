@@ -40,7 +40,7 @@ export async function fetchProfileStats(userId: string) {
     .select('id, quest_id, completed_at')
     .eq('user_id', userId)
     .eq('status', 'active')
-    .eq('quest_source_type', 'official');
+    .in('quest_source_type', ['official', 'spontaneous']);
 
   const { data: quests } = await supabase.from('quests').select('id, category');
 
@@ -77,7 +77,7 @@ export async function fetchActivityChart(userId: string) {
     .select('completed_at, aura_earned')
     .eq('user_id', userId)
     .eq('status', 'active')
-    .eq('quest_source_type', 'official')
+    .in('quest_source_type', ['official', 'spontaneous'])
     .gte('completed_at', since.toISOString());
   if (error) throw error;
   const list = rows ?? [];

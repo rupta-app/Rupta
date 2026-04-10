@@ -143,7 +143,7 @@ export default function GroupsTabScreen() {
               scrollEnabled={false}
               data={groups}
               keyExtractor={(item: { id: string }) => item.id}
-              ListEmptyComponent={<Text className="text-muted text-center mt-4">{t('feed.empty')}</Text>}
+              ListEmptyComponent={<Text className="text-muted text-center mt-4">{t('groups.emptyMyGroups')}</Text>}
               renderItem={({
                 item,
               }: {

@@ -1,16 +1,18 @@
 import { useRouter } from 'expo-router';
-import { MessageCircle, Share2, ThumbsUp } from 'lucide-react-native';
+import { MessageCircle, Share2, ThumbsUp, Trash2 } from 'lucide-react-native';
 import { Alert, Image, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { useCompletionSocial, useToggleRespect } from '@/hooks/useCompletion';
+import { useCompletionSocial, useDeleteCompletion, useToggleRespect } from '@/hooks/useCompletion';
 import { shareCompletionGeneric, shareToWhatsApp, buildCompletionShareMessage } from '@/lib/shareLinks';
+import { useAuth } from '@/providers/AuthProvider';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
 import { formatCompletionTime } from '@/utils/formatTime';
 import { questTitle } from '@/utils/questCopy';
+import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 
 export type FeedPost = {
   id: string;
@@ -39,9 +41,14 @@ function FeedPostActions({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
+  const { refreshProfile } = useAuth();
   const { data: social } = useCompletionSocial(post.id, viewerId);
   const toggleR = useToggleRespect(post.id, viewerId);
+  const deleteMut = useDeleteCompletion(post.id, post.user_id);
   const gave = social?.gaveRespect ?? false;
+  const isOwn =
+    Boolean(viewerId && post.user_id) &&
+    String(viewerId).toLowerCase() === String(post.user_id).toLowerCase();
   const counts = social?.counts ?? { respects: post.respectCount ?? 0, comments: post.commentCount ?? 0 };
 
   const title = post.group_quests?.title
@@ -82,6 +89,31 @@ function FeedPostActions({
           <Pressable onPress={openShare} hitSlop={10}>
             <Share2 color="#CBD5E1" size={22} strokeWidth={2} />
           </Pressable>
+          {isOwn ? (
+            <Pressable
+              onPress={() =>
+                Alert.alert(t('completion.deleteTitle'), t('completion.deleteMessage'), [
+                  { text: t('common.cancel'), style: 'cancel' },
+                  {
+                    text: t('completion.deleteConfirm'),
+                    style: 'destructive',
+                    onPress: () =>
+                      deleteMut.mutate(undefined, {
+                        onSuccess: async () => {
+                          await refreshProfile();
+                        },
+                        onError: (e) =>
+                          Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e)),
+                      }),
+                  },
+                ])
+              }
+              disabled={deleteMut.isPending}
+              hitSlop={10}
+            >
+              <Trash2 color="#F87171" size={22} strokeWidth={2} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
       <View className="flex-row gap-4 px-4 pb-3">
@@ -126,8 +158,14 @@ export function FeedPostCard({
           <View className="items-end gap-1">
             {post.quest_source_type === 'group' ? (
               <Badge tone="secondary">{post.groups?.name ?? t('feed.groupQuest')}</Badge>
+            ) : post.quest_source_type === 'spontaneous' ? (
+              <Badge tone="secondary">{t('feed.spontaneousQuest')}</Badge>
             ) : null}
-            <Badge tone="primary">+{post.aura_earned} AURA</Badge>
+            {isSpontaneousAuraPending(post.quest_source_type, post.aura_earned) ? (
+              <Badge tone="secondary">{t('feed.auraPendingReview')}</Badge>
+            ) : (
+              <Badge tone="primary">+{post.aura_earned} AURA</Badge>
+            )}
           </View>
         </View>
         {media ? (

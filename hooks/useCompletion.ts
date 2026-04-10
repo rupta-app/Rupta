@@ -4,6 +4,8 @@ import {
   addComment,
   createCompletion,
   createGroupQuestCompletion,
+  createSpontaneousCompletion,
+  deleteCompletion,
   fetchComments,
   fetchCompletionById,
   fetchCompletionCounts,
@@ -11,10 +13,10 @@ import {
   userGaveRespect,
 } from '@/services/completions';
 
-export function useCompletion(id: string) {
+export function useCompletion(id: string | undefined) {
   return useQuery({
-    queryKey: ['completion', id],
-    queryFn: () => fetchCompletionById(id),
+    queryKey: ['completion', id ?? ''],
+    queryFn: () => fetchCompletionById(id!),
     enabled: Boolean(id),
   });
 }
@@ -85,6 +87,22 @@ export function useCreateCompletion(userId: string | undefined) {
   });
 }
 
+export function useCreateSpontaneousCompletion(userId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createSpontaneousCompletion,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['feed'] });
+      void qc.invalidateQueries({ queryKey: ['group-feed'] });
+      void qc.invalidateQueries({ queryKey: ['profile-stats', userId] });
+      void qc.invalidateQueries({ queryKey: ['profile-recent', userId] });
+      void qc.invalidateQueries({ queryKey: ['profile-activity', userId] });
+      void qc.invalidateQueries({ queryKey: ['quest-official-count'] });
+      void qc.invalidateQueries({ queryKey: ['life-completion-counts'] });
+    },
+  });
+}
+
 export function useCreateGroupQuestCompletion(userId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
@@ -96,6 +114,32 @@ export function useCreateGroupQuestCompletion(userId: string | undefined) {
       void qc.invalidateQueries({ queryKey: ['challenge-lb'] });
       void qc.invalidateQueries({ queryKey: ['group-quests'] });
       void qc.invalidateQueries({ queryKey: ['profile-recent', userId] });
+    },
+  });
+}
+
+export function useDeleteCompletion(completionId: string, ownerUserId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteCompletion(completionId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['completion', completionId] });
+      void qc.invalidateQueries({ queryKey: ['comments', completionId] });
+      void qc.invalidateQueries({ queryKey: ['feed'] });
+      void qc.invalidateQueries({ queryKey: ['group-feed'] });
+      void qc.invalidateQueries({ queryKey: ['group-lb'] });
+      void qc.invalidateQueries({ queryKey: ['challenge-lb'] });
+      void qc.invalidateQueries({ queryKey: ['group-quests'] });
+      void qc.invalidateQueries({ queryKey: ['lb-global'] });
+      void qc.invalidateQueries({ queryKey: ['lb-friends'] });
+      void qc.invalidateQueries({ queryKey: ['quest-official-count'] });
+      void qc.invalidateQueries({ queryKey: ['life-completion-counts'] });
+      if (ownerUserId) {
+        void qc.invalidateQueries({ queryKey: ['profile', ownerUserId] });
+        void qc.invalidateQueries({ queryKey: ['profile-stats', ownerUserId] });
+        void qc.invalidateQueries({ queryKey: ['profile-recent', ownerUserId] });
+        void qc.invalidateQueries({ queryKey: ['profile-activity', ownerUserId] });
+      }
     },
   });
 }

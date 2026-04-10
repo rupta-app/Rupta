@@ -42,7 +42,9 @@ export async function fetchHomeFeed(
   if (filter === 'official') {
     q = q.eq('quest_source_type', 'official');
   } else if (filter === 'unofficial') {
-    q = q.eq('quest_source_type', 'group').in('visibility', ['public', 'friends']);
+    q = q.or(
+      'and(quest_source_type.eq.group,visibility.in.(public,friends)),and(quest_source_type.eq.spontaneous,visibility.in.(public,friends))',
+    );
   }
 
   const { data: completions, error } = await q;

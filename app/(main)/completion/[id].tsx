@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import { ChevronLeft, Flag } from 'lucide-react-native';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +18,7 @@ import {
   useComments,
   useCompletion,
   useCompletionSocial,
+  useDeleteCompletion,
   useToggleRespect,
 } from '@/hooks/useCompletion';
 import type { Database } from '@/types/database';
@@ -25,6 +26,7 @@ import { buildCompletionShareMessage, shareCompletionGeneric, shareToWhatsApp } 
 import { useAuth } from '@/providers/AuthProvider';
 import { submitReport } from '@/services/reports';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
+import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 import { formatCompletionTime } from '@/utils/formatTime';
 import { questTitle } from '@/utils/questCopy';
 
@@ -36,23 +38,41 @@ const REASONS: Database['public']['Tables']['reports']['Row']['reason'][] = [
   'spam',
 ];
 
+/** Expo Router may pass dynamic segments as `string | string[]` (e.g. web). */
+function normalizeRouteParam(value: string | string[] | undefined): string | undefined {
+  if (value == null) return undefined;
+  const v = Array.isArray(value) ? value[0] : value;
+  return typeof v === 'string' && v.trim().length > 0 ? v.trim() : undefined;
+}
+
 export default function CompletionDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const completionId = useMemo(() => normalizeRouteParam(params.id), [params.id]);
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const lang = i18n.language.startsWith('es') ? 'es' : 'en';
-  const { session } = useAuth();
-  const uid = session?.user?.id;
-  const { data, isLoading } = useCompletion(id);
-  const { data: social } = useCompletionSocial(id, uid);
-  const { data: comments = [] } = useComments(id);
-  const toggleR = useToggleRespect(id, uid);
-  const addC = useAddComment(id, uid);
+  const { session, refreshProfile, profile } = useAuth();
+  const viewerId = session?.user?.id ?? profile?.id;
+  const uid = viewerId;
+  const { data, isLoading } = useCompletion(completionId);
+  const { data: social } = useCompletionSocial(completionId ?? '', uid);
+  const { data: comments = [] } = useComments(completionId ?? '');
+  const toggleR = useToggleRespect(completionId ?? '', uid);
+  const addC = useAddComment(completionId ?? '', uid);
+  const deletePost = useDeleteCompletion(completionId ?? '', data?.user_id);
   const [comment, setComment] = useState('');
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] =
     useState<Database['public']['Tables']['reports']['Row']['reason']>('spam');
+
+  if (!completionId) {
+    return (
+      <View className="flex-1 bg-background justify-center items-center" style={{ paddingTop: insets.top }}>
+        <Text className="text-muted px-6 text-center">{t('common.error')}</Text>
+      </View>
+    );
+  }
 
   if (isLoading || !data?.profiles || (!data.quests && !data.group_quests)) {
     return (
@@ -72,12 +92,17 @@ export default function CompletionDetailScreen() {
       : 'SideQuest';
   const shareMsg = buildCompletionShareMessage(qTitle, data.profiles.username);
 
+  const isOwner =
+    viewerId != null &&
+    data.user_id != null &&
+    String(viewerId).toLowerCase() === String(data.user_id).toLowerCase();
+
   const openShare = () => {
     Alert.alert(t('completion.share'), undefined, [
       { text: t('feed.whatsapp'), onPress: () => void shareToWhatsApp(shareMsg) },
       {
         text: t('feed.instagramStory'),
-        onPress: () => router.push(`/(main)/share-card/${id}`),
+        onPress: () => router.push(`/(main)/share-card/${completionId}`),
       },
       { text: t('feed.shareMore'), onPress: () => void shareCompletionGeneric(null, shareMsg) },
       { text: t('common.cancel'), style: 'cancel' },
@@ -96,10 +121,38 @@ export default function CompletionDetailScreen() {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
+      <View className="flex-row items-center border-b border-border">
         <Pressable onPress={() => router.back()} className="p-2">
           <ChevronLeft color="#F8FAFC" size={28} />
         </Pressable>
+        <View className="flex-1" />
+        {isOwner ? (
+          <Pressable
+            onPress={() =>
+              Alert.alert(t('completion.deleteTitle'), t('completion.deleteMessage'), [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                  text: t('completion.deleteConfirm'),
+                  style: 'destructive',
+                  onPress: () =>
+                    deletePost.mutate(undefined, {
+                      onSuccess: async () => {
+                        await refreshProfile();
+                        router.back();
+                      },
+                      onError: (e) =>
+                        Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e)),
+                    }),
+                },
+              ])
+            }
+            disabled={deletePost.isPending}
+            className="py-2 pr-4 pl-2"
+            hitSlop={12}
+          >
+            <Text className="text-danger font-semibold text-base">{t('completion.deletePost')}</Text>
+          </Pressable>
+        ) : null}
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 48, flexGrow: 1 }}>
         {media ? <Image source={{ uri: media }} className="w-full h-72 bg-surfaceElevated" /> : null}
@@ -113,7 +166,11 @@ export default function CompletionDetailScreen() {
               <Text className="text-foreground font-bold text-lg">{data.profiles.display_name}</Text>
               <Text className="text-muted text-xs">@{data.profiles.username}</Text>
             </View>
-            <Badge tone="primary">{`+${data.aura_earned}`}</Badge>
+            {isSpontaneousAuraPending(data.quest_source_type, data.aura_earned) ? (
+              <Badge tone="secondary">{t('feed.auraPendingReview')}</Badge>
+            ) : (
+              <Badge tone="primary">{`+${data.aura_earned} AURA`}</Badge>
+            )}
           </View>
           <Text className="text-foreground text-2xl font-black mt-4">{qTitle}</Text>
           <Text className="text-muted text-xs uppercase mt-2 tracking-wide">
@@ -221,7 +278,7 @@ export default function CompletionDetailScreen() {
             if (!uid) return;
             await submitReport({
               reporterId: uid,
-              completionId: id,
+              completionId: completionId,
               reportedUserId: data.user_id,
               reason: reportReason,
             });

@@ -4,7 +4,8 @@ export type ProfileStatus = 'normal' | 'warned' | 'flagged_cheater';
 export type CompletionStatus = 'active' | 'under_review' | 'removed';
 export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
 export type GroupRole = 'owner' | 'admin' | 'member';
-export type QuestSourceType = 'official' | 'group';
+export type QuestSourceType = 'official' | 'group' | 'spontaneous';
+export type SpontaneousReviewStatus = 'pending_catalog' | 'promoted' | 'rejected';
 export type AuraScope = 'official' | 'group';
 export type AchievementVisibility = 'public' | 'friends' | 'group' | 'private';
 export type GroupQuestStatus =
@@ -81,10 +82,31 @@ export interface Database {
           cost_range: string;
           location_type: string;
           is_active: boolean;
+          is_spontaneous: boolean;
+          created_by: string | null;
+          spontaneous_review_status: SpontaneousReviewStatus | null;
           created_at: string;
         };
-        Insert: never;
-        Update: never;
+        Insert: {
+          title_en: string;
+          title_es: string;
+          description_en: string;
+          description_es: string;
+          category: string;
+          aura_reward: number;
+          difficulty: string;
+          repeatability_type: string;
+          max_completions_per_user?: number | null;
+          repeat_interval?: string | null;
+          proof_type?: string;
+          cost_range?: string;
+          location_type?: string;
+          is_active?: boolean;
+          is_spontaneous?: boolean;
+          created_by?: string | null;
+          spontaneous_review_status?: SpontaneousReviewStatus | null;
+        };
+        Update: Partial<Omit<Database['public']['Tables']['quests']['Row'], 'id' | 'created_at'>>;
       };
       quest_completions: {
         Row: {
