@@ -11,6 +11,7 @@ import { shareCompletionGeneric, shareToWhatsApp, buildCompletionShareMessage } 
 import { useAuth } from '@/providers/AuthProvider';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
 import { formatCompletionTime } from '@/utils/formatTime';
+import { isSameUser } from '@/utils/identity';
 import { questTitle } from '@/utils/questCopy';
 import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 
@@ -46,9 +47,7 @@ function FeedPostActions({
   const toggleR = useToggleRespect(post.id, viewerId);
   const deleteMut = useDeleteCompletion(post.id, post.user_id);
   const gave = social?.gaveRespect ?? false;
-  const isOwn =
-    Boolean(viewerId && post.user_id) &&
-    String(viewerId).toLowerCase() === String(post.user_id).toLowerCase();
+  const isOwn = isSameUser(viewerId, post.user_id);
   const counts = social?.counts ?? { respects: post.respectCount ?? 0, comments: post.commentCount ?? 0 };
 
   const title = post.group_quests?.title

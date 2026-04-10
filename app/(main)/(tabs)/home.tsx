@@ -12,6 +12,7 @@ import { fetchCompletionCounts } from '@/services/completions';
 import { useAuth } from '@/providers/AuthProvider';
 import type { HomeFeedFilter } from '@/services/feed';
 import { useFriendIds, useHomeFeed, useSuggestedQuest } from '@/hooks/useFeed';
+import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
 import { useQuery } from '@tanstack/react-query';
 
@@ -25,7 +26,7 @@ export default function HomeScreen() {
       void refreshProfile();
     }, [refreshProfile]),
   );
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const [feedFilter, setFeedFilter] = useState<HomeFeedFilter>('all');
   const { data: friendIds = [] } = useFriendIds(session?.user?.id);
   const { data: feed = [], isLoading, refetch, isRefetching } = useHomeFeed(

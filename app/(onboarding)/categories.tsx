@@ -6,13 +6,14 @@ import { OnboardingStepShell } from '@/components/onboarding/OnboardingStepShell
 import { Button } from '@/components/ui/Button';
 import { QUEST_CATEGORIES, type QuestCategory } from '@/constants/categories';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
+import { appLang } from '@/utils/lang';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 
 const TOTAL = 6;
 
 export default function CategoriesOnboarding() {
   const { t, i18n } = useTranslation();
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const router = useRouter();
   const { draft, setDraft } = useOnboardingStore();
 

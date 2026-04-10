@@ -10,6 +10,7 @@ import { CompletedStoryCard } from '@/components/share/CompletedStoryCard';
 import { Button } from '@/components/ui/Button';
 import { useCompletion } from '@/hooks/useCompletion';
 import { openShareSheet, shareImageToInstagramStories } from '@/lib/share';
+import { appLang } from '@/utils/lang';
 
 function normalizeRouteParam(value: string | string[] | undefined): string | undefined {
   if (value == null) return undefined;
@@ -23,7 +24,7 @@ export default function ShareCardScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const { data, isLoading } = useCompletion(completionId);
   const ref = useRef<ViewShot>(null);
   const [busy, setBusy] = useState(false);

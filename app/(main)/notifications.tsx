@@ -1,9 +1,8 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '@/hooks/useNotifications';
@@ -22,7 +21,6 @@ type NotificationRow = {
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id;
@@ -107,16 +105,15 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center justify-between px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2 flex-row items-center gap-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-          <Text className="text-foreground font-bold text-lg">{t('notifications.title')}</Text>
-        </Pressable>
-        <Button variant="ghost" className="min-h-0 py-1" onPress={() => markAll.mutate()}>
-          Read all
-        </Button>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader
+        title={t('notifications.title')}
+        right={
+          <Button variant="ghost" className="min-h-0 py-1" onPress={() => markAll.mutate()}>
+            Read all
+          </Button>
+        }
+      />
       <FlatList
         data={items}
         keyExtractor={(item: NotificationRow) => item.id}

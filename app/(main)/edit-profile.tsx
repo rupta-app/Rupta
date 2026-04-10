@@ -1,11 +1,10 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -16,7 +15,6 @@ import { useAuth } from '@/providers/AuthProvider';
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { session, profile, refreshProfile } = useAuth();
   const uid = session?.user?.id!;
@@ -50,13 +48,8 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <Text className="text-foreground font-bold text-lg ml-1">{t('profile.edit')}</Text>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader title={t('profile.edit')} />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <View className="items-center mb-6">
           <Pressable onPress={pickAvatar}>

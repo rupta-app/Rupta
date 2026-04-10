@@ -12,13 +12,14 @@ import { QUEST_CATEGORIES } from '@/constants/categories';
 import { useAuth } from '@/providers/AuthProvider';
 import { useQuests, useSavedQuestIds, useToggleSave } from '@/hooks/useQuests';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
+import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
 
 export default function ExploreScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const go = (path: string) => (router as { push: (p: string) => void }).push(path);
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const [category, setCategory] = useState<string | undefined>();
   const [search, setSearch] = useState('');
   const { data: quests = [], isLoading, refetch, isRefetching } = useQuests({ category, search });

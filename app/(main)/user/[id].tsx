@@ -1,10 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react-native';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -14,15 +13,15 @@ import { blockUser } from '@/services/reports';
 import { fetchFriendRequestRelation } from '@/services/friends';
 import { fetchProfile, fetchProfileStats, fetchRecentCompletions } from '@/services/profile';
 import { useAuth } from '@/providers/AuthProvider';
-import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
+import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
+import { formatAuraDisplay, isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const { session } = useAuth();
   const uid = session?.user?.id;
   const sendReq = useSendFriendRequest();
@@ -65,12 +64,8 @@ export default function PublicProfileScreen() {
   const isFriend = friends.some((f: { id: string }) => f.id === id);
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader title={profile.display_name} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
         <View className="flex-row items-center gap-4">
           <Avatar url={profile.avatar_url} name={profile.display_name} size={72} />
@@ -173,9 +168,7 @@ export default function PublicProfileScreen() {
                     : 'text-primary text-sm'
                 }
               >
-                {isSpontaneousAuraPending(row.quest_source_type, row.aura_earned)
-                  ? t('feed.auraPendingReview')
-                  : `+${row.aura_earned} AURA`}
+                {formatAuraDisplay(row.quest_source_type, row.aura_earned, t('feed.auraPendingReview'))}
               </Text>
             </Card>
           ),

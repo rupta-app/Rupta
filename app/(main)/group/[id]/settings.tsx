@@ -1,10 +1,10 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -17,7 +17,6 @@ import { useAuth } from '@/providers/AuthProvider';
 export default function GroupSettingsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id!;
@@ -53,7 +52,7 @@ export default function GroupSettingsScreen() {
 
   if (isLoading || !data) {
     return (
-      <View className="flex-1 bg-background justify-center items-center" style={{ paddingTop: insets.top }}>
+      <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
       </View>
     );
@@ -63,26 +62,16 @@ export default function GroupSettingsScreen() {
 
   if (!canAdmin) {
     return (
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-        <View className="flex-row items-center px-2 py-2 border-b border-border">
-          <Pressable onPress={() => router.back()} className="p-2">
-            <ChevronLeft color="#F8FAFC" size={28} />
-          </Pressable>
-          <Text className="text-foreground font-bold text-lg ml-1">{t('groups.settings')}</Text>
-        </View>
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('groups.settings')} />
         <Text className="text-muted text-center mt-10 px-6">{t('groups.settingsMembersOnly')}</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <Text className="text-foreground font-bold text-lg ml-1">{t('groups.settings')}</Text>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader title={t('groups.settings')} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <Text className="text-muted text-sm mb-3">{group.name}</Text>

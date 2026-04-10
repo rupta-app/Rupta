@@ -1,10 +1,9 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -16,7 +15,6 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function SearchUsersScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id!;
@@ -30,13 +28,8 @@ export default function SearchUsersScreen() {
   });
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <Text className="text-foreground font-bold text-lg ml-1">{t('friends.searchUsers')}</Text>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader title={t('friends.searchUsers')} />
       <View className="p-4">
         <Input value={q} onChangeText={setQ} placeholder={t('common.search')} />
         <Button variant="secondary" className="mt-2" onPress={() => refetch()}>

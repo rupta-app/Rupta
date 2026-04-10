@@ -16,13 +16,14 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useLifeList, useLifeListCompletionCounts, useToggleSave } from '@/hooks/useQuests';
 import { fetchActivityChart, fetchProfileStats, fetchRecentCompletions } from '@/services/profile';
 import type { QuestRow } from '@/services/quests';
-import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
+import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
+import { formatAuraDisplay, isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 
 export default function ProfileTab() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const { profile, session, refreshProfile } = useAuth();
   const uid = session?.user?.id;
   const [tab, setTab] = useState<'stats' | 'life'>('stats');
@@ -194,9 +195,7 @@ export default function ProfileTab() {
                           : 'text-primary text-sm'
                       }
                     >
-                      {isSpontaneousAuraPending(row.quest_source_type, row.aura_earned)
-                        ? t('feed.auraPendingReview')
-                        : `+${row.aura_earned} AURA`}
+                      {formatAuraDisplay(row.quest_source_type, row.aura_earned, t('feed.auraPendingReview'))}
                     </Text>
                   </Card>
                 </Pressable>
