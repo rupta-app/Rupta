@@ -1,6 +1,7 @@
 import type { ChallengeScoringMode, ChallengeStatus } from '@/types/database';
 
 import { supabase } from '@/lib/supabase';
+import { enrichWithProfiles, PROFILE_COLS_BASIC } from '@/services/_profiles';
 
 export type CreateChallengeInput = {
   title: string;
@@ -57,13 +58,7 @@ export async function fetchChallengeLeaderboard(challengeId: string, limit = 50)
   if (error) throw error;
   const list = scores ?? [];
   if (list.length === 0) return [];
-  const uids = [...new Set(list.map((s) => s.user_id))];
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, username, display_name, avatar_url')
-    .in('id', uids);
-  const pmap = new Map((profiles ?? []).map((p) => [p.id, p]));
-  return list.map((s) => ({ ...s, profiles: pmap.get(s.user_id) }));
+  return enrichWithProfiles(list, 'user_id', PROFILE_COLS_BASIC);
 }
 
 export async function countActiveChallengesInGroup(groupId: string): Promise<number> {

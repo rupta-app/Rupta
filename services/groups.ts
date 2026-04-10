@@ -1,6 +1,8 @@
 import type { QuestCreationRule } from '@/types/database';
 
 import { supabase } from '@/lib/supabase';
+import { paginateQuery } from '@/services/_pagination';
+import { aggregateByUser, enrichWithProfiles, fetchProfilesByIds, PROFILE_COLS_AURA, PROFILE_COLS_FULL } from '@/services/_profiles';
 import type { LeaderboardPeriod } from '@/services/leaderboard';
 import { periodSinceIso } from '@/services/leaderboard';
 
@@ -48,16 +50,8 @@ export async function fetchGroupDetail(groupId: string) {
     .select('*')
     .eq('group_id', groupId);
   if (mErr) throw mErr;
-  const uids = (members ?? []).map((m) => m.user_id);
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, username, display_name, avatar_url, total_aura')
-    .in('id', uids);
-  const pmap = new Map((profiles ?? []).map((p) => [p.id, p]));
-  return {
-    group,
-    members: (members ?? []).map((m) => ({ ...m, profiles: pmap.get(m.user_id) })),
-  };
+  const enriched = await enrichWithProfiles(members ?? [], 'user_id', PROFILE_COLS_AURA);
+  return { group, members: enriched };
 }
 
 export async function inviteToGroup(groupId: string, inviterId: string, inviteeId: string) {
@@ -91,7 +85,7 @@ export async function fetchPendingGroupInvites(userId: string) {
   const inviterIds = [...new Set(list.map((i) => i.inviter_id))];
   const [{ data: groups }, { data: inviters }] = await Promise.all([
     supabase.from('groups').select('*').in('id', gids),
-    supabase.from('profiles').select('id, username, display_name').in('id', inviterIds),
+    supabase.from('profiles').select('id, username, display_name, avatar_url').in('id', inviterIds),
   ]);
   const gmap = new Map((groups ?? []).map((g) => [g.id, g]));
   const imap = new Map((inviters ?? []).map((p) => [p.id, p]));
@@ -114,25 +108,16 @@ type GroupLeaderboardRow = {
 };
 
 async function fetchGroupCompletionAggRows(groupId: string, sinceIso: string) {
-  const pageSize = 1000;
-  let offset = 0;
-  const all: { user_id: string; aura_earned: number }[] = [];
-  for (;;) {
-    const { data, error } = await supabase
-      .from('quest_completions')
-      .select('user_id, aura_earned')
-      .eq('group_id', groupId)
-      .eq('status', 'active')
-      .gte('completed_at', sinceIso)
-      .range(offset, offset + pageSize - 1);
-    if (error) throw error;
-    const chunk = data ?? [];
-    if (chunk.length === 0) break;
-    all.push(...chunk);
-    if (chunk.length < pageSize) break;
-    offset += pageSize;
-  }
-  return all;
+  return paginateQuery<{ user_id: string; aura_earned: number }>(
+    (from, to) =>
+      supabase
+        .from('quest_completions')
+        .select('user_id, aura_earned')
+        .eq('group_id', groupId)
+        .eq('status', 'active')
+        .gte('completed_at', sinceIso)
+        .range(from, to),
+  );
 }
 
 /** Group ranks: all-time uses group_member_scores; shorter windows sum completions in the group. */
@@ -149,63 +134,40 @@ export async function groupLeaderboard(groupId: string, period: LeaderboardPerio
       const { data: mems } = await supabase.from('group_members').select('user_id').eq('group_id', groupId);
       const ids = (mems ?? []).map((m) => m.user_id);
       if (ids.length === 0) return [];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username, display_name, avatar_url, total_aura, yearly_aura')
-        .in('id', ids);
-      return (profiles ?? []).map(
+      const profiles = await fetchProfilesByIds(ids, PROFILE_COLS_FULL);
+      return profiles.map(
         (p): GroupLeaderboardRow => ({
-          ...p,
+          ...(p as GroupLeaderboardRow),
           total_group_aura: 0,
           period_aura: 0,
         }),
       );
     }
-    const uids = list.map((s) => s.user_id);
-    const { data: profiles, error: pErr } = await supabase
-      .from('profiles')
-      .select('id, username, display_name, avatar_url, total_aura, yearly_aura')
-      .in('id', uids);
-    if (pErr) throw pErr;
-    const pmap = new Map((profiles ?? []).map((p) => [p.id, p]));
-    return list
-      .map((s) => {
-        const p = pmap.get(s.user_id);
-        if (!p) return null;
-        const row: GroupLeaderboardRow = {
-          ...p,
-          total_group_aura: s.total_group_aura,
-          period_aura: s.total_group_aura,
-        };
-        return row;
-      })
-      .filter((row): row is GroupLeaderboardRow => row !== null);
+    const enriched = await enrichWithProfiles(list, 'user_id', PROFILE_COLS_FULL);
+    return enriched
+      .filter((s) => s.profiles != null)
+      .map((s): GroupLeaderboardRow => ({
+        ...(s.profiles as GroupLeaderboardRow),
+        total_group_aura: s.total_group_aura,
+        period_aura: s.total_group_aura,
+      }));
   }
 
   const since = periodSinceIso(period);
   const rows = await fetchGroupCompletionAggRows(groupId, since);
-  const sum = new Map<string, number>();
-  for (const r of rows) {
-    sum.set(r.user_id, (sum.get(r.user_id) ?? 0) + r.aura_earned);
-  }
-  const ordered = [...sum.entries()]
-    .map(([userId, score]) => ({ userId, score }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 50);
+  const ordered = aggregateByUser(rows, 50);
   if (ordered.length === 0) return [];
-  const ids = ordered.map((o) => o.userId);
-  const { data: profiles, error } = await supabase
-    .from('profiles')
-    .select('id, username, display_name, avatar_url, total_aura, yearly_aura')
-    .in('id', ids);
-  if (error) throw error;
-  const pmap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const profiles = await fetchProfilesByIds(
+    ordered.map((o) => o.userId),
+    PROFILE_COLS_FULL,
+  );
+  const pmap = new Map(profiles.map((p) => [p.id, p]));
   return ordered
     .map(({ userId, score }) => {
       const p = pmap.get(userId);
       if (!p) return null;
       const row: GroupLeaderboardRow = {
-        ...p,
+        ...(p as GroupLeaderboardRow),
         total_group_aura: score,
         period_aura: score,
       };

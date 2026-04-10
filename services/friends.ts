@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { PROFILE_COLS_AURA, PROFILE_COLS_BASIC } from '@/services/_profiles';
 
 export async function sendFriendRequest(senderId: string, receiverId: string) {
   const { error } = await supabase.from('friend_requests').insert({
@@ -80,7 +81,7 @@ export async function fetchIncomingRequests(userId: string) {
   const senderIds = list.map((r) => r.sender_id);
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url')
+    .select(PROFILE_COLS_BASIC)
     .in('id', senderIds);
   const pmap = new Map((profiles ?? []).map((p) => [p.id, p]));
   return list.map((r) => ({ ...r, sender: pmap.get(r.sender_id) }));
@@ -99,7 +100,7 @@ export async function fetchFriends(userId: string) {
   if (friendIds.length === 0) return [];
   const { data: profiles, error: pErr } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url, total_aura')
+    .select(PROFILE_COLS_AURA)
     .in('id', friendIds);
   if (pErr) throw pErr;
   return profiles ?? [];

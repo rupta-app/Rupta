@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase';
+import { paginateQuery } from '@/services/_pagination';
+import { aggregateByUser, fetchProfilesByIds, PROFILE_COLS_FULL } from '@/services/_profiles';
 
 import { fetchFriendIds } from '@/services/feed';
 
@@ -37,10 +39,7 @@ async function fetchOfficialAuraRowsSince(
   sinceIso: string,
   userIds: string[] | undefined,
 ): Promise<CompletionAggRow[]> {
-  const pageSize = 1000;
-  let offset = 0;
-  const all: CompletionAggRow[] = [];
-  for (;;) {
+  return paginateQuery<CompletionAggRow>((from, to) => {
     let q = supabase
       .from('quest_completions')
       .select('user_id, aura_earned')
@@ -50,29 +49,8 @@ async function fetchOfficialAuraRowsSince(
     if (userIds && userIds.length > 0) {
       q = q.in('user_id', userIds);
     }
-    const { data, error } = await q.range(offset, offset + pageSize - 1);
-    if (error) throw error;
-    const chunk = (data ?? []) as CompletionAggRow[];
-    if (chunk.length === 0) break;
-    all.push(...chunk);
-    if (chunk.length < pageSize) break;
-    offset += pageSize;
-  }
-  return all;
-}
-
-function aggregateByUser(
-  rows: { user_id: string; aura_earned: number }[],
-  limit: number,
-): { userId: string; score: number }[] {
-  const sum = new Map<string, number>();
-  for (const r of rows) {
-    sum.set(r.user_id, (sum.get(r.user_id) ?? 0) + r.aura_earned);
-  }
-  return [...sum.entries()]
-    .map(([userId, score]) => ({ userId, score }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+    return q.range(from, to);
+  });
 }
 
 async function profilesForLeaderboard(
@@ -80,25 +58,16 @@ async function profilesForLeaderboard(
 ): Promise<LeaderboardRow[]> {
   if (ordered.length === 0) return [];
   const ids = ordered.map((o) => o.userId);
-  const { data: profiles, error } = await supabase
-    .from('profiles')
-    .select('id, username, display_name, avatar_url, total_aura, yearly_aura')
-    .in('id', ids);
-  if (error) throw error;
-  const pmap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const profiles = await fetchProfilesByIds(ids, PROFILE_COLS_FULL);
+  const pmap = new Map(profiles.map((p) => [p.id, p]));
   return ordered
     .map(({ userId, score }) => {
       const p = pmap.get(userId);
       if (!p) return null;
       return {
-        id: p.id,
-        username: p.username,
-        display_name: p.display_name,
-        avatar_url: p.avatar_url,
-        total_aura: p.total_aura,
-        yearly_aura: p.yearly_aura,
+        ...p,
         period_aura: score,
-      };
+      } as LeaderboardRow;
     })
     .filter((r): r is LeaderboardRow => r !== null);
 }
@@ -108,19 +77,14 @@ export async function officialAuraLeaderboard(period: LeaderboardPeriod, limit =
   if (period === 'all') {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, display_name, avatar_url, total_aura, yearly_aura')
+      .select(PROFILE_COLS_FULL)
       .order('total_aura', { ascending: false })
       .limit(limit);
     if (error) throw error;
     return (data ?? []).map((p) => ({
-      id: p.id,
-      username: p.username,
-      display_name: p.display_name,
-      avatar_url: p.avatar_url,
-      total_aura: p.total_aura,
-      yearly_aura: p.yearly_aura,
+      ...p,
       period_aura: p.total_aura,
-    }));
+    })) as LeaderboardRow[];
   }
 
   const since = periodSinceIso(period);
@@ -140,19 +104,14 @@ export async function friendsLeaderboard(userId: string, period: LeaderboardPeri
   if (period === 'all') {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, display_name, avatar_url, total_aura, yearly_aura')
+      .select(PROFILE_COLS_FULL)
       .in('id', ids)
       .order('total_aura', { ascending: false });
     if (error) throw error;
     return (data ?? []).map((p) => ({
-      id: p.id,
-      username: p.username,
-      display_name: p.display_name,
-      avatar_url: p.avatar_url,
-      total_aura: p.total_aura,
-      yearly_aura: p.yearly_aura,
+      ...p,
       period_aura: p.total_aura,
-    }));
+    })) as LeaderboardRow[];
   }
   return officialAuraLeaderboard(period, limit, ids);
 }
