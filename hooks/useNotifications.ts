@@ -1,31 +1,32 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { fetchNotifications, markAllRead, markNotificationRead } from '@/services/notifications';
+import { qk } from '@/hooks/queryKeys';
 
 export function useNotifications(userId: string | undefined) {
   return useQuery({
-    queryKey: ['notifications', userId],
+    queryKey: qk.notifications.all(userId ?? ''),
     queryFn: () => fetchNotifications(userId!),
     enabled: Boolean(userId),
   });
 }
 
 export function useMarkNotificationRead() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: markNotificationRead,
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['notifications'] });
+      void queryClient.invalidateQueries({ queryKey: qk.notifications.prefix });
     },
   });
 }
 
 export function useMarkAllNotificationsRead(userId: string | undefined) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => markAllRead(userId!),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['notifications', userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.notifications.all(userId!) });
     },
   });
 }

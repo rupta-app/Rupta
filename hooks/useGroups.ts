@@ -15,10 +15,11 @@ import {
   updateGroup,
   updateGroupSettings,
 } from '@/services/groups';
+import { qk } from '@/hooks/queryKeys';
 
 export function useMyGroups(userId: string | undefined) {
   return useQuery({
-    queryKey: ['groups', userId],
+    queryKey: qk.groups.mine(userId ?? ''),
     queryFn: () => fetchMyGroups(userId!),
     enabled: Boolean(userId),
   });
@@ -26,7 +27,7 @@ export function useMyGroups(userId: string | undefined) {
 
 export function useGroupDetail(groupId: string | undefined) {
   return useQuery({
-    queryKey: ['group', groupId],
+    queryKey: qk.groups.detail(groupId ?? ''),
     queryFn: () => fetchGroupDetail(groupId!),
     enabled: Boolean(groupId),
   });
@@ -34,7 +35,7 @@ export function useGroupDetail(groupId: string | undefined) {
 
 export function useGroupLeaderboard(groupId: string | undefined, period: LeaderboardPeriod = 'all') {
   return useQuery({
-    queryKey: ['group-lb', groupId, period],
+    queryKey: qk.groups.lb(groupId ?? '', period),
     queryFn: () => groupLeaderboard(groupId!, period),
     enabled: Boolean(groupId),
   });
@@ -42,26 +43,26 @@ export function useGroupLeaderboard(groupId: string | undefined, period: Leaderb
 
 export function usePendingGroupInvites(userId: string | undefined) {
   return useQuery({
-    queryKey: ['group-invites', userId],
+    queryKey: qk.groups.invites(userId ?? ''),
     queryFn: () => fetchPendingGroupInvites(userId!),
     enabled: Boolean(userId),
   });
 }
 
 export function useCreateGroup() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ ownerId, name, description }: { ownerId: string; name: string; description?: string }) =>
       createGroup(ownerId, name, description),
     onSuccess: (_data, vars) => {
-      void qc.invalidateQueries({ queryKey: ['groups'] });
-      void qc.invalidateQueries({ queryKey: ['groups-owned', vars.ownerId] });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.all });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.owned(vars.ownerId) });
     },
   });
 }
 
 export function useInviteToGroup() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       groupId,
@@ -73,77 +74,77 @@ export function useInviteToGroup() {
       inviteeId: string;
     }) => inviteToGroup(groupId, inviterId, inviteeId),
     onSuccess: (_d, vars) => {
-      void qc.invalidateQueries({ queryKey: ['group-invites'] });
-      void qc.invalidateQueries({ queryKey: ['group', vars.groupId] });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.invitesAll });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.detail(vars.groupId) });
     },
   });
 }
 
 export function useRespondGroupInvite() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ inviteId, accept }: { inviteId: string; accept: boolean }) =>
       respondGroupInvite(inviteId, accept),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['group-invites'] });
-      void qc.invalidateQueries({ queryKey: ['groups'] });
-      void qc.invalidateQueries({ queryKey: ['group'] });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.invitesAll });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.all });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.detailAll });
     },
   });
 }
 
 export function useGroupSettings(groupId: string | undefined) {
   return useQuery({
-    queryKey: ['group-settings', groupId],
+    queryKey: qk.groups.settings(groupId ?? ''),
     queryFn: () => fetchGroupSettings(groupId!),
     enabled: Boolean(groupId),
   });
 }
 
 export function useUpdateGroup(groupId: string | undefined) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (patch: Parameters<typeof updateGroup>[1]) => {
       if (!groupId) throw new Error('No group');
       return updateGroup(groupId, patch);
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['group', groupId] });
-      void qc.invalidateQueries({ queryKey: ['groups'] });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.detail(groupId!) });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.all });
     },
   });
 }
 
 export function useUpdateGroupSettings(groupId: string | undefined) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (patch: Parameters<typeof updateGroupSettings>[1]) => {
       if (!groupId) throw new Error('No group');
       return updateGroupSettings(groupId, patch);
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['group-settings', groupId] });
-      void qc.invalidateQueries({ queryKey: ['public-groups'] });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.settings(groupId!) });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.publicAll });
     },
   });
 }
 
 export function usePublicGroups(search: string | undefined, enabled: boolean) {
   return useQuery({
-    queryKey: ['public-groups', search ?? ''],
+    queryKey: qk.groups.public(search ?? ''),
     queryFn: () => fetchPublicGroups(search),
     enabled,
   });
 }
 
 export function useJoinPublicGroup() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ groupId, userId }: { groupId: string; userId: string }) => joinPublicGroup(groupId, userId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['groups'] });
-      void qc.invalidateQueries({ queryKey: ['group'] });
-      void qc.invalidateQueries({ queryKey: ['group-lb'] });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.all });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.detailAll });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.lbAll });
     },
   });
 }

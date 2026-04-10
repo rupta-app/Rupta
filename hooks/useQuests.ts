@@ -10,17 +10,18 @@ import {
   fetchSavedQuestIds,
   toggleSavedQuest,
 } from '@/services/quests';
+import { qk } from '@/hooks/queryKeys';
 
 export function useQuests(filters: QuestFilters) {
   return useQuery({
-    queryKey: ['quests', filters],
+    queryKey: qk.quests.list(filters),
     queryFn: () => fetchQuests(filters),
   });
 }
 
 export function useQuest(id: string) {
   return useQuery({
-    queryKey: ['quest', id],
+    queryKey: qk.quests.detail(id),
     queryFn: () => fetchQuestById(id),
     enabled: Boolean(id),
   });
@@ -28,29 +29,29 @@ export function useQuest(id: string) {
 
 export function useSavedQuestIds(userId: string | undefined) {
   return useQuery({
-    queryKey: ['saved-quests', userId],
+    queryKey: qk.quests.saved(userId ?? ''),
     queryFn: () => fetchSavedQuestIds(userId!),
     enabled: Boolean(userId),
   });
 }
 
 export function useToggleSave(userId: string | undefined) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ questId, currentlySaved }: { questId: string; currentlySaved: boolean }) => {
       if (!userId) throw new Error('No user');
       await toggleSavedQuest(userId, questId, currentlySaved);
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['saved-quests', userId] });
-      void qc.invalidateQueries({ queryKey: ['life-list', userId] });
+      void queryClient.invalidateQueries({ queryKey: qk.quests.saved(userId!) });
+      void queryClient.invalidateQueries({ queryKey: qk.quests.lifeList(userId!) });
     },
   });
 }
 
 export function useLifeList(userId: string | undefined) {
   return useQuery({
-    queryKey: ['life-list', userId],
+    queryKey: qk.quests.lifeList(userId ?? ''),
     queryFn: () => fetchLifeListQuests(userId!),
     enabled: Boolean(userId),
   });
@@ -58,7 +59,7 @@ export function useLifeList(userId: string | undefined) {
 
 export function useOfficialCompletionCount(userId: string | undefined, questId: string | undefined) {
   return useQuery({
-    queryKey: ['quest-official-count', userId, questId],
+    queryKey: qk.quests.officialCount(userId ?? '', questId ?? ''),
     queryFn: () => fetchOfficialCompletionCountForQuest(userId!, questId!),
     enabled: Boolean(userId && questId),
   });
@@ -67,7 +68,7 @@ export function useOfficialCompletionCount(userId: string | undefined, questId: 
 export function useLifeListCompletionCounts(userId: string | undefined, questIds: string[]) {
   const sortedKey = [...questIds].sort().join(',');
   return useQuery({
-    queryKey: ['life-completion-counts', userId, sortedKey],
+    queryKey: qk.quests.lifeCompletionCounts(userId ?? '', sortedKey),
     queryFn: () => fetchOfficialCompletionCountsByQuestIds(userId!, questIds),
     enabled: Boolean(userId) && questIds.length > 0,
   });

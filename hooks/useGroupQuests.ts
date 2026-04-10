@@ -7,10 +7,11 @@ import {
   submitGroupQuestForOfficialReview,
   type CreateGroupQuestInput,
 } from '@/services/groupQuests';
+import { qk } from '@/hooks/queryKeys';
 
 export function useGroupQuestsList(groupId: string | undefined, viewerId?: string) {
   return useQuery({
-    queryKey: ['group-quests', groupId, viewerId],
+    queryKey: qk.groups.quests(groupId ?? '', viewerId),
     queryFn: () => fetchGroupQuests(groupId!, viewerId),
     enabled: Boolean(groupId),
   });
@@ -18,31 +19,31 @@ export function useGroupQuestsList(groupId: string | undefined, viewerId?: strin
 
 export function useGroupQuest(questId: string | undefined) {
   return useQuery({
-    queryKey: ['group-quest', questId],
+    queryKey: qk.groups.groupQuest(questId ?? ''),
     queryFn: () => fetchGroupQuestById(questId!),
     enabled: Boolean(questId),
   });
 }
 
 export function useCreateGroupQuest(groupId: string | undefined) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ creatorId, input }: { creatorId: string; input: CreateGroupQuestInput }) =>
       createGroupQuest(groupId!, creatorId, input),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['group-quests', groupId] });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.quests(groupId ?? '') });
     },
   });
 }
 
 export function useSubmitGroupQuestForReview() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ questId, userId }: { questId: string; userId: string }) =>
       submitGroupQuestForOfficialReview(questId, userId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['group-quests'] });
-      void qc.invalidateQueries({ queryKey: ['group-quest'] });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.questsAll });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.groupQuestAll });
     },
   });
 }
