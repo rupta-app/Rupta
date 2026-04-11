@@ -1,8 +1,10 @@
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { UserCheck } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { FriendRequestActions } from '@/components/social/FriendRequestActions';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { UserListItem } from '@/components/social/UserListItem';
 import { useIncomingFriendRequests } from '@/hooks/useFriends';
 import { useAuth } from '@/providers/AuthProvider';
@@ -20,7 +22,7 @@ export default function FriendRequestsScreen() {
         data={reqs}
         keyExtractor={(item: { id: string }) => item.id}
         contentContainerStyle={{ padding: 16 }}
-        ListEmptyComponent={<Text className="text-muted text-center mt-8">{t('notifications.empty')}</Text>}
+        ListEmptyComponent={<EmptyState icon={UserCheck} title={t('empty.noFriends')} />}
         renderItem={({ item }: { item: { id: string; sender?: { display_name: string; username: string; avatar_url: string | null } } }) => (
           <UserListItem
             user={{

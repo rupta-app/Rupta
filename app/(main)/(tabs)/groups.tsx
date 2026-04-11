@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, ScrollView, Text, View } from 'react-native';
+import { FlatList, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Users } from 'lucide-react-native';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { GroupCard } from '@/components/social/GroupCard';
-import { colors } from '@/constants/theme';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/SkeletonLoader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -54,7 +56,10 @@ export default function GroupsTabScreen() {
               placeholder={t('groups.searchPublicPlaceholder')}
             />
             {loadingPublic ? (
-              <ActivityIndicator color={colors.primary} className="mt-4" />
+              <View className="gap-2 mt-4">
+                <Skeleton width="100%" height={64} />
+                <Skeleton width="100%" height={64} />
+              </View>
             ) : (
               <FlatList
                 scrollEnabled={false}
@@ -126,13 +131,22 @@ export default function GroupsTabScreen() {
         <View className="px-4 pt-6">
           <Text className="text-foreground text-lg font-bold mb-3">{t('groups.myGroups')}</Text>
           {isLoading ? (
-            <ActivityIndicator color={colors.primary} />
+            <View className="gap-2">
+              <Skeleton width="100%" height={64} />
+              <Skeleton width="100%" height={64} />
+            </View>
           ) : (
             <FlatList
               scrollEnabled={false}
               data={groups}
               keyExtractor={(item: { id: string }) => item.id}
-              ListEmptyComponent={<Text className="text-muted text-center mt-4">{t('groups.emptyMyGroups')}</Text>}
+              ListEmptyComponent={
+                <EmptyState
+                  icon={Users}
+                  title={t('empty.noGroups')}
+                  subtitle={t('empty.noGroupsCta')}
+                />
+              }
               renderItem={({
                 item,
               }: {

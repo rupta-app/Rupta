@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { BookmarkPlus } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useLifeList } from '@/hooks/useQuests';
 import { useAuth } from '@/providers/AuthProvider';
 import { appLang } from '@/utils/lang';
@@ -24,7 +26,14 @@ export default function LifeListScreen() {
         data={rows as { quest_id: string; quests: Parameters<typeof questTitle>[0] }[]}
         keyExtractor={(item) => item.quest_id}
         contentContainerStyle={{ padding: 16 }}
-        ListEmptyComponent={<Text className="text-muted text-center mt-8">{t('profile.emptyLifeList')}</Text>}
+        ListEmptyComponent={
+          <EmptyState
+            icon={BookmarkPlus}
+            title={t('empty.noLifeList')}
+            subtitle={t('empty.noLifeListCta')}
+            action={{ label: t('empty.feedCta'), onPress: () => router.push('/(main)/(tabs)/explore') }}
+          />
+        }
         renderItem={({ item }) => (
           <Pressable onPress={() => router.push(`/(main)/quest/${item.quest_id}`)}>
             <Card className="mb-2">

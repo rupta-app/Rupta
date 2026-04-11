@@ -3,9 +3,11 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Trophy } from 'lucide-react-native';
 
 import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { SegmentedTabBar } from '@/components/ui/SegmentedTabBar';
 import { GroupCard } from '@/components/social/GroupCard';
@@ -119,7 +121,7 @@ export default function LeaderboardScreen() {
           data={myGroups}
           keyExtractor={(item: { id: string }) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-          ListEmptyComponent={<Text className="text-muted text-center px-4">{t('feed.empty')}</Text>}
+          ListEmptyComponent={<EmptyState icon={Trophy} title={t('empty.noResults')} />}
           ListHeaderComponent={<Text className="text-muted text-sm mb-4">{t('leaderboard.pickGroup')}</Text>}
           renderItem={renderGroupPicker}
         />
@@ -134,7 +136,7 @@ export default function LeaderboardScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
             ListEmptyComponent={
-              isLoading ? null : <Text className="text-muted text-center">{t('feed.empty')}</Text>
+              isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
             }
             renderItem={renderLbItem}
           />
@@ -145,7 +147,7 @@ export default function LeaderboardScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
           ListEmptyComponent={
-            isLoading ? null : <Text className="text-muted text-center">{t('feed.empty')}</Text>
+            isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
           }
           renderItem={renderLbItem}
         />

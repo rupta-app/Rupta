@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
 import { Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Bell } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '@/hooks/useNotifications';
 import { useRespondFriendRequest } from '@/hooks/useFriends';
 import { useAuth } from '@/providers/AuthProvider';
@@ -118,7 +120,7 @@ export default function NotificationsScreen() {
         data={items}
         keyExtractor={(item: NotificationRow) => item.id}
         contentContainerStyle={{ padding: 16 }}
-        ListEmptyComponent={<Text className="text-muted text-center mt-8">{t('notifications.empty')}</Text>}
+        ListEmptyComponent={<EmptyState icon={Bell} title={t('empty.noNotifications')} />}
         renderItem={({ item }: { item: NotificationRow }) => {
           const isFriendRequest = item.type === 'friend_request';
           return (

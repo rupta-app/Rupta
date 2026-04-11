@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
 import { FlatList, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { UserPlus } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { UserListItem } from '@/components/social/UserListItem';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useFriendsList } from '@/hooks/useFriends';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -33,6 +35,13 @@ export default function FriendsScreen() {
           <Button variant="secondary" className="mb-4" onPress={() => router.push('/(main)/friend-requests')}>
             {t('friends.requests')}
           </Button>
+        }
+        ListEmptyComponent={
+          <EmptyState
+            icon={UserPlus}
+            title={t('empty.noFriends')}
+            action={{ label: t('friends.searchUsers'), onPress: () => router.push('/(main)/unified-search') }}
+          />
         }
         renderItem={({ item }: { item: { id: string; display_name: string; username: string; avatar_url: string | null; total_aura: number } }) => (
           <UserListItem

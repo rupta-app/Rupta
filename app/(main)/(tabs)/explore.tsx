@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Search } from 'lucide-react-native';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
-import { colors } from '@/constants/theme';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -108,9 +110,12 @@ export default function ExploreScreen() {
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           isLoading ? (
-            <ActivityIndicator color={colors.primary} className="mt-8" />
+            <View className="px-4">
+              <FeedPostSkeleton />
+              <FeedPostSkeleton />
+            </View>
           ) : (
-            <Text className="text-muted text-center mt-8 px-6">{t('explore.noResults')}</Text>
+            <EmptyState icon={Search} title={t('empty.noResults')} />
           )
         }
         renderItem={({ item }) => {
