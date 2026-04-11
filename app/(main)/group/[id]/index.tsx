@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import { Settings, UserPlus } from 'lucide-react-native';
+import { FileText, Settings, Swords, Trophy, UserPlus } from 'lucide-react-native';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { SegmentedTabBar } from '@/components/ui/SegmentedTabBar';
@@ -10,10 +11,12 @@ import { colors } from '@/constants/theme';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
 import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
-import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
 import { useGroupDetail, useGroupLeaderboard } from '@/hooks/useGroups';
 import { useGroupFeed } from '@/hooks/useFeed';
 import { useGroupQuestsList } from '@/hooks/useGroupQuests';
@@ -59,13 +62,13 @@ export default function GroupDetailScreen() {
         title={group.name}
         right={
           <View className="flex-row items-center">
-            <Pressable onPress={() => go(`/(main)/group/${id}/people`)} className="p-2.5 shrink-0" hitSlop={6}>
+            <PressableScale onPress={() => go(`/(main)/group/${id}/people`)} className="p-2.5 shrink-0" hitSlop={12} scaleValue={0.9}>
               <UserPlus color={colors.primaryLight} size={24} strokeWidth={2} />
-            </Pressable>
+            </PressableScale>
             {canAdmin ? (
-              <Pressable onPress={() => go(`/(main)/group/${id}/settings`)} className="p-2.5 shrink-0" hitSlop={6}>
+              <PressableScale onPress={() => go(`/(main)/group/${id}/settings`)} className="p-2.5 shrink-0" hitSlop={12} scaleValue={0.9}>
                 <Settings color={colors.muted} size={24} strokeWidth={2} />
-              </Pressable>
+              </PressableScale>
             ) : null}
           </View>
         }
@@ -83,10 +86,10 @@ export default function GroupDetailScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         {section === 'rankings' ? (
-          <>
+          <Animated.View entering={FadeIn.duration(200)} key="rankings">
             <Text className="text-foreground font-bold mb-3">{t('groups.groupAuraRanks')}</Text>
             {lb.length === 0 ? (
-              <Text className="text-muted">{t('feed.empty')}</Text>
+              <EmptyState icon={Trophy} title={t('empty.noResults')} />
             ) : (
               lb.map((item, index) => (
                 <LeaderboardRow
@@ -100,28 +103,31 @@ export default function GroupDetailScreen() {
                 />
               ))
             )}
-          </>
+          </Animated.View>
         ) : null}
 
         {section === 'feed' ? (
-          <>
+          <Animated.View entering={FadeIn.duration(200)} key="feed">
             {feedLoading ? (
-              <ActivityIndicator color={colors.primary} />
+              <>
+                <FeedPostSkeleton />
+                <FeedPostSkeleton />
+              </>
             ) : posts.length === 0 ? (
-              <Text className="text-muted">{t('feed.empty')}</Text>
+              <EmptyState icon={FileText} title={t('empty.noResults')} />
             ) : (
               posts.map((p) => <FeedPostCard key={p.id} post={p} lang={lang} viewerId={uid} />)
             )}
-          </>
+          </Animated.View>
         ) : null}
 
         {section === 'quests' ? (
-          <>
+          <Animated.View entering={FadeIn.duration(200)} key="quests">
             <Button className="mb-4" onPress={() => go(`/(main)/group/${id}/create-quest`)}>
               {t('groups.createQuest')}
             </Button>
             {gQuests.length === 0 ? (
-              <Text className="text-muted">{t('feed.empty')}</Text>
+              <EmptyState icon={Swords} title={t('empty.noResults')} />
             ) : null}
             {gQuests.map(
               (q: {
@@ -130,7 +136,7 @@ export default function GroupDetailScreen() {
                 aura_reward: number;
                 status: string;
               }) => (
-                <Pressable key={q.id} onPress={() => go(`/(main)/group-quest/${q.id}`)}>
+                <PressableScale key={q.id} onPress={() => go(`/(main)/group-quest/${q.id}`)} scaleValue={0.98}>
                   <Card className="mb-2 py-3">
                     <View className="flex-row justify-between items-start gap-2">
                       <Text className="text-foreground font-bold flex-1">{q.title}</Text>
@@ -138,10 +144,10 @@ export default function GroupDetailScreen() {
                     </View>
                     <Text className="text-muted text-xs mt-2 uppercase">{q.status}</Text>
                   </Card>
-                </Pressable>
+                </PressableScale>
               ),
             )}
-          </>
+          </Animated.View>
         ) : null}
       </ScrollView>
     </View>

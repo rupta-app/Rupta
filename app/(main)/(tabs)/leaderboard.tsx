@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Trophy } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Trophy } from 'lucide-react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { SegmentedTabBar } from '@/components/ui/SegmentedTabBar';
 import { GroupCard } from '@/components/social/GroupCard';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { colors } from '@/constants/theme';
 import { useFriendsLeaderboard, useGlobalLeaderboard } from '@/hooks/useLeaderboard';
 import { useGroupLeaderboard, useMyGroups } from '@/hooks/useGroups';
@@ -117,20 +118,24 @@ export default function LeaderboardScreen() {
       </View>
 
       {showGroupPicker ? (
-        <FlatList
-          data={myGroups}
-          keyExtractor={(item: { id: string }) => item.id}
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-          ListEmptyComponent={<EmptyState icon={Trophy} title={t('empty.noResults')} />}
-          ListHeaderComponent={<Text className="text-muted text-sm mb-4">{t('leaderboard.pickGroup')}</Text>}
-          renderItem={renderGroupPicker}
-        />
+        <Animated.View entering={FadeIn.duration(200)} className="flex-1" key="picker">
+          <FlatList
+            data={myGroups}
+            keyExtractor={(item: { id: string }) => item.id}
+            contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+            ListEmptyComponent={<EmptyState icon={Trophy} title={t('empty.noResults')} />}
+            ListHeaderComponent={<Text className="text-muted text-sm mb-4">{t('leaderboard.pickGroup')}</Text>}
+            renderItem={renderGroupPicker}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+          />
+        </Animated.View>
       ) : showGroupBoard ? (
-        <View className="flex-1">
-          <Pressable onPress={() => setSelectedGroupId(null)} className="flex-row items-center px-4 py-2">
+        <Animated.View entering={FadeIn.duration(200)} className="flex-1" key="group-board">
+          <PressableScale onPress={() => setSelectedGroupId(null)} className="flex-row items-center px-4 py-2" scaleValue={0.95} hitSlop={12}>
             <ChevronLeft color={colors.foreground} size={24} />
             <Text className="text-primary ml-1">{t('common.back')}</Text>
-          </Pressable>
+          </PressableScale>
           <FlatList
             data={data}
             keyExtractor={(item) => item.id}
@@ -139,18 +144,24 @@ export default function LeaderboardScreen() {
               isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
             }
             renderItem={renderLbItem}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
           />
-        </View>
+        </Animated.View>
       ) : (
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-          ListEmptyComponent={
-            isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
-          }
-          renderItem={renderLbItem}
-        />
+        <Animated.View entering={FadeIn.duration(200)} className="flex-1" key={`${scope}-${period}`}>
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+            ListEmptyComponent={
+              isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
+            }
+            renderItem={renderLbItem}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+          />
+        </Animated.View>
       )}
     </View>
   );
