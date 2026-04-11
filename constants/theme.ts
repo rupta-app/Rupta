@@ -32,6 +32,15 @@ export const radii = {
   full: 9999,
 } as const;
 
+export const layout = {
+  /** Standard horizontal padding for screen content */
+  screenPadding: 16,
+  /** Bottom padding for scrollable content on tab screens (clears tab bar) */
+  tabScrollPadding: 120,
+  /** Bottom padding for scrollable content on stack screens (clears home indicator) */
+  scrollPadding: 48,
+} as const;
+
 export const typography = {
   hero: { fontSize: 36, lineHeight: 44, fontWeight: '700' as const },
   title: { fontSize: 28, lineHeight: 36, fontWeight: '700' as const },
