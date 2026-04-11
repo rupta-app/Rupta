@@ -7,8 +7,8 @@ export default function OnboardingLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'fade',
-        animationDuration: 220,
+        animation: 'slide_from_right',
+        animationDuration: 280,
         contentStyle: { backgroundColor: colors.background },
       }}
     >
