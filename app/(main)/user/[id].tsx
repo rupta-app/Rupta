@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
@@ -8,14 +8,14 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { auraLevelFromTotal } from '@/lib/aura';
-import { useFriendsList, useRespondFriendRequest, useSendFriendRequest } from '@/hooks/useFriends';
+import { FriendRequestActions } from '@/components/social/FriendRequestActions';
+import { useFriendsList, useSendFriendRequest } from '@/hooks/useFriends';
 import { blockUser } from '@/services/reports';
 import { fetchFriendRequestRelation } from '@/services/friends';
 import { fetchProfile, fetchProfileStats, fetchRecentCompletions } from '@/services/profile';
 import { useAuth } from '@/providers/AuthProvider';
+import { RecentCompletionsList } from '@/components/social/RecentCompletionsList';
 import { appLang } from '@/utils/lang';
-import { questTitle } from '@/utils/questCopy';
-import { formatAuraDisplay, isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,7 +25,6 @@ export default function PublicProfileScreen() {
   const { session } = useAuth();
   const uid = session?.user?.id;
   const sendReq = useSendFriendRequest();
-  const respond = useRespondFriendRequest();
   const { data: friends = [] } = useFriendsList(uid);
 
   const { data: profile } = useQuery({
@@ -88,39 +87,7 @@ export default function PublicProfileScreen() {
                 {t('common.loading')}
               </Button>
             ) : relation?.kind === 'incoming' ? (
-              <View className="gap-2">
-                <Button
-                  loading={respond.isPending}
-                  onPress={() =>
-                    respond.mutate(
-                      { requestId: relation.requestId, accept: true },
-                      {
-                        onSuccess: () =>
-                          Alert.alert(t('friends.friendAddedTitle'), t('friends.friendAddedBody')),
-                        onError: (e) =>
-                          Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e)),
-                      },
-                    )
-                  }
-                >
-                  {t('friends.accept')}
-                </Button>
-                <Button
-                  variant="ghost"
-                  loading={respond.isPending}
-                  onPress={() =>
-                    respond.mutate(
-                      { requestId: relation.requestId, accept: false },
-                      {
-                        onError: (e) =>
-                          Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e)),
-                      },
-                    )
-                  }
-                >
-                  {t('friends.reject')}
-                </Button>
-              </View>
+              <FriendRequestActions requestId={relation.requestId} />
             ) : relation?.kind === 'outgoing' ? (
               <Button variant="secondary" disabled onPress={() => {}}>
                 {t('friends.pending')}
@@ -149,30 +116,7 @@ export default function PublicProfileScreen() {
           </Card>
         </View>
 
-        <Text className="text-foreground font-bold mt-8 mb-2">{t('profile.recent')}</Text>
-        {recent.map(
-          (row: {
-            id: string;
-            quests?: { title_en: string; title_es: string };
-            aura_earned: number;
-            quest_source_type?: string;
-          }) => (
-            <Card key={row.id} className="mb-2 py-3">
-              <Text className="text-foreground font-semibold">
-                {row.quests ? questTitle(row.quests, lang) : 'Quest'}
-              </Text>
-              <Text
-                className={
-                  isSpontaneousAuraPending(row.quest_source_type, row.aura_earned)
-                    ? 'text-muted text-sm'
-                    : 'text-primary text-sm'
-                }
-              >
-                {formatAuraDisplay(row.quest_source_type, row.aura_earned, t('feed.auraPendingReview'))}
-              </Text>
-            </Card>
-          ),
-        )}
+        <RecentCompletionsList completions={recent} lang={lang} />
       </ScrollView>
     </View>
   );

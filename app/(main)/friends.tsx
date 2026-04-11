@@ -20,7 +20,7 @@ export default function FriendsScreen() {
       <ScreenHeader
         title={t('friends.title')}
         right={
-          <Button variant="ghost" onPress={() => router.push('/(main)/search-users')}>
+          <Button variant="ghost" onPress={() => router.push('/(main)/unified-search')}>
             {t('friends.searchUsers')}
           </Button>
         }

@@ -1,6 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { QUEST_CATEGORIES } from '@/constants/categories';
 import { useAuth } from '@/providers/AuthProvider';
 import { useSavedQuestIds, useToggleSave } from '@/hooks/useQuests';
@@ -67,80 +68,60 @@ export default function GeneratorScreen() {
         <Text className="text-muted">{t('generator.subtitle')}</Text>
 
         <Text className="text-muted text-xs uppercase mt-6 mb-2">{t('generator.budget')}</Text>
-        <View className="flex-row flex-wrap gap-2">
-          {COSTS.map((c) => (
-            <Pressable
-              key={c}
-              onPress={() => setCost(c)}
-              className={`px-3 py-2 rounded-lg border ${cost === c ? 'border-primary bg-primary/15' : 'border-border'}`}
-            >
-              <Text className="text-foreground capitalize">{c}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <PillToggleGroup
+          options={COSTS.map((c) => ({ value: c, label: c }))}
+          selected={cost}
+          onToggle={setCost}
+          activeClassName="border-primary bg-primary/15"
+          inactiveClassName="border-border"
+        />
 
         <Text className="text-muted text-xs uppercase mt-4 mb-2">Crew</Text>
-        <View className="flex-row gap-2">
-          <Pressable
-            onPress={() => setSolo(true)}
-            className={`px-4 py-2 rounded-lg border ${solo ? 'border-primary' : 'border-border'}`}
-          >
-            <Text className="text-foreground">{t('generator.solo')}</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setSolo(false)}
-            className={`px-4 py-2 rounded-lg border ${!solo ? 'border-primary' : 'border-border'}`}
-          >
-            <Text className="text-foreground">{t('generator.withFriends')}</Text>
-          </Pressable>
-        </View>
+        <PillToggleGroup
+          options={[
+            { value: 'solo' as const, label: t('generator.solo') },
+            { value: 'friends' as const, label: t('generator.withFriends') },
+          ]}
+          selected={solo ? 'solo' : 'friends'}
+          onToggle={(v) => setSolo(v === 'solo')}
+          activeClassName="border-primary"
+          inactiveClassName="border-border"
+          containerClassName="flex-row gap-2"
+        />
 
         <Text className="text-muted text-xs uppercase mt-4 mb-2">Place</Text>
-        <View className="flex-row gap-2">
-          {(['indoor', 'outdoor', 'any'] as const).map((l) => (
-            <Pressable
-              key={l}
-              onPress={() => setLoc(l)}
-              className={`px-3 py-2 rounded-lg border ${loc === l ? 'border-primary' : 'border-border'}`}
-            >
-              <Text className="text-foreground capitalize">
-                {l === 'any' ? 'Any' : t(`generator.${l === 'indoor' ? 'indoor' : 'outdoor'}`)}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        <PillToggleGroup
+          options={[
+            { value: 'indoor' as const, label: t('generator.indoor') },
+            { value: 'outdoor' as const, label: t('generator.outdoor') },
+            { value: 'any' as const, label: 'Any' },
+          ]}
+          selected={loc}
+          onToggle={setLoc}
+          activeClassName="border-primary"
+          inactiveClassName="border-border"
+          containerClassName="flex-row gap-2"
+        />
 
         <Text className="text-muted text-xs uppercase mt-4 mb-2">{t('generator.energy')}</Text>
-        <View className="flex-row gap-2">
-          {(['low', 'medium', 'high'] as const).map((e) => (
-            <Pressable
-              key={e}
-              onPress={() => setEnergy(e)}
-              className={`px-3 py-2 rounded-lg border ${energy === e ? 'border-primary bg-primary/15' : 'border-border'}`}
-            >
-              <Text className="text-foreground capitalize">{e}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <PillToggleGroup
+          options={(['low', 'medium', 'high'] as const).map((e) => ({ value: e, label: e }))}
+          selected={energy ?? 'medium'}
+          onToggle={setEnergy}
+          activeClassName="border-primary bg-primary/15"
+          inactiveClassName="border-border"
+          containerClassName="flex-row gap-2"
+        />
 
         <Text className="text-muted text-xs uppercase mt-4 mb-2">{t('generator.category')}</Text>
-        <View className="flex-row flex-wrap gap-2">
-          <Pressable
-            onPress={() => setCat(undefined)}
-            className={`px-3 py-2 rounded-full border ${!cat ? 'border-primary bg-primary/15' : 'border-border'}`}
-          >
-            <Text className="text-foreground text-sm font-medium">Any</Text>
-          </Pressable>
-          {QUEST_CATEGORIES.map((c) => (
-            <Pressable
-              key={c}
-              onPress={() => setCat(c)}
-              className={`px-3 py-2 rounded-full border ${cat === c ? 'border-primary bg-primary/15' : 'border-border'}`}
-            >
-              <Text className="text-foreground text-sm font-medium">{formatCategoryLabel(c, lang)}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <PillToggleGroup
+          options={[
+            { value: 'any', label: 'Any' },
+            ...QUEST_CATEGORIES.map((c) => ({ value: c, label: formatCategoryLabel(c, lang) })),
+          ]}
+          selected={cat ?? 'any'}
+          onToggle={(v) => setCat(v === 'any' ? undefined : v)}
+        />
 
         <View className="mt-4">
           <Input value={city} onChangeText={setCity} placeholder={t('generator.city')} />

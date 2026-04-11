@@ -1,12 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { GroupCard } from '@/components/social/GroupCard';
 import { colors } from '@/constants/theme';
-import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -70,34 +68,24 @@ export default function GroupsTabScreen() {
                 }: {
                   item: { id: string; name: string; description: string | null; avatar_url?: string | null };
                 }) => (
-                  <Card className="mb-3 flex-row items-center justify-between py-4">
-                    <View className="flex-row items-center gap-3 flex-1 min-w-0 pr-2">
-                      <Avatar url={item.avatar_url ?? null} name={item.name} size={52} />
-                      <View className="flex-1 min-w-0">
-                        <Text className="text-foreground font-bold text-lg">{item.name}</Text>
-                        {item.description ? (
-                          <Text className="text-muted text-sm mt-1" numberOfLines={2}>
-                            {item.description}
-                          </Text>
-                        ) : null}
-                      </View>
-                    </View>
-                    <Button
-                      className="min-h-0 py-1 px-3"
-                      loading={joinPublic.isPending}
-                      onPress={() =>
-                        uid &&
-                        joinPublic.mutate(
-                          { groupId: item.id, userId: uid },
-                          {
-                            onSuccess: () => router.push(`/(main)/group/${item.id}`),
-                          },
-                        )
-                      }
-                    >
-                      {t('groups.join')}
-                    </Button>
-                  </Card>
+                  <GroupCard
+                    group={item}
+                    right={
+                      <Button
+                        className="min-h-0 py-1 px-3"
+                        loading={joinPublic.isPending}
+                        onPress={() =>
+                          uid &&
+                          joinPublic.mutate(
+                            { groupId: item.id, userId: uid },
+                            { onSuccess: () => router.push(`/(main)/group/${item.id}`) },
+                          )
+                        }
+                      >
+                        {t('groups.join')}
+                      </Button>
+                    }
+                  />
                 )}
               />
             )}
@@ -150,19 +138,7 @@ export default function GroupsTabScreen() {
               }: {
                 item: { id: string; name: string; description: string | null; avatar_url?: string | null };
               }) => (
-                <Pressable onPress={() => router.push(`/(main)/group/${item.id}`)}>
-                  <Card className="mb-3 flex-row items-center gap-3 py-4">
-                    <Avatar url={item.avatar_url ?? null} name={item.name} size={52} />
-                    <View className="flex-1 min-w-0">
-                      <Text className="text-foreground text-lg font-bold">{item.name}</Text>
-                      {item.description ? (
-                        <Text className="text-muted text-sm mt-1" numberOfLines={2}>
-                          {item.description}
-                        </Text>
-                      ) : null}
-                    </View>
-                  </Card>
-                </Pressable>
+                <GroupCard group={item} onPress={() => router.push(`/(main)/group/${item.id}`)} />
               )}
             />
           )}

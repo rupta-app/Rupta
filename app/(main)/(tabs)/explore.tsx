@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, View } from '
 import { useTranslation } from 'react-i18next';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { colors } from '@/constants/theme';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -75,24 +76,15 @@ export default function ExploreScreen() {
               flexDirection: 'row',
             }}
           >
-            <Pressable
-              onPress={() => setCategory(undefined)}
-              className={`px-4 py-2.5 rounded-full border ${!category ? 'border-primary bg-primary/15' : 'border-border bg-surface'}`}
-            >
-              <Text className="text-foreground text-sm font-medium">All</Text>
-            </Pressable>
-            {QUEST_CATEGORIES.map((c) => {
-              const active = category === c;
-              return (
-                <Pressable
-                  key={c}
-                  onPress={() => setCategory(c)}
-                  className={`px-4 py-2.5 rounded-full border ${active ? 'border-primary bg-primary/15' : 'border-border bg-surface'}`}
-                >
-                  <Text className="text-foreground text-sm font-medium">{formatCategoryLabel(c, lang)}</Text>
-                </Pressable>
-              );
-            })}
+            <PillToggleGroup
+              options={[
+                { value: 'all', label: 'All' },
+                ...QUEST_CATEGORIES.map((c) => ({ value: c, label: formatCategoryLabel(c, lang) })),
+              ]}
+              selected={category ?? 'all'}
+              onToggle={(v) => setCategory(v === 'all' ? undefined : v)}
+              containerClassName="flex-row gap-2"
+            />
           </ScrollView>
         </View>
         <View className="h-3" />

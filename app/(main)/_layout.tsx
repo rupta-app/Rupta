@@ -22,7 +22,6 @@ export default function MainLayout() {
       <Stack.Screen name="settings" />
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="life-list" />
-      <Stack.Screen name="search-users" />
       <Stack.Screen name="unified-search" />
       <Stack.Screen name="upgrade" />
       <Stack.Screen name="messages" />

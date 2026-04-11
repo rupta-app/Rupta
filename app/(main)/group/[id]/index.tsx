@@ -1,10 +1,11 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Settings, UserPlus } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { SegmentedTabBar } from '@/components/ui/SegmentedTabBar';
 import { colors } from '@/constants/theme';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
@@ -16,18 +17,11 @@ import { Card } from '@/components/ui/Card';
 import { useGroupDetail, useGroupLeaderboard } from '@/hooks/useGroups';
 import { useGroupFeed } from '@/hooks/useFeed';
 import { useGroupQuestsList } from '@/hooks/useGroupQuests';
+import { useFeedWithCounts } from '@/hooks/useFeedWithCounts';
 import { useAuth } from '@/providers/AuthProvider';
-import { fetchCompletionCounts } from '@/services/completions';
 import { appLang } from '@/utils/lang';
-import { useQuery } from '@tanstack/react-query';
 
 type Section = 'rankings' | 'feed' | 'quests';
-
-const TAB_BAR: { key: Section; labelKey: string }[] = [
-  { key: 'rankings', labelKey: 'groups.sectionRankings' },
-  { key: 'feed', labelKey: 'groups.sectionFeed' },
-  { key: 'quests', labelKey: 'groups.sectionQuests' },
-];
 
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,22 +38,7 @@ export default function GroupDetailScreen() {
   const { data: gQuests = [] } = useGroupQuestsList(id, uid);
   const { data: feed = [], isLoading: feedLoading } = useGroupFeed(id);
 
-  const completionIds = useMemo(() => feed.map((f) => f.id), [feed]);
-  const { data: countsMap } = useQuery({
-    queryKey: ['group-feed-counts', completionIds.join(',')],
-    queryFn: () => fetchCompletionCounts(completionIds),
-    enabled: completionIds.length > 0,
-  });
-
-  const posts = useMemo(
-    () =>
-      feed.map((p) => ({
-        ...p,
-        respectCount: countsMap?.get(p.id)?.respects ?? 0,
-        commentCount: countsMap?.get(p.id)?.comments ?? 0,
-      })),
-    [feed, countsMap],
-  );
+  const posts = useFeedWithCounts(feed, 'group-feed-counts');
 
   const myMember = data?.members.find((m: { user_id: string }) => m.user_id === uid);
   const canAdmin = myMember?.role === 'owner' || myMember?.role === 'admin';
@@ -92,26 +71,15 @@ export default function GroupDetailScreen() {
         }
       />
 
-      <View className="flex-row border-b border-border">
-        {TAB_BAR.map(({ key, labelKey }) => {
-          const active = section === key;
-          return (
-            <Pressable
-              key={key}
-              onPress={() => setSection(key)}
-              className="flex-1 py-3 px-1 items-center border-b-2"
-              style={{ borderBottomColor: active ? colors.primary : 'transparent' }}
-            >
-              <Text
-                className={`text-sm font-bold text-center ${active ? 'text-primary' : 'text-muted'}`}
-                numberOfLines={1}
-              >
-                {t(labelKey)}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <SegmentedTabBar
+        tabs={[
+          { key: 'rankings' as const, label: t('groups.sectionRankings') },
+          { key: 'feed' as const, label: t('groups.sectionFeed') },
+          { key: 'quests' as const, label: t('groups.sectionQuests') },
+        ]}
+        active={section}
+        onChange={setSection}
+      />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         {section === 'rankings' ? (

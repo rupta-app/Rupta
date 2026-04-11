@@ -1,21 +1,21 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { colors } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { fetchCompletionCounts } from '@/services/completions';
 import { useAuth } from '@/providers/AuthProvider';
 import type { HomeFeedFilter } from '@/services/feed';
 import { useFriendIds, useHomeFeed, useSuggestedQuest } from '@/hooks/useFeed';
+import { useFeedWithCounts } from '@/hooks/useFeedWithCounts';
 import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
-import { useQuery } from '@tanstack/react-query';
 
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -37,22 +37,7 @@ export default function HomeScreen() {
   );
   const { data: suggested } = useSuggestedQuest(session?.user?.id, profile?.preferred_categories ?? []);
 
-  const completionIds = useMemo(() => feed.map((f) => f.id), [feed]);
-  const { data: countsMap } = useQuery({
-    queryKey: ['feed-counts', completionIds.join(',')],
-    queryFn: () => fetchCompletionCounts(completionIds),
-    enabled: completionIds.length > 0,
-  });
-
-  const posts = useMemo(
-    () =>
-      feed.map((p) => ({
-        ...p,
-        respectCount: countsMap?.get(p.id)?.respects ?? 0,
-        commentCount: countsMap?.get(p.id)?.comments ?? 0,
-      })),
-    [feed, countsMap],
-  );
+  const posts = useFeedWithCounts(feed, 'feed-counts');
 
   return (
     <View className="flex-1 bg-background">
@@ -61,19 +46,18 @@ export default function HomeScreen() {
         className="flex-1 px-4 pt-4"
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.primary} />}
       >
-        <View className="flex-row flex-wrap gap-2 mb-4">
-          {(['all', 'official', 'unofficial'] as const).map((f) => (
-            <Pressable
-              key={f}
-              onPress={() => setFeedFilter(f)}
-              className={`px-3 py-2 rounded-lg border ${feedFilter === f ? 'border-primary' : 'border-border'}`}
-            >
-              <Text className="text-foreground text-sm">
-                {f === 'all' ? t('feed.filterAll') : f === 'official' ? t('feed.filterOfficial') : t('feed.filterUnofficial')}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        <PillToggleGroup
+          options={[
+            { value: 'all' as const, label: t('feed.filterAll') },
+            { value: 'official' as const, label: t('feed.filterOfficial') },
+            { value: 'unofficial' as const, label: t('feed.filterUnofficial') },
+          ]}
+          selected={feedFilter}
+          onToggle={setFeedFilter}
+          activeClassName="border-primary"
+          inactiveClassName="border-border"
+          containerClassName="flex-row flex-wrap gap-2 mb-4"
+        />
         {suggested ? (
           <Card className="mb-4 border-primary/40">
             <Text className="text-muted text-xs uppercase">{t('feed.suggested')}</Text>
