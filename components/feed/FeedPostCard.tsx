@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
 import { questTitle } from '@/utils/questCopy';
 import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
@@ -47,8 +48,12 @@ export function FeedPostCard({
       : 'SideQuest';
 
   return (
-    <Card className="mb-4 p-0 overflow-hidden">
-      <Pressable onPress={() => router.push(`/(main)/completion/${post.id}`)}>
+    <Card className="mb-4 p-0 overflow-hidden" variant="elevated">
+      <PressableScale
+        onPress={() => router.push(`/(main)/completion/${post.id}`)}
+        scaleValue={0.98}
+        haptic={false}
+      >
         <View className="flex-row items-center gap-3 p-4 pb-2">
           <Avatar url={post.profiles?.avatar_url} name={post.profiles?.display_name ?? '?'} size={40} />
           <View className="flex-1">
@@ -70,7 +75,12 @@ export function FeedPostCard({
         </View>
         {media ? (
           <View className="mx-4 overflow-hidden rounded-2xl bg-surfaceElevated">
-            <Image source={{ uri: media }} style={{ width: '100%', height: 224 }} contentFit="cover" />
+            <Image
+              source={{ uri: media }}
+              style={{ width: '100%', aspectRatio: 4 / 3, maxHeight: 300 }}
+              contentFit="cover"
+              transition={{ effect: 'cross-dissolve', duration: 200 }}
+            />
           </View>
         ) : null}
         <View className="p-4 pt-2">
@@ -84,7 +94,7 @@ export function FeedPostCard({
           ) : null}
           {post.caption ? <Text className="text-muted mt-2">{post.caption}</Text> : null}
         </View>
-      </Pressable>
+      </PressableScale>
       <FeedPostActions post={post} lang={lang} viewerId={viewerId} />
     </Card>
   );
