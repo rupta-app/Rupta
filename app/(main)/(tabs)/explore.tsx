@@ -105,7 +105,7 @@ export default function ExploreScreen() {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={ListHeader}
         ListFooterComponent={ListFooter}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
         refreshing={isRefetching}
         onRefresh={() => refetch()}
         keyboardShouldPersistTaps="handled"

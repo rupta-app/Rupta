@@ -122,7 +122,7 @@ export default function LeaderboardScreen() {
           <FlatList
             data={myGroups}
             keyExtractor={(item: { id: string }) => item.id}
-            contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
             ListEmptyComponent={<EmptyState icon={Trophy} title={t('empty.noResults')} />}
             ListHeaderComponent={<Text className="text-muted text-sm mb-4">{t('leaderboard.pickGroup')}</Text>}
             renderItem={renderGroupPicker}
@@ -139,7 +139,7 @@ export default function LeaderboardScreen() {
           <FlatList
             data={data}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
             ListEmptyComponent={
               isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
             }
@@ -153,7 +153,7 @@ export default function LeaderboardScreen() {
           <FlatList
             data={data}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
             ListEmptyComponent={
               isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
             }

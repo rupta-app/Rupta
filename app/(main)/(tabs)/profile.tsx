@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { PressableScale } from '@/components/ui/PressableScale';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
-import { colors } from '@/constants/theme';
+import { colors, layout } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -28,7 +28,7 @@ import { questTitle } from '@/utils/questCopy';
 const CHART_CONTAINER_HEIGHT = 88;
 const CHART_BAR_MIN = 8;
 const CHART_BAR_RANGE = 72;
-const SCROLL_PADDING_BOTTOM = 120;
+const SCROLL_PADDING_BOTTOM = layout.tabScrollPadding;
 const SCROLL_PADDING_TOP = 12;
 
 export default function ProfileTab() {
@@ -96,7 +96,7 @@ export default function ProfileTab() {
 
   const profileHeader = (
     <>
-      <View className="flex-row items-center gap-4 px-4 pt-3">
+      <View className="flex-row items-center gap-4 pt-3">
         <View className="relative">
           <Avatar url={profile.avatar_url} name={profile.display_name} size={80} />
           <PressableScale
@@ -114,7 +114,7 @@ export default function ProfileTab() {
         </View>
       </View>
 
-      <View className="flex-row gap-2 mt-6 px-4">
+      <View className="flex-row gap-2 mt-6">
         <PressableScale
           onPress={() => setTab('stats')}
           className={`flex-1 py-2.5 rounded-xl border items-center ${tab === 'stats' ? 'border-primary bg-primary/10' : 'border-border'}`}
@@ -137,9 +137,9 @@ export default function ProfileTab() {
     <View className="flex-1 bg-background">
       <MainAppHeader variant="profile" />
       {tab === 'stats' ? (
-        <Animated.ScrollView entering={FadeIn.duration(200)} key="stats" contentContainerStyle={{ paddingBottom: SCROLL_PADDING_BOTTOM, paddingTop: SCROLL_PADDING_TOP }}>
+        <Animated.ScrollView entering={FadeIn.duration(200)} key="stats" contentContainerStyle={{ paddingBottom: SCROLL_PADDING_BOTTOM, paddingTop: SCROLL_PADDING_TOP, paddingHorizontal: 16 }}>
           {profileHeader}
-          <View className="px-4">
+          <View>
             <Card className="mt-4" variant="glow">
               <View className="flex-row items-center gap-4">
                 <View className="relative">
