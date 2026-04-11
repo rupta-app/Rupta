@@ -31,6 +31,8 @@ export default function FriendsScreen() {
         data={friends}
         keyExtractor={(item: { id: string }) => item.id}
         contentContainerStyle={{ padding: 16 }}
+        initialNumToRender={15}
+        maxToRenderPerBatch={10}
         ListHeaderComponent={
           <Button variant="secondary" className="mb-4" onPress={() => router.push('/(main)/friend-requests')}>
             {t('friends.requests')}
