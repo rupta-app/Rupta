@@ -18,6 +18,7 @@ export const es: TranslationKeys = {
     lifeList: 'Life List',
     sideQuestGenerator: 'Generador de SideQuest',
     keyboardDone: 'Listo',
+    retry: 'Reintentar',
   },
   auth: {
     login: 'Entrar',
@@ -194,6 +195,7 @@ export const es: TranslationKeys = {
     addComment: 'Escribe un comentario',
     giveRespect: 'Respect',
     removeRespect: 'Quitar Respect',
+    postComment: 'Publicar',
   },
   friends: {
     title: 'Amigos',
@@ -347,6 +349,19 @@ export const es: TranslationKeys = {
   notConfigured: {
     title: 'Conecta Supabase',
     body: 'Añade EXPO_PUBLIC_SUPABASE_URL y EXPO_PUBLIC_SUPABASE_ANON_KEY al .env',
+  },
+  empty: {
+    feedTitle: 'Nada por acá todavía',
+    feedSubtitle: 'Completá un quest o agregá amigos para llenar tu feed.',
+    feedCta: 'Explorar quests',
+    noResults: 'No se encontraron resultados',
+    noGroups: 'Sin grupos aún',
+    noGroupsCta: 'Creá o unite a un grupo',
+    noFriends: 'Sin amigos aún',
+    noNotifications: 'Todo tranqui',
+    noLifeList: 'Tu Life List está vacía',
+    noLifeListCta: 'Explorá quests para guardar',
+    noComments: 'Sin comentarios aún. ¡Sé el primero!',
   },
   errors: {
     rlsOrStorage:

@@ -16,6 +16,7 @@ export const en = {
     lifeList: 'Life List',
     sideQuestGenerator: 'SideQuest Generator',
     keyboardDone: 'Done',
+    retry: 'Retry',
   },
   auth: {
     login: 'Log in',
@@ -192,6 +193,7 @@ export const en = {
     addComment: 'Add a comment',
     giveRespect: 'Respect',
     removeRespect: 'Un-respect',
+    postComment: 'Post',
   },
   friends: {
     title: 'Friends',
@@ -345,6 +347,19 @@ export const en = {
   notConfigured: {
     title: 'Connect Supabase',
     body: 'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env',
+  },
+  empty: {
+    feedTitle: 'Nothing here yet',
+    feedSubtitle: 'Complete a quest or add friends to fill your feed.',
+    feedCta: 'Explore quests',
+    noResults: 'No results found',
+    noGroups: 'No groups yet',
+    noGroupsCta: 'Create or join a group',
+    noFriends: 'No friends yet',
+    noNotifications: 'All quiet',
+    noLifeList: 'Your Life List is empty',
+    noLifeListCta: 'Explore quests to save',
+    noComments: 'No comments yet. Be the first!',
   },
   errors: {
     rlsOrStorage:
