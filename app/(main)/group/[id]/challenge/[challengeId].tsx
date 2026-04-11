@@ -1,11 +1,13 @@
 import { useLocalSearchParams } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Trophy } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useChallenge, useChallengeLeaderboard } from '@/hooks/useChallenges';
 
 export default function ChallengeDetailScreen() {
@@ -36,9 +38,9 @@ export default function ChallengeDetailScreen() {
         <Text className="text-muted text-xs mt-4">
           {new Date(ch.start_date).toLocaleString()} → {new Date(ch.end_date).toLocaleString()}
         </Text>
-        <Text className="text-foreground font-bold mt-6 mb-2">{t('groups.challengeLeaderboard')}</Text>
+        <Text className="text-foreground text-lg font-bold mt-6 mb-2">{t('groups.challengeLeaderboard')}</Text>
         {lb.length === 0 ? (
-          <Text className="text-muted">{t('feed.empty')}</Text>
+          <EmptyState icon={Trophy} title={t('empty.noResults')} />
         ) : (
           lb.map(
             (
