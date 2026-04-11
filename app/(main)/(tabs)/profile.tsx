@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { PressableScale } from '@/components/ui/PressableScale';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
-import { colors, layout } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -28,7 +28,7 @@ import { questTitle } from '@/utils/questCopy';
 const CHART_CONTAINER_HEIGHT = 88;
 const CHART_BAR_MIN = 8;
 const CHART_BAR_RANGE = 72;
-const SCROLL_PADDING_BOTTOM = layout.tabScrollPadding;
+const SCROLL_PADDING_BOTTOM = 120;
 const SCROLL_PADDING_TOP = 12;
 
 export default function ProfileTab() {

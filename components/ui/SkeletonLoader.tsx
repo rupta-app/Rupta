@@ -2,7 +2,7 @@ import { type DimensionValue, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useEffect } from 'react';
 
-const ROUNDED = { sm: 8, md: 12, lg: 16, full: 9999 } as const;
+import { colors, radii } from '@/constants/theme';
 
 export function Skeleton({
   width,
@@ -11,7 +11,7 @@ export function Skeleton({
 }: {
   width: DimensionValue;
   height: number;
-  rounded?: keyof typeof ROUNDED;
+  rounded?: keyof typeof radii;
 }) {
   const opacity = useSharedValue(0.3);
 
@@ -23,8 +23,8 @@ export function Skeleton({
     opacity: opacity.value,
     width,
     height,
-    borderRadius: ROUNDED[rounded],
-    backgroundColor: '#1E1E2E',
+    borderRadius: radii[rounded],
+    backgroundColor: colors.surfaceElevated,
   }));
 
   return <Animated.View style={style} />;

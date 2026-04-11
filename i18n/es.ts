@@ -18,7 +18,6 @@ export const es: TranslationKeys = {
     lifeList: 'Life List',
     sideQuestGenerator: 'Generador de SideQuest',
     keyboardDone: 'Listo',
-    retry: 'Reintentar',
   },
   auth: {
     login: 'Entrar',
@@ -195,7 +194,6 @@ export const es: TranslationKeys = {
     addComment: 'Escribe un comentario',
     giveRespect: 'Respect',
     removeRespect: 'Quitar Respect',
-    postComment: 'Publicar',
   },
   friends: {
     title: 'Amigos',

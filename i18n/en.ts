@@ -16,7 +16,6 @@ export const en = {
     lifeList: 'Life List',
     sideQuestGenerator: 'SideQuest Generator',
     keyboardDone: 'Done',
-    retry: 'Retry',
   },
   auth: {
     login: 'Log in',
@@ -193,7 +192,6 @@ export const en = {
     addComment: 'Add a comment',
     giveRespect: 'Respect',
     removeRespect: 'Un-respect',
-    postComment: 'Post',
   },
   friends: {
     title: 'Friends',

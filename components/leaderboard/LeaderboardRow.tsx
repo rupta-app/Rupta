@@ -33,14 +33,9 @@ function RankIndicator({ rank }: { rank: number }) {
 
 export function LeaderboardRow({ rank, displayName, username, avatarUrl, aura, onPress }: Props) {
   const isTop3 = rank <= 3;
-  const borderColor = RANK_COLORS[rank as keyof typeof RANK_COLORS];
-  const borderClass = isTop3 ? '' : '';
 
   const content = (
-    <Card
-      className={`mb-2 flex-row items-center gap-3 ${borderClass}`}
-      {...(isTop3 ? { style: { borderColor: borderColor + '33' } } : {})}
-    >
+    <Card className="mb-2 flex-row items-center gap-3">
       <View className="w-7 items-center">
         <RankIndicator rank={rank} />
       </View>

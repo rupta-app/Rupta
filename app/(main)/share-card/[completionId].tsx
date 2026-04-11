@@ -30,6 +30,30 @@ const BURST_PARTICLES = [
   { x: 30, y: -90, color: colors.respect },
 ];
 
+function BurstDot({ targetX, targetY, color, delay }: { targetX: number; targetY: number; color: string; delay: number }) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withDelay(delay, withSpring(1, { damping: 12 }));
+  }, [delay, progress]);
+
+  const style = useAnimatedStyle(() => ({
+    position: 'absolute' as const,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: color,
+    opacity: 1 - progress.value * 0.8,
+    transform: [
+      { translateX: targetX * progress.value },
+      { translateY: targetY * progress.value },
+      { scale: progress.value },
+    ],
+  }));
+
+  return <Animated.View style={style} />;
+}
+
 function CelebrationBurst() {
   return (
     <View className="absolute inset-0 items-center justify-center" pointerEvents="none">
@@ -38,36 +62,6 @@ function CelebrationBurst() {
       ))}
     </View>
   );
-}
-
-function BurstDot({ targetX, targetY, color, delay }: { targetX: number; targetY: number; color: string; delay: number }) {
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const opacity = useSharedValue(1);
-  const scale = useSharedValue(0);
-
-  useEffect(() => {
-    scale.value = withDelay(delay, withSpring(1, { damping: 8 }));
-    translateX.value = withDelay(delay, withSpring(targetX, { damping: 12 }));
-    translateY.value = withDelay(delay, withSpring(targetY, { damping: 12 }));
-    opacity.value = withDelay(delay + 300, withTiming(0, { duration: 400 }));
-  }, [delay, opacity, scale, targetX, targetY, translateX, translateY]);
-
-  const style = useAnimatedStyle(() => ({
-    position: 'absolute' as const,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: color,
-    opacity: opacity.value,
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-  }));
-
-  return <Animated.View style={style} />;
 }
 
 export default function ShareCardScreen() {

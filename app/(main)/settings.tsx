@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { layout } from '@/constants/theme';
 import { setAppLanguage, type AppLanguage } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { updateProfile } from '@/services/profile';
@@ -29,7 +28,7 @@ export default function SettingsScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('settings.title')} />
-      <ScrollView contentContainerStyle={{ padding: layout.screenPadding, paddingBottom: layout.scrollPadding }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <Text className="text-muted text-xs uppercase mb-2">{t('settings.language')}</Text>
         <View className="flex-row gap-2 mb-8">
           <PressableScale
