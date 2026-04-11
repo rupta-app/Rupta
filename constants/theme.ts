@@ -4,12 +4,17 @@ export const colors = {
   surface: '#14141F',
   surfaceElevated: '#1E1E2E',
   primary: '#8B5CF6',
+  primaryLight: '#A78BFA',
   secondary: '#06D6A0',
   respect: '#F59E0B',
   danger: '#EF4444',
+  dangerLight: '#F87171',
   border: '#2E2E3E',
   muted: '#94A3B8',
+  mutedForeground: '#64748B',
+  slate: '#CBD5E1',
   foreground: '#F8FAFC',
+  white: '#FFFFFF',
 } as const;
 
 export const spacing = {

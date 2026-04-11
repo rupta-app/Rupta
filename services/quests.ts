@@ -11,7 +11,7 @@ export type QuestFilters = {
   search?: string;
 };
 
-export async function fetchQuests(filters: QuestFilters = {}) {
+export async function fetchQuests(filters: QuestFilters = {}): Promise<QuestRow[]> {
   let q = supabase.from('quests').select('*').eq('is_active', true).eq('is_spontaneous', false);
 
   if (filters.category) q = q.eq('category', filters.category);
@@ -28,19 +28,19 @@ export async function fetchQuests(filters: QuestFilters = {}) {
   return (data ?? []) as QuestRow[];
 }
 
-export async function fetchQuestById(id: string) {
+export async function fetchQuestById(id: string): Promise<QuestRow> {
   const { data, error } = await supabase.from('quests').select('*').eq('id', id).single();
   if (error) throw error;
   return data as QuestRow;
 }
 
-export async function fetchSavedQuestIds(userId: string) {
+export async function fetchSavedQuestIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase.from('saved_quests').select('quest_id').eq('user_id', userId);
   if (error) throw error;
   return new Set((data ?? []).map((r) => r.quest_id));
 }
 
-export async function toggleSavedQuest(userId: string, questId: string, saved: boolean) {
+export async function toggleSavedQuest(userId: string, questId: string, saved: boolean): Promise<void> {
   if (saved) {
     const { error } = await supabase.from('saved_quests').delete().eq('user_id', userId).eq('quest_id', questId);
     if (error) throw error;
@@ -51,7 +51,7 @@ export async function toggleSavedQuest(userId: string, questId: string, saved: b
 }
 
 /** Active official completions per quest (for caps / Life List progress). */
-export async function fetchOfficialCompletionCountsByQuestIds(userId: string, questIds: string[]) {
+export async function fetchOfficialCompletionCountsByQuestIds(userId: string, questIds: string[]): Promise<Map<string, number>> {
   const map = new Map<string, number>();
   if (questIds.length === 0) return map;
   const { data, error } = await supabase
@@ -69,7 +69,7 @@ export async function fetchOfficialCompletionCountsByQuestIds(userId: string, qu
   return map;
 }
 
-export async function fetchOfficialCompletionCountForQuest(userId: string, questId: string) {
+export async function fetchOfficialCompletionCountForQuest(userId: string, questId: string): Promise<number> {
   const { count, error } = await supabase
     .from('quest_completions')
     .select('id', { count: 'exact', head: true })
@@ -81,7 +81,7 @@ export async function fetchOfficialCompletionCountForQuest(userId: string, quest
   return count ?? 0;
 }
 
-export async function fetchLifeListQuests(userId: string) {
+export async function fetchLifeListQuests(userId: string): Promise<{ quest_id: string; created_at: string; quests: QuestRow | undefined }[]> {
   const { data: saved, error } = await supabase
     .from('saved_quests')
     .select('quest_id, created_at')

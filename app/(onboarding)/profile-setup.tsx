@@ -1,9 +1,11 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Pencil } from 'lucide-react-native';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { colors } from '@/constants/theme';
 import { OnboardingStepShell } from '@/components/onboarding/OnboardingStepShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -50,14 +52,14 @@ export default function ProfileSetupOnboarding() {
       <View className="items-center mb-2">
         <Pressable onPress={pickAvatar} className="relative">
           {draft.avatarUrl ? (
-            <Image source={{ uri: draft.avatarUrl }} className="w-28 h-28 rounded-full bg-surface" />
+            <Image source={{ uri: draft.avatarUrl }} style={{ width: 112, height: 112, borderRadius: 9999, backgroundColor: colors.surface }} />
           ) : (
             <View className="w-28 h-28 rounded-full bg-primary/25 items-center justify-center border-2 border-dashed border-primary/50">
               <Text className="text-primary text-3xl font-light">+</Text>
             </View>
           )}
           <View className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-surface border border-border items-center justify-center">
-            <Pencil color="#A78BFA" size={18} />
+            <Pencil color={colors.primaryLight} size={18} />
           </View>
         </Pressable>
         <Button variant="ghost" className="mt-3 min-h-0 py-2" onPress={pickAvatar}>

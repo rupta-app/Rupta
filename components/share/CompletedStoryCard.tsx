@@ -1,4 +1,5 @@
-import { Image, ImageBackground, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { ImageBackground, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { logoMark } from '@/constants/branding';
@@ -40,7 +41,7 @@ export function CompletedStoryCard({
         <Image
           source={logoMark}
           accessibilityLabel="Rupta"
-          resizeMode="contain"
+          contentFit="contain"
           style={{ width: 88, height: 26 }}
         />
         <Text className="text-white/70 text-xs mt-1">SideQuest completed</Text>

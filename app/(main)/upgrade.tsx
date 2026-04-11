@@ -1,4 +1,5 @@
-import { Image, ScrollView, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { ScrollView, Text, View } from 'react-native';
 
 import { logoMark } from '@/constants/branding';
 import { useTranslation } from 'react-i18next';
@@ -17,8 +18,7 @@ export default function UpgradeScreen() {
           <View className="flex-row items-center gap-0.5" accessibilityRole="header" accessibilityLabel="Rupta Pro">
             <Image
               source={logoMark}
-              accessible={false}
-              resizeMode="contain"
+              contentFit="contain"
               style={{ width: 88, height: 26, marginLeft: -4 }}
             />
             <Text className="text-primary font-bold text-lg">Pro</Text>

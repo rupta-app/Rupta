@@ -1,7 +1,10 @@
-import type { ChallengeScoringMode, ChallengeStatus } from '@/types/database';
+import type { ChallengeScoringMode, ChallengeStatus, Database } from '@/types/database';
 
 import { supabase } from '@/lib/supabase';
+import type { ProfileBasic } from '@/services/_profiles';
 import { enrichWithProfiles, PROFILE_COLS_BASIC } from '@/services/_profiles';
+
+type ChallengeRow = Database['public']['Tables']['group_challenges']['Row'];
 
 export type CreateChallengeInput = {
   title: string;
@@ -12,7 +15,7 @@ export type CreateChallengeInput = {
   scoringMode: ChallengeScoringMode;
 };
 
-export async function createChallenge(groupId: string, creatorId: string, input: CreateChallengeInput) {
+export async function createChallenge(groupId: string, creatorId: string, input: CreateChallengeInput): Promise<ChallengeRow> {
   const { data, error } = await supabase
     .from('group_challenges')
     .insert({
@@ -32,7 +35,7 @@ export async function createChallenge(groupId: string, creatorId: string, input:
   return data;
 }
 
-export async function fetchGroupChallenges(groupId: string) {
+export async function fetchGroupChallenges(groupId: string): Promise<ChallengeRow[]> {
   const { data, error } = await supabase
     .from('group_challenges')
     .select('*')
@@ -42,13 +45,13 @@ export async function fetchGroupChallenges(groupId: string) {
   return data ?? [];
 }
 
-export async function fetchChallengeById(challengeId: string) {
+export async function fetchChallengeById(challengeId: string): Promise<ChallengeRow> {
   const { data, error } = await supabase.from('group_challenges').select('*').eq('id', challengeId).single();
   if (error) throw error;
   return data;
 }
 
-export async function fetchChallengeLeaderboard(challengeId: string, limit = 50) {
+export async function fetchChallengeLeaderboard(challengeId: string, limit = 50): Promise<({ user_id: string; score: number } & { profiles: ProfileBasic | undefined })[]> {
   const { data: scores, error } = await supabase
     .from('challenge_scores')
     .select('user_id, score')
@@ -71,7 +74,7 @@ export async function countActiveChallengesInGroup(groupId: string): Promise<num
   return count ?? 0;
 }
 
-export async function updateChallengeStatus(challengeId: string, status: ChallengeStatus) {
+export async function updateChallengeStatus(challengeId: string, status: ChallengeStatus): Promise<ChallengeRow> {
   const { data, error } = await supabase
     .from('group_challenges')
     .update({ status })
@@ -82,6 +85,6 @@ export async function updateChallengeStatus(challengeId: string, status: Challen
   return data;
 }
 
-export async function completeChallenge(challengeId: string) {
+export async function completeChallenge(challengeId: string): Promise<ChallengeRow> {
   return updateChallengeStatus(challengeId, 'completed');
 }

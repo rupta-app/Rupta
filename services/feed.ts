@@ -1,6 +1,8 @@
+import type { Database } from '@/types/database';
+
 import { supabase } from '@/lib/supabase';
-import { groupMediaByCompletion } from '@/services/_media';
-import { PROFILE_COLS_BASIC } from '@/services/_profiles';
+
+type QuestRow = Database['public']['Tables']['quests']['Row'];
 
 export async function fetchFriendIds(userId: string): Promise<string[]> {
   const { data, error } = await supabase
@@ -16,7 +18,7 @@ export async function fetchFriendIds(userId: string): Promise<string[]> {
   return ids;
 }
 
-export async function fetchBlockedIds(userId: string) {
+export async function fetchBlockedIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase.from('blocked_users').select('blocked_id').eq('blocker_id', userId);
   if (error) throw error;
   return new Set((data ?? []).map((r) => r.blocked_id));
@@ -24,17 +26,68 @@ export async function fetchBlockedIds(userId: string) {
 
 export type HomeFeedFilter = 'all' | 'official' | 'unofficial';
 
+type FeedViewRow = {
+  id: string;
+  user_id: string;
+  quest_id: string | null;
+  group_quest_id: string | null;
+  group_id: string | null;
+  quest_source_type: string;
+  status: string;
+  visibility: string;
+  aura_earned: number;
+  caption: string | null;
+  completed_at: string;
+  profile_username: string;
+  profile_display_name: string;
+  profile_avatar_url: string | null;
+  quest_title_en: string | null;
+  quest_title_es: string | null;
+  quest_category: string | null;
+  group_quest_title: string | null;
+  group_name: string | null;
+  media_url: string | null;
+};
+
+export type FeedPost = ReturnType<typeof mapViewRow>;
+
+function mapViewRow(r: FeedViewRow) {
+  return {
+    id: r.id,
+    user_id: r.user_id,
+    quest_id: r.quest_id,
+    group_quest_id: r.group_quest_id,
+    group_id: r.group_id,
+    quest_source_type: r.quest_source_type,
+    aura_earned: r.aura_earned,
+    caption: r.caption,
+    completed_at: r.completed_at,
+    visibility: r.visibility,
+    profiles: {
+      username: r.profile_username,
+      display_name: r.profile_display_name,
+      avatar_url: r.profile_avatar_url,
+    },
+    quests: r.quest_title_en
+      ? { title_en: r.quest_title_en, title_es: r.quest_title_es!, category: r.quest_category! }
+      : undefined,
+    group_quests: r.group_quest_title ? { title: r.group_quest_title } : undefined,
+    groups: r.group_name && r.group_id ? { id: r.group_id, name: r.group_name } : undefined,
+    quest_media: r.media_url ? [{ media_url: r.media_url }] : [],
+  };
+}
+
 export async function fetchHomeFeed(
   userId: string,
   friendIds: string[],
   filter: HomeFeedFilter = 'all',
-) {
+): Promise<FeedPost[]> {
   const blocked = await fetchBlockedIds(userId);
   const ids = [...friendIds, userId].filter((id) => !blocked.has(id));
   if (ids.length === 0) return [];
 
   let q = supabase
-    .from('quest_completions')
+    .from('feed_completions_enriched' as 'quest_completions')
     .select('*')
     .in('user_id', ids)
     .eq('status', 'active')
@@ -49,90 +102,26 @@ export async function fetchHomeFeed(
     );
   }
 
-  const { data: completions, error } = await q;
+  const { data: rows, error } = await q;
   if (error) throw error;
-  const rows = (completions ?? []).filter((r) => !blocked.has(r.user_id as string));
-  if (rows.length === 0) return [];
-
-  const pIds = [...new Set(rows.map((r) => r.user_id))];
-  const officialQids = [...new Set(rows.map((r) => r.quest_id).filter(Boolean))] as string[];
-  const groupQids = [...new Set(rows.map((r) => r.group_quest_id).filter(Boolean))] as string[];
-  const groupIds = [...new Set(rows.map((r) => r.group_id).filter(Boolean))] as string[];
-  const cIds = rows.map((r) => r.id);
-
-  const [profilesRes, questsRes, groupQuestsRes, groupsRes, mediasRes] = await Promise.all([
-    supabase.from('profiles').select(PROFILE_COLS_BASIC).in('id', pIds),
-    officialQids.length
-      ? supabase.from('quests').select('*').in('id', officialQids)
-      : Promise.resolve({ data: [] as { id: string }[] }),
-    groupQids.length
-      ? supabase.from('group_quests').select('*').in('id', groupQids)
-      : Promise.resolve({ data: [] as { id: string }[] }),
-    groupIds.length
-      ? supabase.from('groups').select('id, name').in('id', groupIds)
-      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-    supabase.from('quest_media').select('*').in('completion_id', cIds),
-  ]);
-
-  const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
-  const questMap = new Map((questsRes.data ?? []).map((q) => [q.id, q]));
-  const groupQuestMap = new Map((groupQuestsRes.data ?? []).map((gq) => [gq.id, gq]));
-  const groupMap = new Map((groupsRes.data ?? []).map((g) => [g.id, g]));
-  const mediaByC = groupMediaByCompletion(mediasRes.data ?? []);
-
-  return rows.map((r) => ({
-    ...r,
-    profiles: profileMap.get(r.user_id),
-    quests: r.quest_id ? questMap.get(r.quest_id) : undefined,
-    group_quests: r.group_quest_id ? groupQuestMap.get(r.group_quest_id) : undefined,
-    groups: r.group_id ? groupMap.get(r.group_id) : undefined,
-    quest_media: mediaByC.get(r.id) ?? [],
-  }));
+  return ((rows ?? []) as unknown as FeedViewRow[])
+    .filter((r) => !blocked.has(r.user_id))
+    .map(mapViewRow);
 }
 
-export async function fetchGroupFeed(groupId: string) {
-  const { data: completions, error } = await supabase
-    .from('quest_completions')
+export async function fetchGroupFeed(groupId: string): Promise<FeedPost[]> {
+  const { data: rows, error } = await supabase
+    .from('feed_completions_enriched' as 'quest_completions')
     .select('*')
     .eq('group_id', groupId)
     .eq('status', 'active')
     .order('completed_at', { ascending: false })
     .limit(50);
   if (error) throw error;
-  const rows = completions ?? [];
-  if (rows.length === 0) return [];
-
-  const pIds = [...new Set(rows.map((r) => r.user_id))];
-  const officialQids = [...new Set(rows.map((r) => r.quest_id).filter(Boolean))] as string[];
-  const groupQids = [...new Set(rows.map((r) => r.group_quest_id).filter(Boolean))] as string[];
-  const cIds = rows.map((r) => r.id);
-
-  const [profilesRes, questsRes, groupQuestsRes, mediasRes] = await Promise.all([
-    supabase.from('profiles').select(PROFILE_COLS_BASIC).in('id', pIds),
-    officialQids.length
-      ? supabase.from('quests').select('*').in('id', officialQids)
-      : Promise.resolve({ data: [] as { id: string }[] }),
-    groupQids.length
-      ? supabase.from('group_quests').select('*').in('id', groupQids)
-      : Promise.resolve({ data: [] as { id: string }[] }),
-    supabase.from('quest_media').select('*').in('completion_id', cIds),
-  ]);
-
-  const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
-  const questMap = new Map((questsRes.data ?? []).map((q) => [q.id, q]));
-  const groupQuestMap = new Map((groupQuestsRes.data ?? []).map((gq) => [gq.id, gq]));
-  const mediaByC = groupMediaByCompletion(mediasRes.data ?? []);
-
-  return rows.map((r) => ({
-    ...r,
-    profiles: profileMap.get(r.user_id),
-    quests: r.quest_id ? questMap.get(r.quest_id) : undefined,
-    group_quests: r.group_quest_id ? groupQuestMap.get(r.group_quest_id) : undefined,
-    quest_media: mediaByC.get(r.id) ?? [],
-  }));
+  return ((rows ?? []) as unknown as FeedViewRow[]).map(mapViewRow);
 }
 
-export async function fetchSuggestedQuest(userId: string, preferredCategories: string[]) {
+export async function fetchSuggestedQuest(userId: string, preferredCategories: string[]): Promise<QuestRow | null> {
   let q = supabase.from('quests').select('*').eq('is_active', true);
   if (preferredCategories.length > 0) {
     q = q.in('category', preferredCategories);

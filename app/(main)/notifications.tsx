@@ -19,6 +19,11 @@ type NotificationRow = {
   data: unknown;
 };
 
+function asNotificationData(data: unknown): Record<string, string | undefined> {
+  if (typeof data === 'object' && data !== null) return data as Record<string, string | undefined>;
+  return {};
+}
+
 export default function NotificationsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -31,12 +36,7 @@ export default function NotificationsScreen() {
 
   const onOpen = (row: NotificationRow) => {
     markOne.mutate(row.id);
-    const d = row.data as {
-      completion_id?: string;
-      sender_id?: string;
-      group_id?: string;
-      quest_id?: string;
-    };
+    const d = asNotificationData(row.data);
     if (row.type === 'comment' || row.type === 'respect') {
       if (d.completion_id) router.push(`/(main)/completion/${d.completion_id}`);
     } else if (row.type === 'friend_request' && d.sender_id) {
@@ -49,7 +49,7 @@ export default function NotificationsScreen() {
   };
 
   const resolveRequestId = async (row: NotificationRow): Promise<string | undefined> => {
-    const d = row.data as { sender_id?: string; request_id?: string };
+    const d = asNotificationData(row.data);
     if (d.request_id) return d.request_id;
     if (!uid || !d.sender_id) return undefined;
     return (await findPendingIncomingRequestId(uid, d.sender_id)) ?? undefined;

@@ -1,8 +1,10 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRef, useState } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { colors } from '@/constants/theme';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -101,7 +103,7 @@ export function CompletionForm({
       <Button className="mt-4" variant="secondary" onPress={pick}>
         {t('complete.proof')}
       </Button>
-      {uri ? <Image source={{ uri }} className="w-full h-56 rounded-xl mt-4 bg-surfaceElevated" /> : null}
+      {uri ? <Image source={{ uri }} style={{ width: '100%', height: 224, borderRadius: 12, marginTop: 16, backgroundColor: colors.surfaceElevated }} /> : null}
 
       <Input label={t('complete.caption')} value={caption} onChangeText={setCaption} multiline />
       <Input label={t('complete.rating')} value={rating} onChangeText={setRating} placeholder="1-5" />

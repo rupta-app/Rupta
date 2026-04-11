@@ -1,10 +1,12 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -54,7 +56,7 @@ export default function EditProfileScreen() {
         <View className="items-center mb-6">
           <Pressable onPress={pickAvatar}>
             {localAvatarUri ? (
-              <Image source={{ uri: localAvatarUri }} className="w-28 h-28 rounded-full bg-surfaceElevated" />
+              <Image source={{ uri: localAvatarUri }} style={{ width: 112, height: 112, borderRadius: 9999, backgroundColor: colors.surfaceElevated }} />
             ) : (
               <Avatar url={profile?.avatar_url} name={(displayName || profile?.display_name) ?? '?'} size={112} />
             )}

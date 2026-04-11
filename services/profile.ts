@@ -3,14 +3,15 @@ import type { Database } from '@/types/database';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+type ProfileView = Omit<Profile, 'city' | 'status' | 'is_admin'>;
 
-export async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-  if (error) return null;
-  return data as Profile;
+export async function fetchProfile(userId: string): Promise<ProfileView | null> {
+  const { data, error } = await supabase.from('profiles').select('id, username, display_name, avatar_url, bio, date_of_birth, preferred_language, preferred_categories, activity_styles, total_aura, yearly_aura, onboarding_completed, plan, created_at, updated_at').eq('id', userId).maybeSingle();
+  if (error) throw error;
+  return data;
 }
 
-export async function updateProfile(userId: string, patch: ProfileUpdate) {
+export async function updateProfile(userId: string, patch: ProfileUpdate): Promise<Profile> {
   const { data, error } = await supabase
     .from('profiles')
     .update({ ...patch, updated_at: new Date().toISOString() })
@@ -21,7 +22,7 @@ export async function updateProfile(userId: string, patch: ProfileUpdate) {
   return data as Profile;
 }
 
-export async function searchProfiles(query: string, excludeId: string) {
+export async function searchProfiles(query: string, excludeId: string): Promise<{ id: string; username: string; display_name: string; avatar_url: string | null; total_aura: number }[]> {
   const q = query.trim().toLowerCase();
   if (q.length < 2) return [];
   const { data, error } = await supabase
@@ -34,7 +35,12 @@ export async function searchProfiles(query: string, excludeId: string) {
   return data ?? [];
 }
 
-export async function fetchProfileStats(userId: string) {
+export async function fetchProfileStats(userId: string): Promise<{
+  questsCompleted: number;
+  categoriesExplored: number;
+  categoryCompletionPct: number;
+  lifeListCount: number;
+}> {
   const { data: completions } = await supabase
     .from('quest_completions')
     .select('id, quest_id, completed_at')
@@ -68,7 +74,12 @@ export async function fetchProfileStats(userId: string) {
 }
 
 /** Last 7 days completion counts (index 0 = 6 days ago, 6 = today) + period totals */
-export async function fetchActivityChart(userId: string) {
+export async function fetchActivityChart(userId: string): Promise<{
+  buckets: number[];
+  weekAura: number;
+  monthAura: number;
+  weekCompletions: number;
+}> {
   const since = new Date();
   since.setDate(since.getDate() - 7);
   since.setHours(0, 0, 0, 0);
@@ -108,7 +119,16 @@ export async function fetchActivityChart(userId: string) {
   };
 }
 
-export async function fetchRecentCompletions(userId: string, limit = 8) {
+export async function fetchRecentCompletions(userId: string, limit = 8): Promise<{
+  id: string;
+  aura_earned: number;
+  completed_at: string;
+  quest_id: string | null;
+  group_quest_id: string | null;
+  quest_source_type: string;
+  quests: { id: string; title_en: string; title_es: string } | undefined;
+  group_quests: { id: string; title: string } | undefined;
+}[]> {
   const { data: rows, error } = await supabase
     .from('quest_completions')
     .select('id, aura_earned, completed_at, quest_id, group_quest_id, quest_source_type')

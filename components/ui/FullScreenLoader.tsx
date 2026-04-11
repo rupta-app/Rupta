@@ -1,6 +1,8 @@
-import { ActivityIndicator, Image, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 import { logoMark } from '@/constants/branding';
+import { colors } from '@/constants/theme';
 
 export function FullScreenLoader({ label }: { label?: string }) {
   return (
@@ -9,10 +11,10 @@ export function FullScreenLoader({ label }: { label?: string }) {
         <Image
           source={logoMark}
           accessibilityLabel="Rupta"
-          resizeMode="contain"
+          contentFit="contain"
           style={{ width: 140, height: 40, marginBottom: 24 }}
         />
-        <ActivityIndicator color="#8B5CF6" size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
         {label ? <Text className="text-muted text-sm mt-5 text-center">{label}</Text> : null}
       </View>
     </View>

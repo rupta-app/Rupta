@@ -1,6 +1,8 @@
-import type { AchievementVisibility, GroupQuestStatus, QuestCreationRule } from '@/types/database';
+import type { AchievementVisibility, Database, GroupQuestStatus, QuestCreationRule } from '@/types/database';
 
 import { supabase } from '@/lib/supabase';
+
+type GroupQuestRow = Database['public']['Tables']['group_quests']['Row'];
 
 export type CreateGroupQuestInput = {
   title: string;
@@ -59,7 +61,7 @@ export async function createGroupQuest(
   groupId: string,
   creatorId: string,
   input: CreateGroupQuestInput,
-) {
+): Promise<GroupQuestRow> {
   const [rule, role] = await Promise.all([
     fetchQuestCreationRule(groupId),
     fetchMemberRole(groupId, creatorId),
@@ -92,7 +94,7 @@ export async function createGroupQuest(
   return data;
 }
 
-export async function fetchGroupQuests(groupId: string, includeDraftsForUserId?: string) {
+export async function fetchGroupQuests(groupId: string, includeDraftsForUserId?: string): Promise<GroupQuestRow[]> {
   let q = supabase.from('group_quests').select('*').eq('group_id', groupId).order('created_at', { ascending: false });
   const { data, error } = await q;
   if (error) throw error;
@@ -108,26 +110,26 @@ export async function fetchGroupQuests(groupId: string, includeDraftsForUserId?:
   );
 }
 
-export async function fetchGroupQuestById(id: string) {
+export async function fetchGroupQuestById(id: string): Promise<GroupQuestRow> {
   const { data, error } = await supabase.from('group_quests').select('*').eq('id', id).single();
   if (error) throw error;
   return data;
 }
 
-export async function updateGroupQuestStatus(id: string, status: GroupQuestStatus) {
+export async function updateGroupQuestStatus(id: string, status: GroupQuestStatus): Promise<GroupQuestRow> {
   const { data, error } = await supabase.from('group_quests').update({ status }).eq('id', id).select().single();
   if (error) throw error;
   return data;
 }
 
-export async function submitGroupQuestForOfficialReview(questId: string, userId: string) {
+export async function submitGroupQuestForOfficialReview(questId: string, userId: string): Promise<GroupQuestRow> {
   const row = await fetchGroupQuestById(questId);
   if (row.creator_id !== userId) throw new Error('Only the creator can submit for review');
   if (row.status !== 'active') throw new Error('Quest must be active to submit');
   return updateGroupQuestStatus(questId, 'submitted_for_review');
 }
 
-export async function activateDraftQuest(questId: string, adminUserId: string, groupId: string) {
+export async function activateDraftQuest(questId: string, adminUserId: string, groupId: string): Promise<GroupQuestRow> {
   const role = await fetchMemberRole(groupId, adminUserId);
   if (role !== 'owner' && role !== 'admin') throw new Error('Not allowed');
   const row = await fetchGroupQuestById(questId);

@@ -2,6 +2,8 @@ import { Tabs } from 'expo-router';
 import { Compass, Home, Trophy, User, Users } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
+import { colors } from '@/constants/theme';
+
 export default function TabsLayout() {
   const { t } = useTranslation();
   return (
@@ -9,11 +11,11 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#14141F',
-          borderTopColor: '#2E2E3E',
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
         },
-        tabBarActiveTintColor: '#8B5CF6',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.mutedForeground,
       }}
     >
       <Tabs.Screen

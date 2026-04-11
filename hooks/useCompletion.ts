@@ -52,6 +52,7 @@ export function useToggleRespect(completionId: string, userId: string | undefine
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: qk.completions.socialAll });
       void queryClient.invalidateQueries({ queryKey: qk.feed.all });
+      void queryClient.invalidateQueries({ queryKey: qk.feed.groupAll });
     },
   });
 }
@@ -65,6 +66,9 @@ export function useAddComment(completionId: string, userId: string | undefined) 
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: qk.completions.comments(completionId) });
+      void queryClient.invalidateQueries({ queryKey: qk.completions.detail(completionId) });
+      void queryClient.invalidateQueries({ queryKey: qk.feed.all });
+      void queryClient.invalidateQueries({ queryKey: qk.feed.groupAll });
     },
   });
 }

@@ -20,10 +20,6 @@ export function canCreateGroup(plan: UserPlan, groupsOwnedCount: number): boolea
   return groupsOwnedCount < PLAN_LIMITS[plan].maxGroupsCreated;
 }
 
-export function canJoinGroup(plan: UserPlan, groupsMemberCount: number): boolean {
-  return groupsMemberCount < PLAN_LIMITS[plan].maxGroupsJoined;
-}
-
 export function canCreateChallenge(plan: UserPlan, activeChallengesInGroup: number): boolean {
   return activeChallengesInGroup < PLAN_LIMITS[plan].maxActiveChallengesPerGroup;
 }

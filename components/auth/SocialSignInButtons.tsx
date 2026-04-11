@@ -2,6 +2,8 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { useTranslation } from 'react-i18next';
 
+import { colors } from '@/constants/theme';
+
 type Loading = 'google' | 'apple' | null;
 
 export function SocialSignInButtons({
@@ -27,7 +29,7 @@ export function SocialSignInButtons({
         }`}
       >
         {loading === 'google' ? (
-          <ActivityIndicator color="#94A3B8" />
+          <ActivityIndicator color={colors.muted} />
         ) : (
           <>
             <View className="w-8 h-8 rounded-lg bg-white items-center justify-center">
@@ -49,7 +51,7 @@ export function SocialSignInButtons({
           }`}
         >
           {loading === 'apple' ? (
-            <ActivityIndicator color="#0A0A0F" />
+            <ActivityIndicator color={colors.background} />
           ) : (
             <>
               <Text className="text-background text-lg"></Text>
