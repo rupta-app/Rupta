@@ -31,3 +31,19 @@ export const radii = {
   lg: 16,
   full: 9999,
 } as const;
+
+export const typography = {
+  hero: { fontSize: 36, lineHeight: 44, fontWeight: '700' as const },
+  title: { fontSize: 28, lineHeight: 36, fontWeight: '700' as const },
+  subtitle: { fontSize: 22, lineHeight: 30, fontWeight: '700' as const },
+  body: { fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
+  bodyBold: { fontSize: 16, lineHeight: 24, fontWeight: '600' as const },
+  caption: { fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
+  overline: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '600' as const,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase' as const,
+  },
+} as const;
