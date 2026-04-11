@@ -339,6 +339,14 @@ export const en = {
     notifications: 'Notifications (coming soon)',
     signOut: 'Sign out',
   },
+  weeklyRecap: {
+    title: 'Weekly Recap',
+    subtitle: 'Your week on Rupta',
+    questsDone: 'Quests completed',
+    auraEarned: 'AURA earned',
+    respectReceived: 'Respect received',
+    topCategory: 'Top category',
+  },
   admin: {
     note: 'Use the web admin with your service role key.',
   },

@@ -341,6 +341,14 @@ export const es: TranslationKeys = {
     notifications: 'Notificaciones (pronto)',
     signOut: 'Cerrar sesión',
   },
+  weeklyRecap: {
+    title: 'Resumen semanal',
+    subtitle: 'Tu semana en Rupta',
+    questsDone: 'Quests completados',
+    auraEarned: 'AURA ganado',
+    respectReceived: 'Respect recibido',
+    topCategory: 'Categoría top',
+  },
   admin: {
     note: 'Usa el admin web con tu service role key.',
   },
