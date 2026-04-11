@@ -30,7 +30,7 @@ export default function FriendsScreen() {
       <FlatList
         data={friends}
         keyExtractor={(item: { id: string }) => item.id}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         initialNumToRender={15}
         maxToRenderPerBatch={10}
         ListHeaderComponent={

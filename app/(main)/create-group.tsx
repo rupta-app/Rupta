@@ -29,7 +29,7 @@ export default function CreateGroupScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('groups.create')} />
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <Input label="Name" value={name} onChangeText={setName} />
         <Input label="Description" value={desc} onChangeText={setDesc} multiline />
         <Button

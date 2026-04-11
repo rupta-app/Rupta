@@ -21,7 +21,7 @@ export default function FriendRequestsScreen() {
       <FlatList
         data={reqs}
         keyExtractor={(item: { id: string }) => item.id}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         ListEmptyComponent={<EmptyState icon={UserCheck} title={t('empty.noFriends')} />}
         renderItem={({ item }: { item: { id: string; sender?: { display_name: string; username: string; avatar_url: string | null } } }) => (
           <UserListItem

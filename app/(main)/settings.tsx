@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { layout } from '@/constants/theme';
 import { setAppLanguage, type AppLanguage } from '@/i18n';
 import { supabase } from '@/lib/supabase';
 import { updateProfile } from '@/services/profile';
@@ -27,21 +29,23 @@ export default function SettingsScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('settings.title')} />
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: layout.screenPadding, paddingBottom: layout.scrollPadding }}>
         <Text className="text-muted text-xs uppercase mb-2">{t('settings.language')}</Text>
         <View className="flex-row gap-2 mb-8">
-          <Pressable
+          <PressableScale
             onPress={() => setLang('en')}
-            className={`px-4 py-3 rounded-xl border ${i18n.language.startsWith('en') ? 'border-primary' : 'border-border'}`}
+            scaleValue={0.96}
+            className={`px-4 py-3 rounded-xl border ${i18n.language.startsWith('en') ? 'border-primary bg-primary/10' : 'border-border'}`}
           >
-            <Text className="text-foreground">English</Text>
-          </Pressable>
-          <Pressable
+            <Text className={`${i18n.language.startsWith('en') ? 'text-foreground' : 'text-muted'}`}>English</Text>
+          </PressableScale>
+          <PressableScale
             onPress={() => setLang('es')}
-            className={`px-4 py-3 rounded-xl border ${i18n.language.startsWith('es') ? 'border-primary' : 'border-border'}`}
+            scaleValue={0.96}
+            className={`px-4 py-3 rounded-xl border ${i18n.language.startsWith('es') ? 'border-primary bg-primary/10' : 'border-border'}`}
           >
-            <Text className="text-foreground">Español</Text>
-          </Pressable>
+            <Text className={`${i18n.language.startsWith('es') ? 'text-foreground' : 'text-muted'}`}>Español</Text>
+          </PressableScale>
         </View>
         <Text className="text-muted mb-4">{t('settings.notifications')}</Text>
         <Button

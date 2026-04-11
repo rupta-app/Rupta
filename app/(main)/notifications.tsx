@@ -120,7 +120,7 @@ export default function NotificationsScreen() {
       <FlatList
         data={items}
         keyExtractor={(item: NotificationRow) => item.id}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         ListEmptyComponent={<EmptyState icon={Bell} title={t('empty.noNotifications')} />}
         initialNumToRender={12}
         maxToRenderPerBatch={8}

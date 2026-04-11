@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image } from 'expo-image';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
@@ -10,6 +10,7 @@ import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { PICKER_IMAGES } from '@/lib/pickImage';
 import { uploadAvatar } from '@/lib/storage';
 import { updateProfile } from '@/services/profile';
@@ -52,15 +53,15 @@ export default function EditProfileScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('profile.edit')} />
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <View className="items-center mb-6">
-          <Pressable onPress={pickAvatar}>
+          <PressableScale onPress={pickAvatar} scaleValue={0.96}>
             {localAvatarUri ? (
               <Image source={{ uri: localAvatarUri }} style={{ width: 112, height: 112, borderRadius: 9999, backgroundColor: colors.surfaceElevated }} />
             ) : (
               <Avatar url={profile?.avatar_url} name={(displayName || profile?.display_name) ?? '?'} size={112} />
             )}
-          </Pressable>
+          </PressableScale>
           <Button variant="ghost" className="mt-2 min-h-0 py-2" onPress={pickAvatar}>
             {t('onboarding.changePhoto')}
           </Button>

@@ -25,7 +25,7 @@ export default function UpgradeScreen() {
           </View>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <Text className="text-foreground text-2xl font-black">{t('upgrade.title')}</Text>
         <Text className="text-muted mt-3 leading-6">{t('upgrade.body')}</Text>
         <Card className="mt-8">

@@ -38,7 +38,7 @@ export default function SuggestQuestScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('suggestQuest.title')} />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         {done ? (
           <Text className="text-foreground text-lg font-semibold">{t('suggestQuest.thanks')}</Text>
         ) : (

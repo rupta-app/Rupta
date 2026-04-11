@@ -26,7 +26,7 @@ export default function LifeListScreen() {
       <FlatList
         data={rows as { quest_id: string; quests: Parameters<typeof questTitle>[0] }[]}
         keyExtractor={(item) => item.quest_id}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         initialNumToRender={12}
         maxToRenderPerBatch={8}
         ListEmptyComponent={
