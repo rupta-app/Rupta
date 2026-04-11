@@ -1,13 +1,16 @@
 import * as MediaLibrary from 'expo-media-library';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 import ViewShot from 'react-native-view-shot';
 
 import { CompletedStoryCard } from '@/components/share/CompletedStoryCard';
 import { Button } from '@/components/ui/Button';
+import { colors } from '@/constants/theme';
 import { useCompletion } from '@/hooks/useCompletion';
 import { openShareSheet, shareImageToInstagramStories } from '@/lib/share';
 import { appLang } from '@/utils/lang';
@@ -16,6 +19,55 @@ function normalizeRouteParam(value: string | string[] | undefined): string | und
   if (value == null) return undefined;
   const v = Array.isArray(value) ? value[0] : value;
   return typeof v === 'string' && v.trim().length > 0 ? v.trim() : undefined;
+}
+
+const BURST_PARTICLES = [
+  { x: -60, y: -80, color: colors.primary },
+  { x: 60, y: -70, color: colors.secondary },
+  { x: -40, y: -100, color: colors.respect },
+  { x: 80, y: -50, color: colors.primary },
+  { x: -80, y: -40, color: colors.secondary },
+  { x: 30, y: -90, color: colors.respect },
+];
+
+function CelebrationBurst() {
+  return (
+    <View className="absolute inset-0 items-center justify-center" pointerEvents="none">
+      {BURST_PARTICLES.map((p, i) => (
+        <BurstDot key={i} targetX={p.x} targetY={p.y} color={p.color} delay={i * 50} />
+      ))}
+    </View>
+  );
+}
+
+function BurstDot({ targetX, targetY, color, delay }: { targetX: number; targetY: number; color: string; delay: number }) {
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(1);
+  const scale = useSharedValue(0);
+
+  useEffect(() => {
+    scale.value = withDelay(delay, withSpring(1, { damping: 8 }));
+    translateX.value = withDelay(delay, withSpring(targetX, { damping: 12 }));
+    translateY.value = withDelay(delay, withSpring(targetY, { damping: 12 }));
+    opacity.value = withDelay(delay + 300, withTiming(0, { duration: 400 }));
+  }, [delay, opacity, scale, targetX, targetY, translateX, translateY]);
+
+  const style = useAnimatedStyle(() => ({
+    position: 'absolute' as const,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: color,
+    opacity: opacity.value,
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
+  return <Animated.View style={style} />;
 }
 
 export default function ShareCardScreen() {
@@ -28,6 +80,10 @@ export default function ShareCardScreen() {
   const { data, isLoading } = useCompletion(completionId);
   const ref = useRef<ViewShot>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, []);
 
   if (!completionId) {
     return (
@@ -87,7 +143,13 @@ export default function ShareCardScreen() {
       className="flex-1 bg-background"
       contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 40, alignItems: 'center' }}
     >
-      <Text className="text-foreground text-xl font-bold px-4 text-center">{t('complete.shareStory')}</Text>
+      <Animated.Text
+        entering={FadeInDown.delay(400).duration(300)}
+        className="text-foreground text-xl font-bold px-4 text-center"
+      >
+        {t('complete.shareStory')}
+      </Animated.Text>
+      <CelebrationBurst />
       <ViewShot ref={ref} options={{ format: 'png', quality: 1 }}>
         <View className="items-center py-8 bg-background">
           <CompletedStoryCard
@@ -104,7 +166,7 @@ export default function ShareCardScreen() {
           />
         </View>
       </ViewShot>
-      <View className="px-6 w-full gap-3 mt-4">
+      <Animated.View entering={FadeInUp.delay(600).duration(300)} className="px-6 w-full gap-3 mt-4">
         <Button onPress={onInstagram} loading={busy}>
           {t('complete.shareStory')}
         </Button>
@@ -114,7 +176,7 @@ export default function ShareCardScreen() {
         <Button variant="ghost" onPress={() => router.replace('/(main)/(tabs)/home')}>
           {t('common.continue')}
         </Button>
-      </View>
+      </Animated.View>
     </ScrollView>
   );
 }

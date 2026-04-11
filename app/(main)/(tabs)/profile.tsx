@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { BookmarkMinus, Pencil } from 'lucide-react-native';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { colors } from '@/constants/theme';
@@ -79,6 +81,15 @@ export default function ProfileTab() {
   const level = auraLevelFromTotal(profile.total_aura);
   const { progress } = auraProgressInCurrentLevel(profile.total_aura);
   const next = auraToNextLevel(profile.total_aura);
+  const progressWidth = useSharedValue(0);
+
+  useEffect(() => {
+    progressWidth.value = withTiming(progress * 100, { duration: 800 });
+  }, [progress, progressWidth]);
+
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
   const maxBar = Math.max(...(activity?.buckets ?? [0]), 1);
 
   const profileHeader = (
@@ -123,18 +134,32 @@ export default function ProfileTab() {
         <ScrollView contentContainerStyle={{ paddingBottom: SCROLL_PADDING_BOTTOM, paddingTop: SCROLL_PADDING_TOP }}>
           {profileHeader}
           <View className="px-4">
-            <Card className="mt-4">
-              <Text className="text-muted text-xs uppercase">{t('common.auraLevel')}</Text>
-              <Text className="text-primary text-4xl font-black mt-1">{level}</Text>
-              <Text className="text-foreground mt-2">
-                {profile.total_aura} {t('common.aura')}
-              </Text>
-              <View className="h-2 bg-surfaceElevated rounded-full mt-3 overflow-hidden">
-                <View className="h-full bg-primary rounded-full" style={{ width: `${progress * 100}%` }} />
+            <Card className="mt-4" variant="glow">
+              <View className="flex-row items-center gap-4">
+                <View className="relative">
+                  <LinearGradient
+                    colors={[colors.primary + '30', 'transparent']}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    style={{ position: 'absolute', width: 80, height: 80, borderRadius: 40 }}
+                  />
+                  <View className="w-20 h-20 rounded-full border-2 border-primary items-center justify-center shadow-lg shadow-primary/30">
+                    <Text className="text-primary text-3xl font-black">{level}</Text>
+                  </View>
+                </View>
+                <View className="flex-1">
+                  <Text className="text-muted text-xs uppercase">{t('common.auraLevel')}</Text>
+                  <Text className="text-foreground text-lg font-bold mt-1">
+                    {profile.total_aura} {t('common.aura')}
+                  </Text>
+                  <View className="h-2 bg-surfaceElevated rounded-full mt-2 overflow-hidden">
+                    <Animated.View className="h-full bg-primary rounded-full" style={progressBarStyle} />
+                  </View>
+                  <Text className="text-muted text-xs mt-1">
+                    {next} {t('profile.nextLevelSuffix')}
+                  </Text>
+                </View>
               </View>
-              <Text className="text-muted text-xs mt-1">
-                {next} {t('profile.nextLevelSuffix')}
-              </Text>
             </Card>
 
             <View className="flex-row flex-wrap gap-3 mt-4">
