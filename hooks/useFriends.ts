@@ -6,10 +6,11 @@ import {
   respondFriendRequest,
   sendFriendRequest,
 } from '@/services/friends';
+import { qk } from '@/hooks/queryKeys';
 
 export function useFriendsList(userId: string | undefined) {
   return useQuery({
-    queryKey: ['friends', userId],
+    queryKey: qk.friends.list(userId ?? ''),
     queryFn: () => fetchFriends(userId!),
     enabled: Boolean(userId),
   });
@@ -17,34 +18,34 @@ export function useFriendsList(userId: string | undefined) {
 
 export function useIncomingFriendRequests(userId: string | undefined) {
   return useQuery({
-    queryKey: ['friend-requests-in', userId],
+    queryKey: qk.friends.requestsIn(userId ?? ''),
     queryFn: () => fetchIncomingRequests(userId!),
     enabled: Boolean(userId),
   });
 }
 
 export function useSendFriendRequest() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ senderId, receiverId }: { senderId: string; receiverId: string }) =>
       sendFriendRequest(senderId, receiverId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['friend-requests-in'] });
+      void queryClient.invalidateQueries({ queryKey: qk.friends.requestsInAll });
     },
   });
 }
 
 export function useRespondFriendRequest() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ requestId, accept }: { requestId: string; accept: boolean }) =>
       respondFriendRequest(requestId, accept),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['friend-requests-in'] });
-      void qc.invalidateQueries({ queryKey: ['friends'] });
-      void qc.invalidateQueries({ queryKey: ['friend-ids'] });
-      void qc.invalidateQueries({ queryKey: ['friend-relation'] });
-      void qc.invalidateQueries({ queryKey: ['notifications'] });
+      void queryClient.invalidateQueries({ queryKey: qk.friends.requestsInAll });
+      void queryClient.invalidateQueries({ queryKey: qk.friends.listAll });
+      void queryClient.invalidateQueries({ queryKey: qk.friends.idsAll });
+      void queryClient.invalidateQueries({ queryKey: qk.friends.relation });
+      void queryClient.invalidateQueries({ queryKey: qk.notifications.prefix });
     },
   });
 }

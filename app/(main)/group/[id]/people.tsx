@@ -1,8 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
@@ -13,7 +13,6 @@ import { useAuth } from '@/providers/AuthProvider';
 export default function GroupPeopleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id!;
@@ -23,7 +22,7 @@ export default function GroupPeopleScreen() {
 
   if (isLoading || !data) {
     return (
-      <View className="flex-1 bg-background justify-center items-center" style={{ paddingTop: insets.top }}>
+      <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
       </View>
     );
@@ -33,16 +32,8 @@ export default function GroupPeopleScreen() {
   const memberCount = members.length;
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <View className="flex-1 ml-1">
-          <Text className="text-foreground font-bold text-lg">{t('groups.people')}</Text>
-          <Text className="text-muted text-xs mt-0.5">{group.name}</Text>
-        </View>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader title={t('groups.people')} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <Text className="text-muted text-sm mb-4">

@@ -1,11 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -14,6 +13,7 @@ import { isAtCompletionCap, maxCompletionsAllowed } from '@/lib/questCompletionR
 import { useAuth } from '@/providers/AuthProvider';
 import type { QuestRow } from '@/services/quests';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
+import { appLang } from '@/utils/lang';
 import { questDescription, questTitle } from '@/utils/questCopy';
 
 function completionRuleLines(quest: QuestRow, t: (k: string, o?: Record<string, unknown>) => string) {
@@ -36,8 +36,7 @@ export default function QuestDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const { data: quest, isLoading } = useQuest(id);
   const { session } = useAuth();
   const uid = session?.user?.id;
@@ -59,13 +58,8 @@ export default function QuestDetailScreen() {
   const isSaved = saved.has(quest.id);
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <Text className="text-foreground font-bold text-lg ml-1">{t('quest.detail')}</Text>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader title={t('quest.detail')} />
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         <Animated.View entering={FadeInDown.duration(450).springify().damping(16)}>
           <View className="bg-surface border border-primary/25 rounded-2xl p-5 mb-2">

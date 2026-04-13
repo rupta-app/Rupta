@@ -1,11 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
-import { ChevronLeft, Flag } from 'lucide-react-native';
+import { Flag } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 
 import { RespectButton } from '@/components/social/RespectButton';
 import { AppModal } from '@/components/ui/AppModal';
@@ -26,9 +27,11 @@ import { buildCompletionShareMessage, shareCompletionGeneric, shareToWhatsApp } 
 import { useAuth } from '@/providers/AuthProvider';
 import { submitReport } from '@/services/reports';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
-import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 import { formatCompletionTime } from '@/utils/formatTime';
+import { isSameUser } from '@/utils/identity';
+import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
+import { isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 
 const REASONS: Database['public']['Tables']['reports']['Row']['reason'][] = [
   'fake_proof',
@@ -50,8 +53,7 @@ export default function CompletionDetailScreen() {
   const completionId = useMemo(() => normalizeRouteParam(params.id), [params.id]);
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const { session, refreshProfile, profile } = useAuth();
   const viewerId = session?.user?.id ?? profile?.id;
   const uid = viewerId;
@@ -68,7 +70,7 @@ export default function CompletionDetailScreen() {
 
   if (!completionId) {
     return (
-      <View className="flex-1 bg-background justify-center items-center" style={{ paddingTop: insets.top }}>
+      <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted px-6 text-center">{t('common.error')}</Text>
       </View>
     );
@@ -92,10 +94,7 @@ export default function CompletionDetailScreen() {
       : 'SideQuest';
   const shareMsg = buildCompletionShareMessage(qTitle, data.profiles.username);
 
-  const isOwner =
-    viewerId != null &&
-    data.user_id != null &&
-    String(viewerId).toLowerCase() === String(data.user_id).toLowerCase();
+  const isOwner = isSameUser(viewerId, data.user_id);
 
   const openShare = () => {
     Alert.alert(t('completion.share'), undefined, [
@@ -120,40 +119,39 @@ export default function CompletionDetailScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <View className="flex-1" />
-        {isOwner ? (
-          <Pressable
-            onPress={() =>
-              Alert.alert(t('completion.deleteTitle'), t('completion.deleteMessage'), [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                  text: t('completion.deleteConfirm'),
-                  style: 'destructive',
-                  onPress: () =>
-                    deletePost.mutate(undefined, {
-                      onSuccess: async () => {
-                        await refreshProfile();
-                        router.back();
-                      },
-                      onError: (e) =>
-                        Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e)),
-                    }),
-                },
-              ])
-            }
-            disabled={deletePost.isPending}
-            className="py-2 pr-4 pl-2"
-            hitSlop={12}
-          >
-            <Text className="text-danger font-semibold text-base">{t('completion.deletePost')}</Text>
-          </Pressable>
-        ) : null}
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader
+        title=""
+        right={
+          isOwner ? (
+            <Pressable
+              onPress={() =>
+                Alert.alert(t('completion.deleteTitle'), t('completion.deleteMessage'), [
+                  { text: t('common.cancel'), style: 'cancel' },
+                  {
+                    text: t('completion.deleteConfirm'),
+                    style: 'destructive',
+                    onPress: () =>
+                      deletePost.mutate(undefined, {
+                        onSuccess: async () => {
+                          await refreshProfile();
+                          router.back();
+                        },
+                        onError: (e) =>
+                          Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e)),
+                      }),
+                  },
+                ])
+              }
+              disabled={deletePost.isPending}
+              className="py-2 pr-4 pl-2"
+              hitSlop={12}
+            >
+              <Text className="text-danger font-semibold text-base">{t('completion.deletePost')}</Text>
+            </Pressable>
+          ) : undefined
+        }
+      />
       <ScrollView contentContainerStyle={{ paddingBottom: 48, flexGrow: 1 }}>
         {media ? <Image source={{ uri: media }} className="w-full h-72 bg-surfaceElevated" /> : null}
         <View className="p-4">

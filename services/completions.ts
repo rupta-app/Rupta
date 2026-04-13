@@ -1,6 +1,7 @@
 import type { AchievementVisibility } from '@/types/database';
 
 import { supabase } from '@/lib/supabase';
+import { enrichWithProfiles, PROFILE_COLS_BASIC } from '@/services/_profiles';
 
 function parseOptionalRating(raw: number | null | undefined): number | null {
   if (raw == null) return null;
@@ -296,13 +297,7 @@ export async function fetchComments(completionId: string) {
   if (error) throw error;
   const list = rows ?? [];
   if (list.length === 0) return [];
-  const uids = [...new Set(list.map((c) => c.user_id))];
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, username, display_name, avatar_url')
-    .in('id', uids);
-  const pmap = new Map((profiles ?? []).map((p) => [p.id, p]));
-  return list.map((c) => ({ ...c, profiles: pmap.get(c.user_id) }));
+  return enrichWithProfiles(list, 'user_id', PROFILE_COLS_BASIC);
 }
 
 export async function addComment(completionId: string, userId: string, content: string) {

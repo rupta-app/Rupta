@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
@@ -152,17 +153,14 @@ export default function LeaderboardScreen() {
               isLoading ? null : <Text className="text-muted text-center">{t('feed.empty')}</Text>
             }
             renderItem={({ item, index }) => (
-              <Pressable onPress={() => router.push(`/(main)/user/${item.id}`)}>
-                <Card className="mb-2 flex-row items-center gap-3">
-                  <Text className="text-muted w-6 text-lg font-bold">#{index + 1}</Text>
-                  <Avatar url={item.avatar_url} name={item.display_name} size={40} />
-                  <View className="flex-1">
-                    <Text className="text-foreground font-semibold">{item.display_name}</Text>
-                    <Text className="text-muted text-xs">@{item.username}</Text>
-                  </View>
-                  <Text className="text-primary font-black">{displayAura(item)}</Text>
-                </Card>
-              </Pressable>
+              <LeaderboardRow
+                rank={index + 1}
+                displayName={item.display_name}
+                username={item.username}
+                avatarUrl={item.avatar_url}
+                aura={displayAura(item)}
+                onPress={() => router.push(`/(main)/user/${item.id}`)}
+              />
             )}
           />
         </View>
@@ -175,17 +173,14 @@ export default function LeaderboardScreen() {
             isLoading ? null : <Text className="text-muted text-center">{t('feed.empty')}</Text>
           }
           renderItem={({ item, index }) => (
-            <Pressable onPress={() => router.push(`/(main)/user/${item.id}`)}>
-              <Card className="mb-2 flex-row items-center gap-3">
-                <Text className="text-muted w-6 text-lg font-bold">#{index + 1}</Text>
-                <Avatar url={item.avatar_url} name={item.display_name} size={40} />
-                <View className="flex-1">
-                  <Text className="text-foreground font-semibold">{item.display_name}</Text>
-                  <Text className="text-muted text-xs">@{item.username}</Text>
-                </View>
-                <Text className="text-primary font-black">{displayAura(item)}</Text>
-              </Card>
-            </Pressable>
+            <LeaderboardRow
+              rank={index + 1}
+              displayName={item.display_name}
+              username={item.username}
+              avatarUrl={item.avatar_url}
+              aura={displayAura(item)}
+              onPress={() => router.push(`/(main)/user/${item.id}`)}
+            />
           )}
         />
       )}

@@ -1,9 +1,8 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { setAppLanguage, type AppLanguage } from '@/i18n';
 import { supabase } from '@/lib/supabase';
@@ -12,7 +11,6 @@ import { useAuth } from '@/providers/AuthProvider';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
   const { session, refreshProfile } = useAuth();
   const uid = session?.user?.id;
@@ -27,13 +25,8 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <Text className="text-foreground font-bold text-lg ml-1">{t('settings.title')}</Text>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader title={t('settings.title')} />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <Text className="text-muted text-xs uppercase mb-2">{t('settings.language')}</Text>
         <View className="flex-row gap-2 mb-8">

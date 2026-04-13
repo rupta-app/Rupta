@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase';
+import { groupMediaByCompletion } from '@/services/_media';
+import { PROFILE_COLS_BASIC } from '@/services/_profiles';
 
 export async function fetchFriendIds(userId: string): Promise<string[]> {
   const { data, error } = await supabase
@@ -59,7 +61,7 @@ export async function fetchHomeFeed(
   const cIds = rows.map((r) => r.id);
 
   const [profilesRes, questsRes, groupQuestsRes, groupsRes, mediasRes] = await Promise.all([
-    supabase.from('profiles').select('id, username, display_name, avatar_url').in('id', pIds),
+    supabase.from('profiles').select(PROFILE_COLS_BASIC).in('id', pIds),
     officialQids.length
       ? supabase.from('quests').select('*').in('id', officialQids)
       : Promise.resolve({ data: [] as { id: string }[] }),
@@ -76,12 +78,7 @@ export async function fetchHomeFeed(
   const questMap = new Map((questsRes.data ?? []).map((q) => [q.id, q]));
   const groupQuestMap = new Map((groupQuestsRes.data ?? []).map((gq) => [gq.id, gq]));
   const groupMap = new Map((groupsRes.data ?? []).map((g) => [g.id, g]));
-  const mediaByC = new Map<string, { media_url: string; media_type: string }[]>();
-  (mediasRes.data ?? []).forEach((m) => {
-    const list = mediaByC.get(m.completion_id) ?? [];
-    list.push(m);
-    mediaByC.set(m.completion_id, list);
-  });
+  const mediaByC = groupMediaByCompletion(mediasRes.data ?? []);
 
   return rows.map((r) => ({
     ...r,
@@ -111,7 +108,7 @@ export async function fetchGroupFeed(groupId: string) {
   const cIds = rows.map((r) => r.id);
 
   const [profilesRes, questsRes, groupQuestsRes, mediasRes] = await Promise.all([
-    supabase.from('profiles').select('id, username, display_name, avatar_url').in('id', pIds),
+    supabase.from('profiles').select(PROFILE_COLS_BASIC).in('id', pIds),
     officialQids.length
       ? supabase.from('quests').select('*').in('id', officialQids)
       : Promise.resolve({ data: [] as { id: string }[] }),
@@ -124,12 +121,7 @@ export async function fetchGroupFeed(groupId: string) {
   const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
   const questMap = new Map((questsRes.data ?? []).map((q) => [q.id, q]));
   const groupQuestMap = new Map((groupQuestsRes.data ?? []).map((gq) => [gq.id, gq]));
-  const mediaByC = new Map<string, { media_url: string; media_type: string }[]>();
-  (mediasRes.data ?? []).forEach((m) => {
-    const list = mediaByC.get(m.completion_id) ?? [];
-    list.push(m);
-    mediaByC.set(m.completion_id, list);
-  });
+  const mediaByC = groupMediaByCompletion(mediasRes.data ?? []);
 
   return rows.map((r) => ({
     ...r,

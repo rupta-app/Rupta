@@ -1,11 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, Settings, UserPlus } from 'lucide-react-native';
+import { Settings, UserPlus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
+import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +17,7 @@ import { useGroupFeed } from '@/hooks/useFeed';
 import { useGroupQuestsList } from '@/hooks/useGroupQuests';
 import { useAuth } from '@/providers/AuthProvider';
 import { fetchCompletionCounts } from '@/services/completions';
+import { appLang } from '@/utils/lang';
 import { useQuery } from '@tanstack/react-query';
 
 type Section = 'rankings' | 'feed' | 'quests';
@@ -37,9 +40,8 @@ export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const go = (path: string) => (router as { push: (p: string) => void }).push(path);
-  const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const { session, profile } = useAuth();
   const uid = session?.user?.id ?? profile?.id;
   const [section, setSection] = useState<Section>('rankings');
@@ -80,31 +82,22 @@ export default function GroupDetailScreen() {
   const { group } = data;
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border gap-2">
-        <Pressable onPress={() => router.back()} className="p-2 shrink-0">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <Avatar url={group.avatar_url} name={group.name} size={44} />
-        <View className="flex-1 min-w-0 pr-1">
-          <Text className="text-foreground font-bold text-lg" numberOfLines={1}>
-            {group.name}
-          </Text>
-          {group.description ? (
-            <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
-              {group.description}
-            </Text>
-          ) : null}
-        </View>
-        <Pressable onPress={() => go(`/(main)/group/${id}/people`)} className="p-2.5 shrink-0" hitSlop={6}>
-          <UserPlus color="#A78BFA" size={24} strokeWidth={2} />
-        </Pressable>
-        {canAdmin ? (
-          <Pressable onPress={() => go(`/(main)/group/${id}/settings`)} className="p-2.5 shrink-0" hitSlop={6}>
-            <Settings color="#94A3B8" size={24} strokeWidth={2} />
-          </Pressable>
-        ) : null}
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader
+        title={group.name}
+        right={
+          <View className="flex-row items-center">
+            <Pressable onPress={() => go(`/(main)/group/${id}/people`)} className="p-2.5 shrink-0" hitSlop={6}>
+              <UserPlus color="#A78BFA" size={24} strokeWidth={2} />
+            </Pressable>
+            {canAdmin ? (
+              <Pressable onPress={() => go(`/(main)/group/${id}/settings`)} className="p-2.5 shrink-0" hitSlop={6}>
+                <Settings color="#94A3B8" size={24} strokeWidth={2} />
+              </Pressable>
+            ) : null}
+          </View>
+        }
+      />
 
       <View className="flex-row border-b border-border">
         {TAB_BAR.map(({ key, labelKey }) => {
@@ -135,17 +128,15 @@ export default function GroupDetailScreen() {
               <Text className="text-muted">{t('feed.empty')}</Text>
             ) : (
               (lb as LbRow[]).map((item, index) => (
-                <Pressable key={item.id} onPress={() => router.push(`/(main)/user/${item.id}`)}>
-                  <Card className="mb-2 flex-row items-center gap-3 py-3">
-                    <Text className="text-muted w-7 text-lg font-bold">#{index + 1}</Text>
-                    <Avatar url={item.avatar_url} name={item.display_name} size={40} />
-                    <View className="flex-1 min-w-0">
-                      <Text className="text-foreground font-semibold">{item.display_name}</Text>
-                      <Text className="text-muted text-xs">@{item.username}</Text>
-                    </View>
-                    <Text className="text-primary font-black">{item.total_group_aura ?? 0}</Text>
-                  </Card>
-                </Pressable>
+                <LeaderboardRow
+                  key={item.id}
+                  rank={index + 1}
+                  displayName={item.display_name}
+                  username={item.username}
+                  avatarUrl={item.avatar_url}
+                  aura={item.total_group_aura ?? 0}
+                  onPress={() => router.push(`/(main)/user/${item.id}`)}
+                />
               ))
             )}
           </>

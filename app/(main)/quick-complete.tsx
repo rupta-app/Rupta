@@ -1,22 +1,21 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { fetchQuests } from '@/services/quests';
+import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
 
 export default function QuickCompleteScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en';
+  const lang = appLang(i18n);
   const [search, setSearch] = useState('');
 
   const { data: quests = [], isFetching } = useQuery({
@@ -25,13 +24,8 @@ export default function QuickCompleteScreen() {
   });
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center px-2 py-2 border-b border-border">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft color="#F8FAFC" size={28} />
-        </Pressable>
-        <Text className="text-foreground font-bold text-lg ml-1 flex-1">{t('quickComplete.title')}</Text>
-      </View>
+    <View className="flex-1 bg-background">
+      <ScreenHeader title={t('quickComplete.title')} />
       <View className="p-4">
         <Input value={search} onChangeText={setSearch} placeholder={t('quickComplete.placeholder')} />
         <Text className="text-muted text-xs mt-2">{t('quickComplete.hint')}</Text>

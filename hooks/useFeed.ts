@@ -2,10 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { HomeFeedFilter } from '@/services/feed';
 import { fetchFriendIds, fetchGroupFeed, fetchHomeFeed, fetchSuggestedQuest } from '@/services/feed';
+import { qk } from '@/hooks/queryKeys';
 
 export function useFriendIds(userId: string | undefined) {
   return useQuery({
-    queryKey: ['friend-ids', userId],
+    queryKey: qk.friends.ids(userId ?? ''),
     queryFn: () => fetchFriendIds(userId!),
     enabled: Boolean(userId),
   });
@@ -17,7 +18,7 @@ export function useHomeFeed(
   filter: HomeFeedFilter = 'all',
 ) {
   return useQuery({
-    queryKey: ['feed', userId, friendIds.join(','), filter],
+    queryKey: qk.feed.home(userId ?? '', friendIds.join(','), filter),
     queryFn: () => fetchHomeFeed(userId!, friendIds, filter),
     enabled: Boolean(userId),
   });
@@ -25,7 +26,7 @@ export function useHomeFeed(
 
 export function useGroupFeed(groupId: string | undefined) {
   return useQuery({
-    queryKey: ['group-feed', groupId],
+    queryKey: qk.feed.group(groupId ?? ''),
     queryFn: () => fetchGroupFeed(groupId!),
     enabled: Boolean(groupId),
   });
@@ -33,7 +34,7 @@ export function useGroupFeed(groupId: string | undefined) {
 
 export function useSuggestedQuest(userId: string | undefined, categories: string[]) {
   return useQuery({
-    queryKey: ['suggested-quest', userId, categories.join(',')],
+    queryKey: qk.quests.suggested(userId ?? '', categories.join(',')),
     queryFn: () => fetchSuggestedQuest(userId!, categories),
     enabled: Boolean(userId),
   });
