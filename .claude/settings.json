@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git checkout -b *)",
+      "Bash(git push*)",
+      "Bash(git stash*)",
+      "Bash(git rev-parse*)",
+      "Bash(git show*)",
+      "Bash(gh pr *)",
+      "Bash(gh issue *)",
+      "Bash(npx expo start*)",
+      "Bash(npx expo install*)",
+      "Bash(npx supabase*)",
+      "Bash(npx tsc --noEmit*)",
+      "Bash(npm run*)",
+      "Bash(npm install*)",
+      "Bash(node scripts/*)",
+      "Bash(ls*)",
+      "Bash(wc*)"
+    ],
+    "deny": [
+      "Bash(git push origin main*)",
+      "Bash(git push --force origin main*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git branch -D *)",
+      "Bash(rm -rf *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(admin/.env*)"
+    ]
+  }
+}
