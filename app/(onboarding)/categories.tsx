@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { OnboardingStepShell } from '@/components/onboarding/OnboardingStepShell';
 import { Button } from '@/components/ui/Button';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { QUEST_CATEGORIES, type QuestCategory } from '@/constants/categories';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
 import { appLang } from '@/utils/lang';
@@ -38,15 +39,17 @@ export default function CategoriesOnboarding() {
     >
       <View className="flex-row flex-wrap gap-2.5">
         {QUEST_CATEGORIES.map((c) => (
-          <Pressable
+          <PressableScale
             key={c}
             onPress={() => toggle(c)}
+            scaleValue={0.95}
+            hitSlop={4}
             className={`px-4 py-3 rounded-full border ${
               draft.preferredCategories.includes(c) ? 'border-primary bg-primary/20' : 'border-border bg-surface'
             }`}
           >
             <Text className="text-foreground text-sm font-medium">{formatCategoryLabel(c, lang)}</Text>
-          </Pressable>
+          </PressableScale>
         ))}
       </View>
     </OnboardingStepShell>

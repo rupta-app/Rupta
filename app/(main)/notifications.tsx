@@ -1,10 +1,13 @@
 import { useRouter } from 'expo-router';
-import { Alert, FlatList, Pressable, Text, View } from 'react-native';
+import { Alert, FlatList, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Bell } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '@/hooks/useNotifications';
 import { useRespondFriendRequest } from '@/hooks/useFriends';
 import { useAuth } from '@/providers/AuthProvider';
@@ -117,36 +120,38 @@ export default function NotificationsScreen() {
       <FlatList
         data={items}
         keyExtractor={(item: NotificationRow) => item.id}
-        contentContainerStyle={{ padding: 16 }}
-        ListEmptyComponent={<Text className="text-muted text-center mt-8">{t('notifications.empty')}</Text>}
+        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
+        ListEmptyComponent={<EmptyState icon={Bell} title={t('empty.noNotifications')} />}
+        initialNumToRender={12}
+        maxToRenderPerBatch={8}
         renderItem={({ item }: { item: NotificationRow }) => {
           const isFriendRequest = item.type === 'friend_request';
           return (
-            <Card className={`mb-2 ${item.is_read ? 'opacity-60' : 'border-primary/40'}`}>
-              <Pressable onPress={() => onOpen(item)}>
+            <PressableScale onPress={() => onOpen(item)} scaleValue={0.98}>
+              <Card className={`mb-2 ${item.is_read ? 'opacity-60' : 'border-primary/40'}`}>
                 <Text className="text-foreground font-semibold">{item.title}</Text>
                 <Text className="text-muted text-sm mt-1">{item.body}</Text>
-              </Pressable>
-              {isFriendRequest ? (
-                <View className="flex-row gap-2 mt-3">
-                  <Button
-                    loading={respond.isPending}
-                    onPress={() => void onAcceptFriend(item)}
-                    className="flex-1 py-2 px-3 min-h-0"
-                  >
-                    {t('friends.accept')}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    loading={respond.isPending}
-                    onPress={() => void onRejectFriend(item)}
-                    className="flex-1 py-2 px-3 min-h-0"
-                  >
-                    {t('friends.reject')}
-                  </Button>
-                </View>
-              ) : null}
-            </Card>
+                {isFriendRequest ? (
+                  <View className="flex-row gap-2 mt-3">
+                    <Button
+                      loading={respond.isPending}
+                      onPress={() => void onAcceptFriend(item)}
+                      className="flex-1 py-2 px-3 min-h-0"
+                    >
+                      {t('friends.accept')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      loading={respond.isPending}
+                      onPress={() => void onRejectFriend(item)}
+                      className="flex-1 py-2 px-3 min-h-0"
+                    >
+                      {t('friends.reject')}
+                    </Button>
+                  </View>
+                ) : null}
+              </Card>
+            </PressableScale>
           );
         }}
       />

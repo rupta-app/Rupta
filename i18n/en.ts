@@ -346,6 +346,19 @@ export const en = {
     title: 'Connect Supabase',
     body: 'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env',
   },
+  empty: {
+    feedTitle: 'Nothing here yet',
+    feedSubtitle: 'Complete a quest or add friends to fill your feed.',
+    feedCta: 'Explore quests',
+    noResults: 'No results found',
+    noGroups: 'No groups yet',
+    noGroupsCta: 'Create or join a group',
+    noFriends: 'No friends yet',
+    noNotifications: 'All quiet',
+    noLifeList: 'Your Life List is empty',
+    noLifeListCta: 'Explore quests to save',
+    noComments: 'No comments yet. Be the first!',
+  },
   errors: {
     rlsOrStorage:
       'Could not save your photo or profile (permissions). If you added a picture, apply the latest Supabase migration for storage policies, or try again without a photo.',

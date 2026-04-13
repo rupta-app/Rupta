@@ -47,8 +47,8 @@ function RootLayoutContent() {
   return (
     <QueryProvider>
       <AuthProvider>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-          <Stack.Screen name="index" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background }, animation: 'fade' }}>
+          <Stack.Screen name="index" options={{ animation: 'none' }} />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(onboarding)" />
           <Stack.Screen name="(main)" />

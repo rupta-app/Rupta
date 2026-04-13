@@ -1,4 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+
+import { PressableScale } from '@/components/ui/PressableScale';
 
 type PillToggleProps = {
   label: string;
@@ -16,12 +18,13 @@ export function PillToggle({
   inactiveClassName = 'border-border bg-surface',
 }: PillToggleProps) {
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      scaleValue={0.94}
       className={`px-4 py-2.5 rounded-full border ${active ? activeClassName : inactiveClassName}`}
     >
-      <Text className="text-foreground text-sm font-medium">{label}</Text>
-    </Pressable>
+      <Text className={`text-sm font-medium ${active ? 'text-foreground' : 'text-muted'}`}>{label}</Text>
+    </PressableScale>
   );
 }
 

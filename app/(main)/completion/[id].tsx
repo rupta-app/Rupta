@@ -141,7 +141,7 @@ export default function CompletionDetailScreen() {
         {media ? <Image source={{ uri: media }} style={{ width: '100%', height: 288, backgroundColor: colors.surfaceElevated }} /> : null}
         <View className="p-4">
           <Text className="text-muted text-xs">{formatCompletionTime(data.completed_at, lang)}</Text>
-          <View className="flex-row items-center gap-3 mt-3">
+          <View className="flex-row items-center gap-4 mt-3">
             <Pressable onPress={() => router.push(`/(main)/user/${data.user_id}`)}>
               <Avatar url={data.profiles.avatar_url} name={data.profiles.display_name} size={48} />
             </Pressable>

@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,6 +17,16 @@ export function OnboardingStepShell({ step, totalSteps, title, subtitle, childre
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const pct = Math.min(100, Math.round((step / totalSteps) * 100));
+
+  const animatedPct = useSharedValue(0);
+
+  useEffect(() => {
+    animatedPct.value = withTiming(pct, { duration: 400 });
+  }, [pct, animatedPct]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${animatedPct.value}%`,
+  }));
 
   return (
     <View className="flex-1 bg-background">
@@ -39,7 +49,7 @@ export function OnboardingStepShell({ step, totalSteps, title, subtitle, childre
           <Animated.View entering={FadeInDown.duration(420).springify().damping(18)}>
             <View className="mb-6">
               <View className="h-1.5 bg-border/70 rounded-full overflow-hidden">
-                <View className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
+                <Animated.View className="h-full bg-primary rounded-full shadow-sm shadow-primary/50" style={progressStyle} />
               </View>
               <Text className="text-muted text-xs mt-2.5 font-medium tracking-wide">
                 {t('onboarding.stepOf', { current: step, total: totalSteps })}

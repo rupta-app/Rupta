@@ -19,8 +19,8 @@ export default function WelcomeOnboarding() {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          paddingHorizontal: 24,
-          paddingTop: Math.max(insets.top, 24),
+          paddingHorizontal: 20,
+          paddingTop: Math.max(insets.top, 20),
           paddingBottom: Math.max(insets.bottom, 32),
           justifyContent: 'center',
         }}

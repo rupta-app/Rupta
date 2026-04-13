@@ -1,11 +1,14 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Search } from 'lucide-react-native';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
-import { colors } from '@/constants/theme';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -102,21 +105,26 @@ export default function ExploreScreen() {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={ListHeader}
         ListFooterComponent={ListFooter}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
         refreshing={isRefetching}
         onRefresh={() => refetch()}
         keyboardShouldPersistTaps="handled"
+        initialNumToRender={8}
+        maxToRenderPerBatch={6}
         ListEmptyComponent={
           isLoading ? (
-            <ActivityIndicator color={colors.primary} className="mt-8" />
+            <View className="px-4">
+              <FeedPostSkeleton />
+              <FeedPostSkeleton />
+            </View>
           ) : (
-            <Text className="text-muted text-center mt-8 px-6">{t('explore.noResults')}</Text>
+            <EmptyState icon={Search} title={t('empty.noResults')} />
           )
         }
         renderItem={({ item }) => {
           const isSaved = saved.has(item.id);
           return (
-            <Pressable onPress={() => router.push(`/(main)/quest/${item.id}`)} className="px-4">
+            <PressableScale onPress={() => router.push(`/(main)/quest/${item.id}`)} className="px-4" scaleValue={0.98}>
               <Card className="mb-3">
                 <View className="flex-row justify-between items-start gap-2">
                   <View className="flex-1 pr-2">
@@ -127,19 +135,17 @@ export default function ExploreScreen() {
                   </View>
                   <Badge tone="primary">+{item.aura_reward}</Badge>
                 </View>
-                <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation?.();
-                    toggle.mutate({ questId: item.id, currentlySaved: isSaved });
-                  }}
+                <PressableScale
+                  onPress={() => toggle.mutate({ questId: item.id, currentlySaved: isSaved })}
                   className="mt-3"
+                  scaleValue={0.95}
                 >
                   <Text className="text-secondary text-sm font-semibold">
                     {isSaved ? t('quest.unsaved') : `+ ${t('common.lifeList')}`}
                   </Text>
-                </Pressable>
+                </PressableScale>
               </Card>
-            </Pressable>
+            </PressableScale>
           );
         }}
       />

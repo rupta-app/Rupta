@@ -65,7 +65,9 @@ export default function GroupSettingsScreen() {
     return (
       <View className="flex-1 bg-background">
         <ScreenHeader title={t('groups.settings')} />
-        <Text className="text-muted text-center mt-10 px-6">{t('groups.settingsMembersOnly')}</Text>
+        <View className="flex-1 justify-center items-center px-6">
+          <Text className="text-muted text-center">{t('groups.settingsMembersOnly')}</Text>
+        </View>
       </View>
     );
   }

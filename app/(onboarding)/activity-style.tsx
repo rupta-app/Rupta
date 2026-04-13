@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { OnboardingStepShell } from '@/components/onboarding/OnboardingStepShell';
 import { Button } from '@/components/ui/Button';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { ACTIVITY_STYLES } from '@/constants/categories';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 
@@ -31,15 +32,17 @@ export default function ActivityStyleOnboarding() {
     >
       <View className="flex-row flex-wrap gap-2.5">
         {ACTIVITY_STYLES.map((s) => (
-          <Pressable
+          <PressableScale
             key={s}
             onPress={() => toggle(s)}
+            scaleValue={0.95}
+            hitSlop={4}
             className={`px-4 py-3 rounded-full border ${
               draft.activityStyles.includes(s) ? 'border-secondary bg-secondary/15' : 'border-border bg-surface'
             }`}
           >
             <Text className="text-foreground text-sm font-medium">{s.replace(/_/g, ' ')}</Text>
-          </Pressable>
+          </PressableScale>
         ))}
       </View>
     </OnboardingStepShell>

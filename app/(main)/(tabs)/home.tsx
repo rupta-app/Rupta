@@ -1,12 +1,15 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Compass } from 'lucide-react-native';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
 import { colors } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -75,9 +78,17 @@ export default function HomeScreen() {
         ) : null}
 
         {isLoading ? (
-          <ActivityIndicator color={colors.primary} className="mt-8" />
+          <>
+            <FeedPostSkeleton />
+            <FeedPostSkeleton />
+          </>
         ) : posts.length === 0 ? (
-          <Text className="text-muted text-center mt-10 px-4">{t('feed.empty')}</Text>
+          <EmptyState
+            icon={Compass}
+            title={t('empty.feedTitle')}
+            subtitle={t('empty.feedSubtitle')}
+            action={{ label: t('empty.feedCta'), onPress: () => router.push('/(main)/(tabs)/explore') }}
+          />
         ) : (
           posts.map((p) => (
             <FeedPostCard
