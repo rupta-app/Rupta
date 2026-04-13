@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 
+import { colors } from '@/constants/theme';
+
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const variants: Record<Variant, string> = {
@@ -39,7 +41,7 @@ export function Button({
       className={`rounded-xl px-5 py-3.5 items-center justify-center min-h-[48px] ${variants[variant]} ${disabled || loading ? 'opacity-50' : ''} ${className}`}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#fff' : '#8B5CF6'} />
+        <ActivityIndicator color={variant === 'primary' ? colors.white : colors.primary} />
       ) : (
         <Text className={`text-base ${textVariants[variant]}`}>{children}</Text>
       )}

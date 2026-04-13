@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { paginateQuery } from '@/services/_pagination';
+import type { ProfileFull } from '@/services/_profiles';
 import { aggregateByUser, fetchProfilesByIds, PROFILE_COLS_FULL } from '@/services/_profiles';
 
 import { fetchFriendIds } from '@/services/feed';
@@ -64,16 +65,23 @@ async function profilesForLeaderboard(
     .map(({ userId, score }) => {
       const p = pmap.get(userId);
       if (!p) return null;
-      return {
-        ...p,
+      const fp = p as ProfileFull;
+      const row: LeaderboardRow = {
+        id: fp.id,
+        username: fp.username,
+        display_name: fp.display_name,
+        avatar_url: fp.avatar_url,
+        total_aura: fp.total_aura,
+        yearly_aura: fp.yearly_aura,
         period_aura: score,
-      } as LeaderboardRow;
+      };
+      return row;
     })
     .filter((r): r is LeaderboardRow => r !== null);
 }
 
 /** Official-quest AURA earned in the window (global or restricted to user ids). */
-export async function officialAuraLeaderboard(period: LeaderboardPeriod, limit = 50, userIds?: string[]) {
+export async function officialAuraLeaderboard(period: LeaderboardPeriod, limit = 50, userIds?: string[]): Promise<LeaderboardRow[]> {
   if (period === 'all') {
     const { data, error } = await supabase
       .from('profiles')
@@ -81,10 +89,15 @@ export async function officialAuraLeaderboard(period: LeaderboardPeriod, limit =
       .order('total_aura', { ascending: false })
       .limit(limit);
     if (error) throw error;
-    return (data ?? []).map((p) => ({
-      ...p,
+    return (data ?? []).map((p): LeaderboardRow => ({
+      id: p.id,
+      username: p.username,
+      display_name: p.display_name,
+      avatar_url: p.avatar_url,
+      total_aura: p.total_aura,
+      yearly_aura: p.yearly_aura,
       period_aura: p.total_aura,
-    })) as LeaderboardRow[];
+    }));
   }
 
   const since = periodSinceIso(period);
@@ -94,11 +107,11 @@ export async function officialAuraLeaderboard(period: LeaderboardPeriod, limit =
   return profilesForLeaderboard(ordered);
 }
 
-export async function globalLeaderboard(period: LeaderboardPeriod, limit = 50) {
+export async function globalLeaderboard(period: LeaderboardPeriod, limit = 50): Promise<LeaderboardRow[]> {
   return officialAuraLeaderboard(period, limit);
 }
 
-export async function friendsLeaderboard(userId: string, period: LeaderboardPeriod, limit = 50) {
+export async function friendsLeaderboard(userId: string, period: LeaderboardPeriod, limit = 50): Promise<LeaderboardRow[]> {
   const friendIds = await fetchFriendIds(userId);
   const ids = [...friendIds, userId];
   if (period === 'all') {
@@ -108,10 +121,15 @@ export async function friendsLeaderboard(userId: string, period: LeaderboardPeri
       .in('id', ids)
       .order('total_aura', { ascending: false });
     if (error) throw error;
-    return (data ?? []).map((p) => ({
-      ...p,
+    return (data ?? []).map((p): LeaderboardRow => ({
+      id: p.id,
+      username: p.username,
+      display_name: p.display_name,
+      avatar_url: p.avatar_url,
+      total_aura: p.total_aura,
+      yearly_aura: p.yearly_aura,
       period_aura: p.total_aura,
-    })) as LeaderboardRow[];
+    }));
   }
   return officialAuraLeaderboard(period, limit, ids);
 }

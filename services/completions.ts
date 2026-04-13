@@ -1,7 +1,11 @@
-import type { AchievementVisibility } from '@/types/database';
+import type { AchievementVisibility, Database } from '@/types/database';
 
 import { supabase } from '@/lib/supabase';
+import type { ProfileBasic } from '@/services/_profiles';
 import { enrichWithProfiles, PROFILE_COLS_BASIC } from '@/services/_profiles';
+
+type CompletionRow = Database['public']['Tables']['quest_completions']['Row'];
+type CommentRow = Database['public']['Tables']['comments']['Row'];
 
 function parseOptionalRating(raw: number | null | undefined): number | null {
   if (raw == null) return null;
@@ -16,6 +20,30 @@ function parseOptionalRating(raw: number | null | undefined): number | null {
   return r;
 }
 
+async function insertMediaAndParticipants(
+  completionId: string,
+  userId: string,
+  mediaUrl: string,
+  participantIds: string[],
+) {
+  const { error: mErr } = await supabase.from('quest_media').insert({
+    completion_id: completionId,
+    media_url: mediaUrl,
+    media_type: 'photo',
+    order_index: 0,
+  });
+  if (mErr) throw mErr;
+
+  for (const uid of participantIds) {
+    if (uid === userId) continue;
+    const { error: pErr } = await supabase.from('completion_participants').insert({
+      completion_id: completionId,
+      user_id: uid,
+    });
+    if (pErr) throw pErr;
+  }
+}
+
 export async function createCompletion(payload: {
   userId: string;
   questId: string;
@@ -26,7 +54,7 @@ export async function createCompletion(payload: {
   groupId?: string | null;
   challengeId?: string | null;
   visibility?: AchievementVisibility;
-}) {
+}): Promise<CompletionRow> {
   const rating = parseOptionalRating(payload.rating ?? null);
   const { data: completion, error: cErr } = await supabase
     .from('quest_completions')
@@ -48,23 +76,7 @@ export async function createCompletion(payload: {
 
   if (cErr) throw cErr;
 
-  const { error: mErr } = await supabase.from('quest_media').insert({
-    completion_id: completion.id,
-    media_url: payload.mediaUrl,
-    media_type: 'photo',
-    order_index: 0,
-  });
-  if (mErr) throw mErr;
-
-  for (const uid of payload.participantIds) {
-    if (uid === payload.userId) continue;
-    const { error: pErr } = await supabase.from('completion_participants').insert({
-      completion_id: completion.id,
-      user_id: uid,
-    });
-    if (pErr) throw pErr;
-  }
-
+  await insertMediaAndParticipants(completion.id, payload.userId, payload.mediaUrl, payload.participantIds);
   return completion;
 }
 
@@ -78,7 +90,7 @@ export async function createGroupQuestCompletion(payload: {
   participantIds: string[];
   challengeId?: string | null;
   visibility?: AchievementVisibility;
-}) {
+}): Promise<CompletionRow> {
   const rating = parseOptionalRating(payload.rating ?? null);
   const { data: completion, error: cErr } = await supabase
     .from('quest_completions')
@@ -100,23 +112,7 @@ export async function createGroupQuestCompletion(payload: {
 
   if (cErr) throw cErr;
 
-  const { error: mErr } = await supabase.from('quest_media').insert({
-    completion_id: completion.id,
-    media_url: payload.mediaUrl,
-    media_type: 'photo',
-    order_index: 0,
-  });
-  if (mErr) throw mErr;
-
-  for (const uid of payload.participantIds) {
-    if (uid === payload.userId) continue;
-    const { error: pErr } = await supabase.from('completion_participants').insert({
-      completion_id: completion.id,
-      user_id: uid,
-    });
-    if (pErr) throw pErr;
-  }
-
+  await insertMediaAndParticipants(completion.id, payload.userId, payload.mediaUrl, payload.participantIds);
   return completion;
 }
 
@@ -132,7 +128,7 @@ export async function createSpontaneousCompletion(payload: {
   mediaUrl: string;
   participantIds: string[];
   visibility?: AchievementVisibility;
-}) {
+}): Promise<CompletionRow> {
   const title = payload.title.trim();
   if (title.length < SPONT_TITLE_MIN) {
     throw new Error('Title too short');
@@ -192,32 +188,22 @@ export async function createSpontaneousCompletion(payload: {
     throw cErr;
   }
 
-  const { error: mErr } = await supabase.from('quest_media').insert({
-    completion_id: completion.id,
-    media_url: payload.mediaUrl,
-    media_type: 'photo',
-    order_index: 0,
-  });
-  if (mErr) throw mErr;
-
-  for (const uid of payload.participantIds) {
-    if (uid === payload.userId) continue;
-    const { error: pErr } = await supabase.from('completion_participants').insert({
-      completion_id: completion.id,
-      user_id: uid,
-    });
-    if (pErr) throw pErr;
-  }
-
+  await insertMediaAndParticipants(completion.id, payload.userId, payload.mediaUrl, payload.participantIds);
   return completion;
 }
 
-export async function deleteCompletion(completionId: string) {
+export async function deleteCompletion(completionId: string): Promise<void> {
   const { error } = await supabase.from('quest_completions').delete().eq('id', completionId);
   if (error) throw error;
 }
 
-export async function fetchCompletionById(id: string) {
+export async function fetchCompletionById(id: string): Promise<CompletionRow & {
+  profiles: { id: string; username: string; display_name: string; avatar_url: string | null } | null;
+  quests: Database['public']['Tables']['quests']['Row'] | null;
+  group_quests: Database['public']['Tables']['group_quests']['Row'] | null;
+  groups: { id: string; name: string } | null;
+  quest_media: Database['public']['Tables']['quest_media']['Row'][];
+}> {
   const { data: row, error } = await supabase.from('quest_completions').select('*').eq('id', id).single();
   if (error) throw error;
 
@@ -228,8 +214,8 @@ export async function fetchCompletionById(id: string) {
     row.quest_id
       ? supabase.from('quests').select('*').eq('id', row.quest_id).maybeSingle()
       : Promise.resolve({ data: null }),
-    isGroup
-      ? supabase.from('group_quests').select('*').eq('id', row.group_quest_id!).maybeSingle()
+    isGroup && row.group_quest_id
+      ? supabase.from('group_quests').select('*').eq('id', row.group_quest_id).maybeSingle()
       : Promise.resolve({ data: null }),
     row.group_id
       ? supabase.from('groups').select('id, name').eq('id', row.group_id).maybeSingle()
@@ -247,7 +233,7 @@ export async function fetchCompletionById(id: string) {
   };
 }
 
-export async function fetchCompletionCounts(completionIds: string[]) {
+export async function fetchCompletionCounts(completionIds: string[]): Promise<Map<string, { respects: number; comments: number }>> {
   if (completionIds.length === 0) return new Map<string, { respects: number; comments: number }>();
   const { data: reacts } = await supabase.from('reactions').select('completion_id').in('completion_id', completionIds);
   const { data: coms } = await supabase.from('comments').select('completion_id').in('completion_id', completionIds);
@@ -264,7 +250,7 @@ export async function fetchCompletionCounts(completionIds: string[]) {
   return map;
 }
 
-export async function userGaveRespect(completionId: string, userId: string) {
+export async function userGaveRespect(completionId: string, userId: string): Promise<boolean> {
   const { data } = await supabase
     .from('reactions')
     .select('id')
@@ -274,7 +260,7 @@ export async function userGaveRespect(completionId: string, userId: string) {
   return Boolean(data);
 }
 
-export async function toggleRespect(completionId: string, userId: string, has: boolean) {
+export async function toggleRespect(completionId: string, userId: string, has: boolean): Promise<void> {
   if (has) {
     const { error } = await supabase
       .from('reactions')
@@ -288,7 +274,7 @@ export async function toggleRespect(completionId: string, userId: string, has: b
   }
 }
 
-export async function fetchComments(completionId: string) {
+export async function fetchComments(completionId: string): Promise<(CommentRow & { profiles: ProfileBasic | undefined })[]> {
   const { data: rows, error } = await supabase
     .from('comments')
     .select('*')
@@ -300,7 +286,7 @@ export async function fetchComments(completionId: string) {
   return enrichWithProfiles(list, 'user_id', PROFILE_COLS_BASIC);
 }
 
-export async function addComment(completionId: string, userId: string, content: string) {
+export async function addComment(completionId: string, userId: string, content: string): Promise<CommentRow> {
   const { data, error } = await supabase
     .from('comments')
     .insert({ completion_id: completionId, user_id: userId, content })

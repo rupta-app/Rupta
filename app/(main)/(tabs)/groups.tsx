@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -55,7 +56,7 @@ export default function GroupsTabScreen() {
               placeholder={t('groups.searchPublicPlaceholder')}
             />
             {loadingPublic ? (
-              <ActivityIndicator color="#8B5CF6" className="mt-4" />
+              <ActivityIndicator color={colors.primary} className="mt-4" />
             ) : (
               <FlatList
                 scrollEnabled={false}
@@ -137,7 +138,7 @@ export default function GroupsTabScreen() {
         <View className="px-4 pt-6">
           <Text className="text-foreground text-lg font-bold mb-3">{t('groups.myGroups')}</Text>
           {isLoading ? (
-            <ActivityIndicator color="#8B5CF6" />
+            <ActivityIndicator color={colors.primary} />
           ) : (
             <FlatList
               scrollEnabled={false}

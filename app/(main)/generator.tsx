@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -20,11 +20,12 @@ import { questTitle } from '@/utils/questCopy';
 import { useQuery } from '@tanstack/react-query';
 
 const COSTS = ['free', 'low', 'medium', 'high', 'any'] as const;
+const ROLL_ANIMATION_MS = 1000;
 
 export default function GeneratorScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const go = (path: string) => (router as { push: (p: string) => void }).push(path);
+  const go = (path: string) => router.push(path as Href);
   const lang = appLang(i18n);
   const { session } = useAuth();
   const uid = session?.user?.id;
@@ -54,7 +55,7 @@ export default function GeneratorScreen() {
     setTimeout(() => {
       setPicked(pickQuestFromCatalog(quests, input));
       setRolling(false);
-    }, 1000);
+    }, ROLL_ANIMATION_MS);
   };
 
   const isSaved = picked ? saved.has(picked.id) : false;

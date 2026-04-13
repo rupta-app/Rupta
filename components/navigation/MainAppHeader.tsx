@@ -1,8 +1,10 @@
 import { useRouter } from 'expo-router';
 import { Bell, MessageCircle, Plus, Settings, Users } from 'lucide-react-native';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, Text, View } from 'react-native';
 
 import { logoMark } from '@/constants/branding';
+import { colors } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/ui/Avatar';
@@ -52,7 +54,7 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
               hitSlop={8}
               accessibilityLabel="Friends and groups search"
             >
-              <Users color="#F8FAFC" size={22} strokeWidth={2} />
+              <Users color={colors.foreground} size={22} strokeWidth={2} />
             </Pressable>
           ) : null}
         </View>
@@ -66,8 +68,7 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
           <View className="flex-row items-center gap-0.5 pl-1 pr-2 py-1 rounded-full border border-primary/50 bg-primary/10">
             <Image
               source={logoMark}
-              accessible={false}
-              resizeMode="contain"
+              contentFit="contain"
               style={{ width: 44, height: 16, marginLeft: -2 }}
             />
             <Text className="text-primary font-bold text-xs tracking-wide">Pro</Text>
@@ -79,36 +80,36 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
             <>
               <Pressable onPress={() => go('/(main)/spontaneous-sidequest')} className="p-2.5" hitSlop={8}>
                 <View className="w-8 h-8 rounded-full border-2 border-primary items-center justify-center">
-                  <Plus color="#8B5CF6" size={20} strokeWidth={2.5} />
+                  <Plus color={colors.primary} size={20} strokeWidth={2.5} />
                 </View>
               </Pressable>
               <Pressable onPress={() => go('/(main)/settings')} className="p-2.5" hitSlop={8}>
-                <Settings color="#94A3B8" size={22} strokeWidth={2} />
+                <Settings color={colors.muted} size={22} strokeWidth={2} />
               </Pressable>
             </>
           ) : null}
           {showPlusOnly ? (
             <Pressable onPress={() => go('/(main)/spontaneous-sidequest')} className="p-2.5" hitSlop={8}>
               <View className="w-9 h-9 rounded-full border-2 border-primary items-center justify-center">
-                <Plus color="#8B5CF6" size={22} strokeWidth={2.5} />
+                <Plus color={colors.primary} size={22} strokeWidth={2.5} />
               </View>
             </Pressable>
           ) : null}
           {showSpontaneousShortcut ? (
             <Pressable onPress={() => go('/(main)/spontaneous-sidequest')} className="p-2.5" hitSlop={8}>
               <View className="w-8 h-8 rounded-full border-2 border-primary items-center justify-center">
-                <Plus color="#8B5CF6" size={20} strokeWidth={2.5} />
+                <Plus color={colors.primary} size={20} strokeWidth={2.5} />
               </View>
             </Pressable>
           ) : null}
           {showMessages ? (
             <Pressable onPress={() => go('/(main)/messages')} className="p-2.5" hitSlop={8}>
-              <MessageCircle color="#F8FAFC" size={22} strokeWidth={2} />
+              <MessageCircle color={colors.foreground} size={22} strokeWidth={2} />
             </Pressable>
           ) : null}
           {showNotifications ? (
             <Pressable onPress={() => go('/(main)/notifications')} className="p-2.5 relative" hitSlop={8}>
-              <Bell color="#F8FAFC" size={22} strokeWidth={2} />
+              <Bell color={colors.foreground} size={22} strokeWidth={2} />
               {unread > 0 ? (
                 <View className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500" />
               ) : null}

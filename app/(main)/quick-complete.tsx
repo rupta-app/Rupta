@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/Input';
 import { fetchQuests } from '@/services/quests';
 import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
+
+const QUICK_COMPLETE_MAX_ITEMS = 40;
 
 export default function QuickCompleteScreen() {
   const router = useRouter();
@@ -31,13 +33,13 @@ export default function QuickCompleteScreen() {
         <Text className="text-muted text-xs mt-2">{t('quickComplete.hint')}</Text>
       </View>
       <FlatList
-        data={quests.slice(0, 40)}
+        data={quests.slice(0, QUICK_COMPLETE_MAX_ITEMS)}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
         ListEmptyComponent={
           isFetching ? null : <Text className="text-muted text-center px-4">{t('quickComplete.empty')}</Text>
         }
-        renderItem={({ item }) => (
+        renderItem={useCallback(({ item }: { item: (typeof quests)[number] }) => (
           <Pressable onPress={() => router.push(`/(main)/complete-quest/${item.id}`)}>
             <Card className="mb-2">
               <View className="flex-row justify-between items-start gap-2">
@@ -46,7 +48,7 @@ export default function QuickCompleteScreen() {
               </View>
             </Card>
           </Pressable>
-        )}
+        ), [router, lang])}
       />
     </View>
   );

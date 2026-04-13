@@ -1,10 +1,11 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Settings, UserPlus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { colors } from '@/constants/theme';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
 import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
@@ -28,18 +29,10 @@ const TAB_BAR: { key: Section; labelKey: string }[] = [
   { key: 'quests', labelKey: 'groups.sectionQuests' },
 ];
 
-type LbRow = {
-  id: string;
-  display_name: string;
-  username: string;
-  avatar_url: string | null;
-  total_group_aura?: number;
-};
-
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const go = (path: string) => (router as { push: (p: string) => void }).push(path);
+  const go = (path: string) => router.push(path as Href);
   const { t, i18n } = useTranslation();
   const lang = appLang(i18n);
   const { session, profile } = useAuth();
@@ -88,11 +81,11 @@ export default function GroupDetailScreen() {
         right={
           <View className="flex-row items-center">
             <Pressable onPress={() => go(`/(main)/group/${id}/people`)} className="p-2.5 shrink-0" hitSlop={6}>
-              <UserPlus color="#A78BFA" size={24} strokeWidth={2} />
+              <UserPlus color={colors.primaryLight} size={24} strokeWidth={2} />
             </Pressable>
             {canAdmin ? (
               <Pressable onPress={() => go(`/(main)/group/${id}/settings`)} className="p-2.5 shrink-0" hitSlop={6}>
-                <Settings color="#94A3B8" size={24} strokeWidth={2} />
+                <Settings color={colors.muted} size={24} strokeWidth={2} />
               </Pressable>
             ) : null}
           </View>
@@ -107,7 +100,7 @@ export default function GroupDetailScreen() {
               key={key}
               onPress={() => setSection(key)}
               className="flex-1 py-3 px-1 items-center border-b-2"
-              style={{ borderBottomColor: active ? '#8B5CF6' : 'transparent' }}
+              style={{ borderBottomColor: active ? colors.primary : 'transparent' }}
             >
               <Text
                 className={`text-sm font-bold text-center ${active ? 'text-primary' : 'text-muted'}`}
@@ -127,7 +120,7 @@ export default function GroupDetailScreen() {
             {lb.length === 0 ? (
               <Text className="text-muted">{t('feed.empty')}</Text>
             ) : (
-              (lb as LbRow[]).map((item, index) => (
+              lb.map((item, index) => (
                 <LeaderboardRow
                   key={item.id}
                   rank={index + 1}
@@ -145,7 +138,7 @@ export default function GroupDetailScreen() {
         {section === 'feed' ? (
           <>
             {feedLoading ? (
-              <ActivityIndicator color="#8B5CF6" />
+              <ActivityIndicator color={colors.primary} />
             ) : posts.length === 0 ? (
               <Text className="text-muted">{t('feed.empty')}</Text>
             ) : (

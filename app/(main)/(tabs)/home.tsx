@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { colors } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { fetchCompletionCounts } from '@/services/completions';
@@ -58,7 +59,7 @@ export default function HomeScreen() {
       <MainAppHeader variant="home" />
       <ScrollView
         className="flex-1 px-4 pt-4"
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor="#8B5CF6" />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.primary} />}
       >
         <View className="flex-row flex-wrap gap-2 mb-4">
           {(['all', 'official', 'unofficial'] as const).map((f) => (
@@ -90,7 +91,7 @@ export default function HomeScreen() {
         ) : null}
 
         {isLoading ? (
-          <ActivityIndicator color="#8B5CF6" className="mt-8" />
+          <ActivityIndicator color={colors.primary} className="mt-8" />
         ) : posts.length === 0 ? (
           <Text className="text-muted text-center mt-10 px-4">{t('feed.empty')}</Text>
         ) : (

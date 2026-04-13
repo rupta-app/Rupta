@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, View } from '
 import { useTranslation } from 'react-i18next';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { colors } from '@/constants/theme';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -115,7 +116,7 @@ export default function ExploreScreen() {
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           isLoading ? (
-            <ActivityIndicator color="#8B5CF6" className="mt-8" />
+            <ActivityIndicator color={colors.primary} className="mt-8" />
           ) : (
             <Text className="text-muted text-center mt-8 px-6">{t('explore.noResults')}</Text>
           )

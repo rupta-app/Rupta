@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { logoMark } from '@/constants/branding';
@@ -35,7 +36,7 @@ export function AuthScreenShell({
             <Image
               source={logoMark}
               accessibilityLabel="Rupta"
-              resizeMode="contain"
+              contentFit="contain"
               style={{ width: 160, height: 52 }}
             />
           </View>

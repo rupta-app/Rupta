@@ -1,6 +1,10 @@
+import type { Database } from '@/types/database';
+
 import { supabase } from '@/lib/supabase';
 
-export async function fetchNotifications(userId: string) {
+type NotificationRow = Database['public']['Tables']['notifications']['Row'];
+
+export async function fetchNotifications(userId: string): Promise<NotificationRow[]> {
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
@@ -11,17 +15,17 @@ export async function fetchNotifications(userId: string) {
   return data ?? [];
 }
 
-export async function markNotificationRead(id: string) {
+export async function markNotificationRead(id: string): Promise<void> {
   const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
   if (error) throw error;
 }
 
-export async function markAllRead(userId: string) {
+export async function markAllRead(userId: string): Promise<void> {
   const { error } = await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId);
   if (error) throw error;
 }
 
-export async function createWeeklySuggestion(userId: string, questId: string, title: string) {
+export async function createWeeklySuggestion(userId: string, questId: string, title: string): Promise<void> {
   const { error } = await supabase.from('notifications').insert({
     user_id: userId,
     type: 'weekly_quest',

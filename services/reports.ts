@@ -9,7 +9,7 @@ export async function submitReport(payload: {
   reportedUserId?: string | null;
   reason: ReportReason;
   description?: string | null;
-}) {
+}): Promise<void> {
   const { error: rErr } = await supabase.from('reports').insert({
     reporter_id: payload.reporterId,
     completion_id: payload.completionId ?? null,
@@ -25,7 +25,7 @@ export async function submitReport(payload: {
   }
 }
 
-export async function blockUser(blockerId: string, blockedId: string) {
+export async function blockUser(blockerId: string, blockedId: string): Promise<void> {
   const { error } = await supabase.from('blocked_users').insert({ blocker_id: blockerId, blocked_id: blockedId });
   if (error) throw error;
 }

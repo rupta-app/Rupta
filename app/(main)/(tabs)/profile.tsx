@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -19,6 +20,12 @@ import type { QuestRow } from '@/services/quests';
 import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
 import { formatAuraDisplay, isSpontaneousAuraPending } from '@/utils/spontaneousAura';
+
+const CHART_CONTAINER_HEIGHT = 88;
+const CHART_BAR_MIN = 8;
+const CHART_BAR_RANGE = 72;
+const SCROLL_PADDING_BOTTOM = 120;
+const SCROLL_PADDING_TOP = 12;
 
 export default function ProfileTab() {
   const { t, i18n } = useTranslation();
@@ -83,7 +90,7 @@ export default function ProfileTab() {
             onPress={() => router.push('/(main)/edit-profile')}
             className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-surface border border-border items-center justify-center"
           >
-            <Pencil color="#A78BFA" size={16} />
+            <Pencil color={colors.primaryLight} size={16} />
           </Pressable>
         </View>
         <View className="flex-1">
@@ -113,7 +120,7 @@ export default function ProfileTab() {
     <View className="flex-1 bg-background">
       <MainAppHeader variant="profile" />
       {tab === 'stats' ? (
-        <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingTop: 12 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: SCROLL_PADDING_BOTTOM, paddingTop: SCROLL_PADDING_TOP }}>
           {profileHeader}
           <View className="px-4">
             <Card className="mt-4">
@@ -162,12 +169,12 @@ export default function ProfileTab() {
             {activity?.buckets ? (
               <Card className="mt-4">
                 <Text className="text-foreground font-bold mb-3">{t('profile.activityWeek')}</Text>
-                <View className="flex-row items-end justify-between gap-1" style={{ height: 88 }}>
+                <View className="flex-row items-end justify-between gap-1" style={{ height: CHART_CONTAINER_HEIGHT }}>
                   {activity.buckets.map((n, i) => (
                     <View key={i} className="flex-1 items-center justify-end">
                       <View
                         className="w-full bg-primary/80 rounded-t-md"
-                        style={{ height: 8 + (n / maxBar) * 72 }}
+                        style={{ height: CHART_BAR_MIN + (n / maxBar) * CHART_BAR_RANGE }}
                       />
                     </View>
                   ))}
@@ -228,9 +235,9 @@ export default function ProfileTab() {
               ) : null}
             </View>
           }
-          contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16, paddingTop: 12 }}
+          contentContainerStyle={{ paddingBottom: SCROLL_PADDING_BOTTOM, paddingHorizontal: 16, paddingTop: SCROLL_PADDING_TOP }}
           ListEmptyComponent={<Text className="text-muted text-center mt-8 px-4">{t('profile.emptyLifeList')}</Text>}
-          renderItem={({ item }) => {
+          renderItem={useCallback(({ item }: { item: { quest_id: string; quests?: QuestRow } }) => {
             const q = item.quests;
             const cnt = lifeCounts?.get(item.quest_id) ?? 0;
             const max = q ? maxCompletionsAllowed(q) : null;
@@ -259,11 +266,11 @@ export default function ProfileTab() {
                   hitSlop={8}
                   accessibilityLabel={t('profile.removeFromLifeList')}
                 >
-                  <BookmarkMinus color="#94A3B8" size={22} />
+                  <BookmarkMinus color={colors.muted} size={22} />
                 </Pressable>
               </Card>
             );
-          }}
+          }, [lifeCounts, router, lang, t, uid, toggle])}
         />
       )}
     </View>

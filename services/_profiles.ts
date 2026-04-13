@@ -38,9 +38,10 @@ export async function enrichWithProfiles<
     .from('profiles')
     .select(columns)
     .in('id', uids);
-  const pmap = new Map(
-    ((profiles ?? []) as unknown as { id: string }[]).map((p) => [p.id, p]),
-  );
+  const pmap = new Map<string, ProfileBasic | ProfileWithAura | ProfileFull>();
+  for (const p of (profiles ?? []) as unknown as (ProfileBasic | ProfileWithAura | ProfileFull)[]) {
+    pmap.set(p.id, p);
+  }
   return rows.map((r) => ({
     ...r,
     profiles: pmap.get(String(r[userIdKey])) as

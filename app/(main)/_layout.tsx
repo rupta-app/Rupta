@@ -1,8 +1,10 @@
 import { Stack } from 'expo-router';
 
+import { colors } from '@/constants/theme';
+
 export default function MainLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0A0F' } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="quest/[id]" options={{ presentation: 'modal', headerShown: false, animation: 'slide_from_bottom' }} />
       <Stack.Screen name="completion/[id]" />

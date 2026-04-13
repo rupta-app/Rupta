@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { colors } from '@/constants/theme';
+
 export function Input({
   label,
   value,
@@ -40,7 +42,7 @@ export function Input({
     <View className="mb-4">
       {label ? <Text className="text-muted text-sm mb-1.5 font-medium">{label}</Text> : null}
       {Platform.OS === 'ios' && multiline && accessoryId ? (
-        <InputAccessoryView nativeID={accessoryId} backgroundColor="#14141F">
+        <InputAccessoryView nativeID={accessoryId} backgroundColor={colors.surface}>
           <View className="flex-row justify-end border-t border-border px-3 py-2">
             <Pressable onPress={() => Keyboard.dismiss()} className="px-3 py-1" hitSlop={8}>
               <Text className="text-primary font-semibold">{t('common.keyboardDone')}</Text>
@@ -52,7 +54,7 @@ export function Input({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#64748B"
+        placeholderTextColor={colors.mutedForeground}
         secureTextEntry={secureTextEntry}
         multiline={multiline}
         autoCapitalize={autoCapitalize}

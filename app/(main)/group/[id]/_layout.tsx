@@ -1,8 +1,10 @@
 import { Stack } from 'expo-router';
 
+import { colors } from '@/constants/theme';
+
 export default function GroupIdLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0A0F' } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="people" />
       <Stack.Screen name="settings" />

@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { useFriendsLeaderboard, useGlobalLeaderboard } from '@/hooks/useLeaderboard';
@@ -46,10 +47,36 @@ export default function LeaderboardScreen() {
   const { data = [], isLoading } =
     scope === 'global' ? g : scope === 'friends' ? f : showGroupBoard ? glb : { data: [], isLoading: false };
 
-  const displayAura = (row: LbRow) => {
-    if (showGroupBoard && row.total_group_aura !== undefined) return row.total_group_aura;
-    return row.period_aura;
-  };
+  const renderLbItem = useCallback(({ item, index }: { item: LbRow; index: number }) => (
+    <LeaderboardRow
+      rank={index + 1}
+      displayName={item.display_name}
+      username={item.username}
+      avatarUrl={item.avatar_url}
+      aura={showGroupBoard && item.total_group_aura !== undefined ? item.total_group_aura : item.period_aura}
+      onPress={() => router.push(`/(main)/user/${item.id}`)}
+    />
+  ), [router, showGroupBoard]);
+
+  const renderGroupPicker = useCallback(({
+    item,
+  }: {
+    item: { id: string; name: string; description?: string | null; avatar_url?: string | null };
+  }) => (
+    <Pressable onPress={() => setSelectedGroupId(item.id)}>
+      <Card className="mb-3 flex-row items-center gap-3 py-4">
+        <Avatar url={item.avatar_url ?? null} name={item.name} size={52} />
+        <View className="flex-1 min-w-0">
+          <Text className="text-foreground font-bold text-lg">{item.name}</Text>
+          {item.description ? (
+            <Text className="text-muted text-sm mt-1" numberOfLines={2}>
+              {item.description}
+            </Text>
+          ) : null}
+        </View>
+      </Card>
+    </Pressable>
+  ), []);
 
   const periodLabel = () => {
     switch (period) {
@@ -119,69 +146,33 @@ export default function LeaderboardScreen() {
           contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
           ListEmptyComponent={<Text className="text-muted text-center px-4">{t('feed.empty')}</Text>}
           ListHeaderComponent={<Text className="text-muted text-sm mb-4">{t('leaderboard.pickGroup')}</Text>}
-          renderItem={({
-            item,
-          }: {
-            item: { id: string; name: string; description?: string | null; avatar_url?: string | null };
-          }) => (
-            <Pressable onPress={() => setSelectedGroupId(item.id)}>
-              <Card className="mb-3 flex-row items-center gap-3 py-4">
-                <Avatar url={item.avatar_url ?? null} name={item.name} size={52} />
-                <View className="flex-1 min-w-0">
-                  <Text className="text-foreground font-bold text-lg">{item.name}</Text>
-                  {item.description ? (
-                    <Text className="text-muted text-sm mt-1" numberOfLines={2}>
-                      {item.description}
-                    </Text>
-                  ) : null}
-                </View>
-              </Card>
-            </Pressable>
-          )}
+          renderItem={renderGroupPicker}
         />
       ) : showGroupBoard ? (
         <View className="flex-1">
           <Pressable onPress={() => setSelectedGroupId(null)} className="flex-row items-center px-4 py-2">
-            <ChevronLeft color="#F8FAFC" size={24} />
+            <ChevronLeft color={colors.foreground} size={24} />
             <Text className="text-primary ml-1">{t('common.back')}</Text>
           </Pressable>
           <FlatList
-            data={data as LbRow[]}
+            data={data}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
             ListEmptyComponent={
               isLoading ? null : <Text className="text-muted text-center">{t('feed.empty')}</Text>
             }
-            renderItem={({ item, index }) => (
-              <LeaderboardRow
-                rank={index + 1}
-                displayName={item.display_name}
-                username={item.username}
-                avatarUrl={item.avatar_url}
-                aura={displayAura(item)}
-                onPress={() => router.push(`/(main)/user/${item.id}`)}
-              />
-            )}
+            renderItem={renderLbItem}
           />
         </View>
       ) : (
         <FlatList
-          data={data as LbRow[]}
+          data={data}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
           ListEmptyComponent={
             isLoading ? null : <Text className="text-muted text-center">{t('feed.empty')}</Text>
           }
-          renderItem={({ item, index }) => (
-            <LeaderboardRow
-              rank={index + 1}
-              displayName={item.display_name}
-              username={item.username}
-              avatarUrl={item.avatar_url}
-              aura={displayAura(item)}
-              onPress={() => router.push(`/(main)/user/${item.id}`)}
-            />
-          )}
+          renderItem={renderLbItem}
         />
       )}
     </View>

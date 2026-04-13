@@ -1,7 +1,10 @@
+import type { Database } from '@/types/database';
+
 import { supabase } from '@/lib/supabase';
+import type { ProfileBasic, ProfileWithAura } from '@/services/_profiles';
 import { PROFILE_COLS_AURA, PROFILE_COLS_BASIC } from '@/services/_profiles';
 
-export async function sendFriendRequest(senderId: string, receiverId: string) {
+export async function sendFriendRequest(senderId: string, receiverId: string): Promise<void> {
   const { error } = await supabase.from('friend_requests').insert({
     sender_id: senderId,
     receiver_id: receiverId,
@@ -10,7 +13,7 @@ export async function sendFriendRequest(senderId: string, receiverId: string) {
   if (error) throw error;
 }
 
-export async function respondFriendRequest(requestId: string, accept: boolean) {
+export async function respondFriendRequest(requestId: string, accept: boolean): Promise<void> {
   const { error } = await supabase
     .from('friend_requests')
     .update({
@@ -69,7 +72,7 @@ export async function findPendingIncomingRequestId(
   return data?.id ?? null;
 }
 
-export async function fetchIncomingRequests(userId: string) {
+export async function fetchIncomingRequests(userId: string): Promise<(Database['public']['Tables']['friend_requests']['Row'] & { sender: ProfileBasic | undefined })[]> {
   const { data: reqs, error } = await supabase
     .from('friend_requests')
     .select('*')
@@ -87,7 +90,7 @@ export async function fetchIncomingRequests(userId: string) {
   return list.map((r) => ({ ...r, sender: pmap.get(r.sender_id) }));
 }
 
-export async function fetchFriends(userId: string) {
+export async function fetchFriends(userId: string): Promise<ProfileWithAura[]> {
   const { data, error } = await supabase
     .from('friendships')
     .select('user_a_id, user_b_id')

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { ScrollView, Text, View } from 'react-native';
 
 import { logoMark } from '@/constants/branding';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -30,7 +31,7 @@ export default function WelcomeOnboarding() {
             <Image
               source={logoMark}
               accessibilityLabel="Rupta"
-              resizeMode="contain"
+              contentFit="contain"
               className="w-full max-w-[220px] h-[72px] self-start mb-6"
             />
             <Text className="text-foreground text-4xl font-black leading-tight tracking-tight">

@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import { Users } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, Share, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -21,6 +22,8 @@ type Row =
   | { kind: 'hint'; text: string }
   | { kind: 'person'; id: string; username: string; display_name: string; avatar_url: string | null }
   | { kind: 'group'; id: string; name: string; description: string | null };
+
+const SEARCH_GROUPS_LIMIT = 20;
 
 export default function UnifiedSearchScreen() {
   const router = useRouter();
@@ -61,7 +64,7 @@ export default function UnifiedSearchScreen() {
       );
     }
     out.push({ kind: 'header', title: t('search.myGroups') });
-    const gList = q.trim().length >= 1 ? groups : groups.slice(0, 20);
+    const gList = q.trim().length >= 1 ? groups : groups.slice(0, SEARCH_GROUPS_LIMIT);
     gList.forEach((g: { id: string; name: string; description: string | null }) =>
       out.push({ kind: 'group', id: g.id, name: g.name, description: g.description }),
     );
@@ -105,7 +108,7 @@ export default function UnifiedSearchScreen() {
                 : `g-${item.id}`
         }
         contentContainerStyle={{ padding: 16, paddingBottom: 180 }}
-        renderItem={({ item }) => {
+        renderItem={useCallback(({ item }: { item: Row }) => {
           if (item.kind === 'header') {
             return (
               <Text className="text-muted text-xs uppercase tracking-wide mt-4 mb-2 first:mt-0">{item.title}</Text>
@@ -142,7 +145,7 @@ export default function UnifiedSearchScreen() {
               </Card>
             </Pressable>
           );
-        }}
+        }, [router, send, uid, t])}
       />
 
       <View
@@ -150,7 +153,7 @@ export default function UnifiedSearchScreen() {
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
         <View className="flex-row items-center gap-2 mb-2">
-          <Users color="#8B5CF6" size={20} />
+          <Users color={colors.primary} size={20} />
           <Text className="text-foreground font-semibold flex-1">{t('search.inviteTitle')}</Text>
         </View>
         <Text className="text-muted text-sm mb-3">{t('search.inviteSubtitle')}</Text>
