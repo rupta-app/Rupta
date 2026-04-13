@@ -6,9 +6,10 @@ import { useTranslation } from 'react-i18next';
 
 import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
+import { PillToggleGroup } from '@/components/ui/PillToggle';
+import { SegmentedTabBar } from '@/components/ui/SegmentedTabBar';
+import { GroupCard } from '@/components/social/GroupCard';
 import { colors } from '@/constants/theme';
-import { Avatar } from '@/components/ui/Avatar';
-import { Card } from '@/components/ui/Card';
 import { useFriendsLeaderboard, useGlobalLeaderboard } from '@/hooks/useLeaderboard';
 import { useGroupLeaderboard, useMyGroups } from '@/hooks/useGroups';
 import type { LeaderboardPeriod } from '@/services/leaderboard';
@@ -63,19 +64,7 @@ export default function LeaderboardScreen() {
   }: {
     item: { id: string; name: string; description?: string | null; avatar_url?: string | null };
   }) => (
-    <Pressable onPress={() => setSelectedGroupId(item.id)}>
-      <Card className="mb-3 flex-row items-center gap-3 py-4">
-        <Avatar url={item.avatar_url ?? null} name={item.name} size={52} />
-        <View className="flex-1 min-w-0">
-          <Text className="text-foreground font-bold text-lg">{item.name}</Text>
-          {item.description ? (
-            <Text className="text-muted text-sm mt-1" numberOfLines={2}>
-              {item.description}
-            </Text>
-          ) : null}
-        </View>
-      </Card>
-    </Pressable>
+    <GroupCard group={item} onPress={() => setSelectedGroupId(item.id)} />
   ), []);
 
   const periodLabel = () => {
@@ -95,45 +84,31 @@ export default function LeaderboardScreen() {
     <View className="flex-1 bg-background">
       <MainAppHeader variant="ranks" />
       <View className="px-4 pt-2 pb-1">
-        <View className="flex-row border-b border-border">
-          {(['global', 'groups', 'friends'] as const).map((tab) => (
-            <Pressable
-              key={tab}
-              onPress={() => {
-                setScope(tab);
-                if (tab !== 'groups') setSelectedGroupId(null);
-              }}
-              className="flex-1 items-center pb-2"
-            >
-              <Text
-                className={`text-sm font-semibold ${scope === tab ? 'text-foreground' : 'text-muted'}`}
-                numberOfLines={1}
-              >
-                {tab === 'global' ? t('leaderboard.global') : tab === 'groups' ? t('leaderboard.groups') : t('leaderboard.friends')}
-              </Text>
-              {scope === tab ? <View className="h-0.5 w-full bg-primary mt-2 rounded-full" /> : <View className="h-0.5 mt-2" />}
-            </Pressable>
-          ))}
-        </View>
+        <SegmentedTabBar
+          tabs={[
+            { key: 'global' as const, label: t('leaderboard.global') },
+            { key: 'groups' as const, label: t('leaderboard.groups') },
+            { key: 'friends' as const, label: t('leaderboard.friends') },
+          ]}
+          active={scope}
+          onChange={(tab) => {
+            setScope(tab);
+            if (tab !== 'groups') setSelectedGroupId(null);
+          }}
+        />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3" contentContainerStyle={{ gap: 8, paddingRight: 16 }}>
-          {(['week', 'month', 'year', 'all'] as const).map((p) => (
-            <Pressable
-              key={p}
-              onPress={() => setPeriod(p)}
-              className={`px-3 py-2 rounded-full border ${period === p ? 'border-primary bg-primary/10' : 'border-border'}`}
-            >
-              <Text className={`text-sm font-medium ${period === p ? 'text-primary' : 'text-foreground'}`}>
-                {p === 'week'
-                  ? t('leaderboard.thisWeek')
-                  : p === 'month'
-                    ? t('leaderboard.thisMonth')
-                    : p === 'year'
-                      ? t('leaderboard.thisYear')
-                      : t('leaderboard.allTime')}
-              </Text>
-            </Pressable>
-          ))}
+          <PillToggleGroup
+            options={[
+              { value: 'week' as const, label: t('leaderboard.thisWeek') },
+              { value: 'month' as const, label: t('leaderboard.thisMonth') },
+              { value: 'year' as const, label: t('leaderboard.thisYear') },
+              { value: 'all' as const, label: t('leaderboard.allTime') },
+            ]}
+            selected={period}
+            onToggle={setPeriod}
+            containerClassName="flex-row gap-2"
+          />
         </ScrollView>
 
         <Text className="text-foreground text-lg font-bold mt-4">{periodLabel()}</Text>

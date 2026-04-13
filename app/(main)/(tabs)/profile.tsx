@@ -17,9 +17,9 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useLifeList, useLifeListCompletionCounts, useToggleSave } from '@/hooks/useQuests';
 import { fetchActivityChart, fetchProfileStats, fetchRecentCompletions } from '@/services/profile';
 import type { QuestRow } from '@/services/quests';
+import { RecentCompletionsList } from '@/components/social/RecentCompletionsList';
 import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
-import { formatAuraDisplay, isSpontaneousAuraPending } from '@/utils/spontaneousAura';
 
 const CHART_CONTAINER_HEIGHT = 88;
 const CHART_BAR_MIN = 8;
@@ -182,32 +182,11 @@ export default function ProfileTab() {
               </Card>
             ) : null}
 
-            <Text className="text-foreground font-bold mt-8 mb-2">{t('profile.recent')}</Text>
-            {recent.map(
-              (row: {
-                id: string;
-                quests?: { title_en: string; title_es: string };
-                aura_earned: number;
-                quest_source_type?: string;
-              }) => (
-                <Pressable key={row.id} onPress={() => router.push(`/(main)/completion/${row.id}`)}>
-                  <Card className="mb-2 py-3">
-                    <Text className="text-foreground font-semibold">
-                      {row.quests ? questTitle(row.quests, lang) : 'Quest'}
-                    </Text>
-                    <Text
-                      className={
-                        isSpontaneousAuraPending(row.quest_source_type, row.aura_earned)
-                          ? 'text-muted text-sm'
-                          : 'text-primary text-sm'
-                      }
-                    >
-                      {formatAuraDisplay(row.quest_source_type, row.aura_earned, t('feed.auraPendingReview'))}
-                    </Text>
-                  </Card>
-                </Pressable>
-              ),
-            )}
+            <RecentCompletionsList
+              completions={recent}
+              lang={lang}
+              onPress={(id) => router.push(`/(main)/completion/${id}`)}
+            />
 
             <Text className="text-muted text-sm mt-6 text-center">{t('profile.ranksFriends')}</Text>
           </View>

@@ -5,6 +5,7 @@ type PillToggleProps = {
   active: boolean;
   onPress: () => void;
   activeClassName?: string;
+  inactiveClassName?: string;
 };
 
 export function PillToggle({
@@ -12,11 +13,12 @@ export function PillToggle({
   active,
   onPress,
   activeClassName = 'border-primary bg-primary/15',
+  inactiveClassName = 'border-border bg-surface',
 }: PillToggleProps) {
   return (
     <Pressable
       onPress={onPress}
-      className={`px-4 py-2.5 rounded-full border ${active ? activeClassName : 'border-border bg-surface'}`}
+      className={`px-4 py-2.5 rounded-full border ${active ? activeClassName : inactiveClassName}`}
     >
       <Text className="text-foreground text-sm font-medium">{label}</Text>
     </Pressable>
@@ -28,6 +30,8 @@ type PillToggleGroupProps<T extends string> = {
   selected: T | T[] | Set<T>;
   onToggle: (value: T) => void;
   activeClassName?: string;
+  inactiveClassName?: string;
+  containerClassName?: string;
 };
 
 export function PillToggleGroup<T extends string>({
@@ -35,6 +39,8 @@ export function PillToggleGroup<T extends string>({
   selected,
   onToggle,
   activeClassName,
+  inactiveClassName,
+  containerClassName = 'flex-row flex-wrap gap-2',
 }: PillToggleGroupProps<T>) {
   const isActive = (value: T) => {
     if (selected instanceof Set) return selected.has(value);
@@ -43,7 +49,7 @@ export function PillToggleGroup<T extends string>({
   };
 
   return (
-    <View className="flex-row flex-wrap gap-2">
+    <View className={containerClassName}>
       {options.map((opt) => (
         <PillToggle
           key={opt.value}
@@ -51,6 +57,7 @@ export function PillToggleGroup<T extends string>({
           active={isActive(opt.value)}
           onPress={() => onToggle(opt.value)}
           activeClassName={activeClassName}
+          inactiveClassName={inactiveClassName}
         />
       ))}
     </View>
