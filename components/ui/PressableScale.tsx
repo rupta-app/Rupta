@@ -18,6 +18,7 @@ export function PressableScale({
   onPressOut,
   children,
   style,
+  className,
   ...rest
 }: Props) {
   const scale = useSharedValue(1);
@@ -27,7 +28,7 @@ export function PressableScale({
   }));
 
   return (
-    <Animated.View style={[animatedStyle, style]}>
+    <Animated.View style={[animatedStyle, style]} className={className}>
       <Pressable
         onPressIn={(e) => {
           scale.value = withSpring(scaleValue, SPRING_CFG);
