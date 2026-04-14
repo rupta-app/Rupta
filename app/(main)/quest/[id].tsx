@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { useOfficialCompletionCount, useQuest, useSavedQuestIds, useToggleSave } from '@/hooks/useQuests';
 import { isAtCompletionCap, maxCompletionsAllowed } from '@/lib/questCompletionRules';
 import { useAuth } from '@/providers/AuthProvider';
@@ -62,7 +61,7 @@ export default function QuestDetailScreen() {
       <ScreenHeader title={t('quest.detail')} />
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         <Animated.View entering={FadeInDown.duration(450).springify().damping(16)}>
-          <View className="bg-surface border border-primary/25 rounded-2xl p-5 mb-2">
+          <View className="bg-surface rounded-2xl p-5 mb-2">
             <Text className="text-foreground text-3xl font-black">{questTitle(quest, lang)}</Text>
             <View className="flex-row flex-wrap gap-2 mt-4">
               <Badge>{formatCategoryLabel(quest.category, lang)}</Badge>
@@ -70,7 +69,7 @@ export default function QuestDetailScreen() {
               <Badge tone="respect">+{quest.aura_reward} AURA</Badge>
             </View>
           </View>
-          <Card className="mt-2 border-border">
+          <View className="bg-surface rounded-2xl p-4 mt-2">
             <Text className="text-muted text-xs uppercase font-semibold mb-2">{t('groups.repeatability')}</Text>
             {rules.map((line, i) => (
               <Text key={`${i}-${line}`} className="text-foreground text-sm leading-6">
@@ -82,13 +81,13 @@ export default function QuestDetailScreen() {
                 {t('quest.yourCompletions', { count: myCount })}
               </Text>
             ) : null}
-          </Card>
-          <Card className="mt-3 border-border">
+          </View>
+          <View className="bg-surface rounded-2xl p-4 mt-3">
             <Text className="text-muted leading-6">{questDescription(quest, lang)}</Text>
             <Text className="text-muted text-sm mt-3">
               {t('groups.proofType')}: {quest.proof_type}
             </Text>
-          </Card>
+          </View>
           <Button
             className="mt-6"
             disabled={!uid || capped || countLoading}

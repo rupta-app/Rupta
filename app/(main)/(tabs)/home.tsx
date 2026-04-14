@@ -3,22 +3,22 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Compass } from 'lucide-react-native';
+import { Compass, Plus, Sparkles } from 'lucide-react-native';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
-import { colors } from '@/constants/theme';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { colors } from '@/constants/theme';
 import { useAuth } from '@/providers/AuthProvider';
 import type { HomeFeedFilter } from '@/services/feed';
 import { useFriendIds, useHomeFeed, useSuggestedQuest } from '@/hooks/useFeed';
 import { useFeedWithCounts } from '@/hooks/useFeedWithCounts';
 import { appLang } from '@/utils/lang';
-import { questTitle } from '@/utils/questCopy';
+import { questTitle, questDescription } from '@/utils/questCopy';
 
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -57,24 +57,32 @@ export default function HomeScreen() {
           ]}
           selected={feedFilter}
           onToggle={setFeedFilter}
-          activeClassName="border-primary"
-          inactiveClassName="border-border"
           containerClassName="flex-row flex-wrap gap-2 mb-4"
         />
         {suggested ? (
-          <Card className="mb-4 border-primary/40">
-            <Text className="text-muted text-xs uppercase">{t('feed.suggested')}</Text>
-            <Text className="text-foreground text-lg font-bold mt-1">
+          <View className="bg-surface rounded-3xl p-5 mb-4">
+            <View className="flex-row items-center gap-2 mb-2">
+              <Sparkles size={14} color={colors.primary} />
+              <Text className="text-primary text-xs font-bold uppercase tracking-widest">
+                {t('feed.suggested')}
+              </Text>
+            </View>
+            <Text className="text-foreground text-xl font-bold">
               {questTitle(suggested, lang)}
             </Text>
+            {suggested.description_en || suggested.description_es ? (
+              <Text className="text-muted text-sm mt-1">
+                {questDescription(suggested, lang)}
+              </Text>
+            ) : null}
             <Button
-              className="mt-3"
+              className="mt-4"
               onPress={() => router.push(`/(main)/quest/${suggested.id}`)}
-              variant="secondary"
+              variant="primary"
             >
               {t('quest.detail')}
             </Button>
-          </Card>
+          </View>
         ) : null}
 
         {isLoading ? (
@@ -100,6 +108,15 @@ export default function HomeScreen() {
           ))
         )}
       </ScrollView>
+
+      <PressableScale
+        onPress={() => router.push('/(main)/spontaneous-sidequest' as never)}
+        className="absolute bottom-6 right-5 w-14 h-14 rounded-full bg-primary items-center justify-center"
+        scaleValue={0.9}
+        haptic
+      >
+        <Plus color={colors.white} size={24} />
+      </PressableScale>
     </View>
   );
 }

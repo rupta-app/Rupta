@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { Compass, Home, Trophy, User, Users } from 'lucide-react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 
@@ -31,8 +32,24 @@ function AnimatedTabIcon({
 
   return (
     <Animated.View style={style}>
-      <Icon color={color} size={size} />
+      <Icon color={color} size={size} strokeWidth={focused ? 2.2 : 1.5} />
     </Animated.View>
+  );
+}
+
+function RaisedHomeIcon({ focused }: { focused: boolean }) {
+  return (
+    <View
+      className={`w-12 h-12 rounded-full -mt-4 items-center justify-center ${
+        focused ? 'bg-primary' : 'bg-surfaceElevated border border-border'
+      }`}
+    >
+      <Home
+        color={focused ? colors.white : colors.mutedForeground}
+        size={24}
+        strokeWidth={focused ? 2.2 : 1.5}
+      />
+    </View>
   );
 }
 
@@ -48,7 +65,7 @@ export default function TabsLayout() {
           borderTopWidth: 0.5,
           paddingTop: 2,
         },
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.foreground,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarLabelStyle: {
           fontSize: 11,
@@ -56,15 +73,6 @@ export default function TabsLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: t('tabs.home'),
-          tabBarIcon: ({ color, size, focused }) => (
-            <AnimatedTabIcon Icon={Home} color={color} size={size} focused={focused} />
-          ),
-        }}
-      />
       <Tabs.Screen
         name="explore"
         options={{
@@ -81,6 +89,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <AnimatedTabIcon Icon={Users} color={color} size={size} focused={focused} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: t('tabs.home'),
+          tabBarIcon: ({ focused }) => <RaisedHomeIcon focused={focused} />,
         }}
       />
       <Tabs.Screen

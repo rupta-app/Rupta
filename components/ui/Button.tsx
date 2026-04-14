@@ -9,9 +9,9 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const variants: Record<Variant, string> = {
   primary: 'bg-primary',
-  secondary: 'bg-surfaceElevated border border-border',
+  secondary: 'bg-surface',
   ghost: 'bg-transparent',
-  danger: 'bg-danger/30 border border-danger',
+  danger: 'bg-danger/20',
 };
 
 const textVariants: Record<Variant, string> = {

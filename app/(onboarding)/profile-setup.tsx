@@ -54,11 +54,11 @@ export default function ProfileSetupOnboarding() {
           {draft.avatarUrl ? (
             <Image source={{ uri: draft.avatarUrl }} style={{ width: 112, height: 112, borderRadius: 9999, backgroundColor: colors.surface }} />
           ) : (
-            <View className="w-28 h-28 rounded-full bg-primary/25 items-center justify-center border-2 border-dashed border-primary/50">
-              <Text className="text-primary text-3xl font-light">+</Text>
+            <View className="w-28 h-28 rounded-full bg-primary items-center justify-center">
+              <Text className="text-white text-3xl font-light">+</Text>
             </View>
           )}
-          <View className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-surface border border-border items-center justify-center">
+          <View className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-surfaceElevated items-center justify-center">
             <Pencil color={colors.primaryLight} size={18} />
           </View>
         </Pressable>

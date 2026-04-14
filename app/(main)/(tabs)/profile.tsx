@@ -101,7 +101,7 @@ export default function ProfileTab() {
           <Avatar url={profile.avatar_url} name={profile.display_name} size={80} />
           <PressableScale
             onPress={() => router.push('/(main)/edit-profile')}
-            className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-surface border border-border items-center justify-center"
+            className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-surfaceElevated items-center justify-center"
             scaleValue={0.9}
             hitSlop={8}
           >
@@ -117,17 +117,17 @@ export default function ProfileTab() {
       <View className="flex-row gap-2 mt-6">
         <PressableScale
           onPress={() => setTab('stats')}
-          className={`flex-1 py-2.5 rounded-xl border items-center ${tab === 'stats' ? 'border-primary bg-primary/10' : 'border-border'}`}
+          className={`flex-1 py-2.5 rounded-xl items-center ${tab === 'stats' ? 'bg-foreground' : 'bg-surfaceElevated'}`}
           scaleValue={0.96}
         >
-          <Text className={`font-semibold ${tab === 'stats' ? 'text-foreground' : 'text-muted'}`}>{t('profile.tabStats')}</Text>
+          <Text className={`font-semibold ${tab === 'stats' ? 'text-background' : 'text-mutedForeground'}`}>{t('profile.tabStats')}</Text>
         </PressableScale>
         <PressableScale
           onPress={() => setTab('life')}
-          className={`flex-1 py-2.5 rounded-xl border items-center ${tab === 'life' ? 'border-primary bg-primary/10' : 'border-border'}`}
+          className={`flex-1 py-2.5 rounded-xl items-center ${tab === 'life' ? 'bg-foreground' : 'bg-surfaceElevated'}`}
           scaleValue={0.96}
         >
-          <Text className={`font-semibold ${tab === 'life' ? 'text-foreground' : 'text-muted'}`}>{t('profile.tabLife')}</Text>
+          <Text className={`font-semibold ${tab === 'life' ? 'text-background' : 'text-mutedForeground'}`}>{t('profile.tabLife')}</Text>
         </PressableScale>
       </View>
     </>
@@ -149,7 +149,7 @@ export default function ProfileTab() {
                     end={{ x: 0.5, y: 1 }}
                     style={{ position: 'absolute', width: 80, height: 80, borderRadius: 40 }}
                   />
-                  <View className="w-20 h-20 rounded-full border-2 border-primary items-center justify-center shadow-lg shadow-primary/30">
+                  <View className="w-20 h-20 rounded-full border-2 border-primary items-center justify-center">
                     <Text className="text-primary text-3xl font-black">{level}</Text>
                   </View>
                 </View>

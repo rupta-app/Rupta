@@ -1,12 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { useActiveChallengeCount, useCreateChallenge } from '@/hooks/useChallenges';
 import { useAuth } from '@/providers/AuthProvider';
 import { canCreateChallenge, getUserPlan } from '@/services/entitlements';
@@ -40,13 +41,14 @@ export default function CreateGroupChallengeScreen() {
         <Text className="text-muted text-xs uppercase mt-4 mb-2">{t('groups.scoringMode')}</Text>
         <View className="flex-row flex-wrap gap-2">
           {(['official_only', 'group_only', 'mixed'] as const).map((m) => (
-            <Pressable
+            <PressableScale
               key={m}
               onPress={() => setMode(m)}
-              className={`px-3 py-2 rounded-lg border ${mode === m ? 'border-primary' : 'border-border'}`}
+              scaleValue={0.95}
+              className={`px-3 py-2 rounded-lg ${mode === m ? 'bg-foreground' : 'bg-surfaceElevated'}`}
             >
-              <Text className="text-foreground text-xs">{m.replace(/_/g, ' ')}</Text>
-            </Pressable>
+              <Text className={`text-xs ${mode === m ? 'text-background font-semibold' : 'text-mutedForeground'}`}>{m.replace(/_/g, ' ')}</Text>
+            </PressableScale>
           ))}
         </View>
         {err ? <Text className="text-danger mt-4">{err}</Text> : null}

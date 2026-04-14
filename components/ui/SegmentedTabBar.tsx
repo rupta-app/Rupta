@@ -43,7 +43,7 @@ export function SegmentedTabBar<T extends string>({ tabs, active, onChange }: Pr
   };
 
   return (
-    <View className="border-b border-border">
+    <View>
       <View className="flex-row relative">
         {tabs.map(({ key, label }, index) => {
           const isActive = active === key;

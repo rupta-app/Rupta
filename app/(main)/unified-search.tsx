@@ -79,7 +79,7 @@ export default function UnifiedSearchScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('search.title')} />
-      <View className="p-4 border-b border-border">
+      <View className="p-4">
         <Input
           value={q}
           onChangeText={setQ}
@@ -149,7 +149,7 @@ export default function UnifiedSearchScreen() {
       />
 
       <View
-        className="absolute bottom-0 left-0 right-0 border-t border-border bg-background px-4 py-4"
+        className="absolute bottom-0 left-0 right-0 bg-surface px-4 py-4 rounded-t-2xl"
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
         <View className="flex-row items-center gap-2 mb-2">

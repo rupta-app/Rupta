@@ -48,7 +48,7 @@ export default function GroupPeopleScreen() {
           friends.map((f: { id: string; display_name: string }) => (
             <Pressable
               key={f.id}
-              className="py-4 border-b border-border"
+              className="py-4 border-b border-border/30"
               onPress={() =>
                 invite.mutate({ groupId: id, inviterId: uid, inviteeId: f.id })
               }

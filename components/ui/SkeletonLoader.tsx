@@ -32,23 +32,16 @@ export function Skeleton({
 
 export function FeedPostSkeleton() {
   return (
-    <View className="bg-surface rounded-2xl border border-border p-4 mb-4">
-      <View className="flex-row items-center gap-3 mb-3">
-        <Skeleton width={40} height={40} rounded="full" />
-        <View className="flex-1 gap-2">
-          <Skeleton width="60%" height={14} rounded="sm" />
-          <Skeleton width="40%" height={12} rounded="sm" />
-        </View>
-      </View>
-      <Skeleton width="100%" height={224} rounded="lg" />
+    <View className="mb-6">
+      <Skeleton width="100%" height={320} rounded="lg" />
       <View className="mt-3 gap-2">
         <Skeleton width="70%" height={16} rounded="sm" />
-        <Skeleton width="45%" height={12} rounded="sm" />
+        <Skeleton width="40%" height={12} rounded="sm" />
       </View>
-      <View className="flex-row gap-6 mt-3">
-        <Skeleton width={22} height={22} rounded="sm" />
-        <Skeleton width={22} height={22} rounded="sm" />
-        <Skeleton width={22} height={22} rounded="sm" />
+      <View className="flex-row gap-4 mt-2.5">
+        <Skeleton width={20} height={20} rounded="sm" />
+        <Skeleton width={20} height={20} rounded="sm" />
+        <Skeleton width={18} height={18} rounded="sm" />
       </View>
     </View>
   );

@@ -18,7 +18,7 @@ export function ScreenHeader({ title, onBack, right }: Props) {
 
   return (
     <View style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center justify-between px-2 py-2 border-b border-border">
+      <View className="flex-row items-center justify-between px-2 py-2">
         <PressableScale
           onPress={onBack ?? (() => router.back())}
           className="p-2 flex-row items-center gap-2"

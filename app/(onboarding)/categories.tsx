@@ -44,11 +44,11 @@ export default function CategoriesOnboarding() {
             onPress={() => toggle(c)}
             scaleValue={0.95}
             hitSlop={4}
-            className={`px-4 py-3 rounded-full border ${
-              draft.preferredCategories.includes(c) ? 'border-primary bg-primary/20' : 'border-border bg-surface'
+            className={`px-4 py-3 rounded-full ${
+              draft.preferredCategories.includes(c) ? 'bg-foreground' : 'bg-surfaceElevated'
             }`}
           >
-            <Text className="text-foreground text-sm font-medium">{formatCategoryLabel(c, lang)}</Text>
+            <Text className={`text-sm font-medium ${draft.preferredCategories.includes(c) ? 'text-background' : 'text-mutedForeground'}`}>{formatCategoryLabel(c, lang)}</Text>
           </PressableScale>
         ))}
       </View>

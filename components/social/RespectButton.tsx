@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp } from 'lucide-react-native';
+import { Heart } from 'lucide-react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -39,10 +39,10 @@ export function RespectButton({
       disabled={loading}
       scaleValue={0.92}
       haptic={false}
-      className={`flex-row items-center gap-2 px-4 py-2 rounded-full border ${active ? 'bg-respect/20 border-respect' : 'border-border bg-surfaceElevated'}`}
+      className={`flex-row items-center gap-2 px-4 py-2 rounded-full ${active ? 'bg-respect/20' : 'bg-surfaceElevated'}`}
     >
       <Animated.View style={iconStyle}>
-        <ThumbsUp
+        <Heart
           size={18}
           color={active ? colors.respect : colors.muted}
           fill={active ? colors.respect : 'none'}
