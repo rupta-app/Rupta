@@ -97,9 +97,9 @@ export async function fetchHomeFeed(
   if (filter === 'official') {
     q = q.eq('quest_source_type', 'official');
   } else if (filter === 'unofficial') {
-    q = q.or(
-      'and(quest_source_type.eq.group,visibility.in.(public,friends)),and(quest_source_type.eq.spontaneous,visibility.in.(public,friends))',
-    );
+    // Chain filters: (group OR spontaneous) AND visibility in (public | friends).
+    // Nested `or(and(...),and(...))` is easy to get wrong for PostgREST and can break the feed query.
+    q = q.or('quest_source_type.eq.group,quest_source_type.eq.spontaneous').in('visibility', ['public', 'friends']);
   }
 
   const { data: rows, error } = await q;
@@ -122,13 +122,23 @@ export async function fetchGroupFeed(groupId: string): Promise<FeedPost[]> {
 }
 
 export async function fetchSuggestedQuest(userId: string, preferredCategories: string[]): Promise<QuestRow | null> {
-  let q = supabase.from('quests').select('*').eq('is_active', true);
+  const catalogBase = () =>
+    supabase.from('quests').select('*').eq('is_active', true).eq('is_spontaneous', false);
+
+  let q = catalogBase();
   if (preferredCategories.length > 0) {
     q = q.in('category', preferredCategories);
   }
   const { data, error } = await q.limit(20);
   if (error) throw error;
-  const list = data ?? [];
+  let list = data ?? [];
+
+  if (list.length === 0 && preferredCategories.length > 0) {
+    const { data: fallback, error: err2 } = await catalogBase().limit(20);
+    if (err2) throw err2;
+    list = fallback ?? [];
+  }
+
   if (list.length === 0) return null;
   return list[Math.floor(Math.random() * list.length)];
 }

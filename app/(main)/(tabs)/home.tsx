@@ -9,6 +9,7 @@ import { FeedPostCard } from '@/components/feed/FeedPostCard';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Button } from '@/components/ui/Button';
@@ -33,7 +34,7 @@ export default function HomeScreen() {
   const lang = appLang(i18n);
   const [feedFilter, setFeedFilter] = useState<HomeFeedFilter>('all');
   const { data: friendIds = [] } = useFriendIds(session?.user?.id);
-  const { data: feed = [], isLoading, refetch, isRefetching } = useHomeFeed(
+  const { data: feed = [], isLoading, refetch, isRefetching, isError } = useHomeFeed(
     session?.user?.id,
     friendIds,
     feedFilter,
@@ -85,7 +86,14 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {isLoading ? (
+        {isError ? (
+          <ErrorState
+            title={t('common.error')}
+            subtitle={t('common.errorSubtitle')}
+            onRetry={() => void refetch()}
+            retryLabel={t('common.retry')}
+          />
+        ) : isLoading ? (
           <>
             <FeedPostSkeleton />
             <FeedPostSkeleton />
