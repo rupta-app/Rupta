@@ -1,6 +1,8 @@
 import { Image } from 'expo-image';
 import { Text, View } from 'react-native';
 
+import { colors } from '@/constants/theme';
+
 export function Avatar({
   url,
   name,
@@ -11,12 +13,18 @@ export function Avatar({
   size?: number;
 }) {
   const initial = name?.charAt(0)?.toUpperCase() || '?';
+  const radius = size / 2;
   if (url) {
     return (
       <Image
         source={{ uri: url }}
-        className="rounded-full bg-surfaceElevated"
-        style={{ width: size, height: size }}
+        contentFit="cover"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: radius,
+          backgroundColor: colors.surfaceElevated,
+        }}
       />
     );
   }

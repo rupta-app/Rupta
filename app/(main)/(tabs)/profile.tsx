@@ -78,11 +78,8 @@ export default function ProfileTab() {
     enabled: Boolean(uid),
   });
 
-  if (!profile) return null;
-
-  const level = auraLevelFromTotal(profile.total_aura);
-  const { progress } = auraProgressInCurrentLevel(profile.total_aura);
-  const next = auraToNextLevel(profile.total_aura);
+  const totalAura = profile?.total_aura ?? 0;
+  const { progress } = auraProgressInCurrentLevel(totalAura);
   const progressWidth = useSharedValue(0);
 
   useEffect(() => {
@@ -92,6 +89,47 @@ export default function ProfileTab() {
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
   }));
+
+  const renderLifeListItem = useCallback(
+    ({ item }: { item: { quest_id: string; quests?: QuestRow } }) => {
+      const q = item.quests;
+      const cnt = lifeCounts?.get(item.quest_id) ?? 0;
+      const max = q ? maxCompletionsAllowed(q) : null;
+      const rowDone = q ? isLifeListRowDone(q, cnt) : false;
+      return (
+        <PressableScale onPress={() => router.push(`/(main)/quest/${item.quest_id}`)} scaleValue={0.98}>
+          <Card className="mb-2 flex-row items-center gap-2 py-3">
+            <View className="flex-1 min-w-0">
+              <View className="flex-row flex-wrap items-center gap-2">
+                <Text className="text-foreground font-bold flex-shrink">{q ? questTitle(q, lang) : 'Quest'}</Text>
+                {rowDone ? <Badge tone="secondary">{t('quest.lifeListRowDone')}</Badge> : null}
+              </View>
+              {q && (max != null || cnt > 0) ? (
+                <Text className="text-muted text-xs mt-1">
+                  {max != null ? `${cnt}/${max}` : t('quest.yourCompletions', { count: cnt })}
+                </Text>
+              ) : null}
+            </View>
+            <PressableScale
+              onPress={() => uid && toggle.mutate({ questId: item.quest_id, currentlySaved: true })}
+              className="p-2 shrink-0"
+              hitSlop={8}
+              scaleValue={0.9}
+              accessibilityLabel={t('profile.removeFromLifeList')}
+            >
+              <BookmarkMinus color={colors.muted} size={22} />
+            </PressableScale>
+          </Card>
+        </PressableScale>
+      );
+    },
+    [lifeCounts, router, lang, t, uid, toggle],
+  );
+
+  if (!profile) return null;
+
+  const level = auraLevelFromTotal(profile.total_aura);
+  const next = auraToNextLevel(profile.total_aura);
   const maxBar = Math.max(...(activity?.buckets ?? [0]), 1);
 
   const profileHeader = (
@@ -247,40 +285,7 @@ export default function ProfileTab() {
           }
           contentContainerStyle={{ paddingBottom: SCROLL_PADDING_BOTTOM, paddingHorizontal: 16, paddingTop: SCROLL_PADDING_TOP }}
           ListEmptyComponent={<Text className="text-muted text-center mt-8 px-4">{t('profile.emptyLifeList')}</Text>}
-          renderItem={useCallback(({ item }: { item: { quest_id: string; quests?: QuestRow } }) => {
-            const q = item.quests;
-            const cnt = lifeCounts?.get(item.quest_id) ?? 0;
-            const max = q ? maxCompletionsAllowed(q) : null;
-            const rowDone = q ? isLifeListRowDone(q, cnt) : false;
-            return (
-              <PressableScale onPress={() => router.push(`/(main)/quest/${item.quest_id}`)} scaleValue={0.98}>
-                <Card className="mb-2 flex-row items-center gap-2 py-3">
-                  <View className="flex-1 min-w-0">
-                    <View className="flex-row flex-wrap items-center gap-2">
-                      <Text className="text-foreground font-bold flex-shrink">
-                        {q ? questTitle(q, lang) : 'Quest'}
-                      </Text>
-                      {rowDone ? <Badge tone="secondary">{t('quest.lifeListRowDone')}</Badge> : null}
-                    </View>
-                    {q && (max != null || cnt > 0) ? (
-                      <Text className="text-muted text-xs mt-1">
-                        {max != null ? `${cnt}/${max}` : t('quest.yourCompletions', { count: cnt })}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <PressableScale
-                    onPress={() => uid && toggle.mutate({ questId: item.quest_id, currentlySaved: true })}
-                    className="p-2 shrink-0"
-                    hitSlop={8}
-                    scaleValue={0.9}
-                    accessibilityLabel={t('profile.removeFromLifeList')}
-                  >
-                    <BookmarkMinus color={colors.muted} size={22} />
-                  </PressableScale>
-                </Card>
-              </PressableScale>
-            );
-          }, [lifeCounts, router, lang, t, uid, toggle])}
+          renderItem={renderLifeListItem}
         />
       )}
     </View>
