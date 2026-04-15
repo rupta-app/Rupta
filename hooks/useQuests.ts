@@ -1,22 +1,41 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { QuestFilters } from '@/services/quests';
+import type { QuestsPage } from '@/services/quests';
 import {
   fetchLifeListQuests,
   fetchOfficialCompletionCountForQuest,
   fetchOfficialCompletionCountsByQuestIds,
   fetchQuestById,
-  fetchQuests,
+  fetchQuestsPage,
   fetchSavedQuestIds,
   toggleSavedQuest,
 } from '@/services/quests';
+import { QUEST_CATEGORIES } from '@/constants/categories';
 import { qk } from '@/hooks/queryKeys';
 
-export function useQuests(filters: QuestFilters) {
-  return useQuery({
+function questsInfiniteOptions(filters: QuestFilters) {
+  return {
     queryKey: qk.quests.list(filters),
-    queryFn: () => fetchQuests(filters),
-  });
+    queryFn: ({ pageParam }: { pageParam: number }) => fetchQuestsPage(filters, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: QuestsPage) => lastPage.nextOffset,
+  };
+}
+
+export function useInfiniteQuests(filters: QuestFilters) {
+  return useInfiniteQuery(questsInfiniteOptions(filters));
+}
+
+export function usePrefetchCategoryPages() {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    queryClient.prefetchInfiniteQuery({ ...questsInfiniteOptions({}), pages: 1 });
+    for (const cat of QUEST_CATEGORIES) {
+      queryClient.prefetchInfiniteQuery({ ...questsInfiniteOptions({ category: cat }), pages: 1 });
+    }
+  }, [queryClient]);
 }
 
 export function useQuest(id: string) {
