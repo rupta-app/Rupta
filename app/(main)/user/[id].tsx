@@ -7,6 +7,8 @@ import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { qk } from '@/hooks/queryKeys';
 import { auraLevelFromTotal } from '@/lib/aura';
 import { FriendRequestActions } from '@/components/social/FriendRequestActions';
 import { useFriendsList, useSendFriendRequest } from '@/hooks/useFriends';
@@ -27,29 +29,43 @@ export default function PublicProfileScreen() {
   const sendReq = useSendFriendRequest();
   const { data: friends = [] } = useFriendsList(uid);
 
-  const { data: profile } = useQuery({
-    queryKey: ['profile', id],
+  const { data: profile, isError: profileError, refetch: refetchProfile } = useQuery({
+    queryKey: qk.profile.detail(id),
     queryFn: () => fetchProfile(id),
     enabled: Boolean(id),
   });
 
   const { data: stats } = useQuery({
-    queryKey: ['profile-stats', id],
+    queryKey: qk.profile.stats(id),
     queryFn: () => fetchProfileStats(id),
     enabled: Boolean(id),
   });
 
   const { data: recent = [] } = useQuery({
-    queryKey: ['profile-recent', id],
+    queryKey: qk.profile.recent(id),
     queryFn: () => fetchRecentCompletions(id),
     enabled: Boolean(id),
   });
 
   const { data: relation, isPending: relationPending } = useQuery({
-    queryKey: ['friend-relation', uid, id],
+    queryKey: [...qk.friends.relation, uid, id],
     queryFn: () => fetchFriendRequestRelation(uid!, id!),
     enabled: Boolean(uid && id && uid !== id),
   });
+
+  if (profileError) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('common.error')} />
+        <ErrorState
+          title={t('common.error')}
+          subtitle={t('common.errorSubtitle')}
+          onRetry={() => void refetchProfile()}
+          retryLabel={t('common.retry')}
+        />
+      </View>
+    );
+  }
 
   if (!profile) {
     return (

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -34,17 +35,19 @@ export default function UnifiedSearchScreen() {
   const [q, setQ] = useState('');
   const send = useSendFriendRequest();
 
-  const { data: people = [], refetch: refetchPeople } = useQuery({
+  const { data: people = [], refetch: refetchPeople, isError: peopleError } = useQuery({
     queryKey: ['unified-search-people', q, uid],
     queryFn: () => searchProfiles(q, uid),
     enabled: q.trim().length >= 2,
   });
 
-  const { data: groups = [], refetch: refetchGroups } = useQuery({
+  const { data: groups = [], refetch: refetchGroups, isError: groupsError } = useQuery({
     queryKey: ['unified-search-groups', q, uid],
     queryFn: () => searchMyGroups(uid, q),
     enabled: Boolean(uid),
   });
+
+  const isError = peopleError || groupsError;
 
   const rows: Row[] = useMemo(() => {
     const out: Row[] = [];
@@ -75,6 +78,23 @@ export default function UnifiedSearchScreen() {
     const msg = t('search.inviteMessage');
     await Share.share({ message: msg });
   };
+
+  if (isError) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('search.title')} />
+        <ErrorState
+          title={t('common.error')}
+          subtitle={t('common.errorSubtitle')}
+          onRetry={() => {
+            void refetchPeople();
+            void refetchGroups();
+          }}
+          retryLabel={t('common.retry')}
+        />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">

@@ -8,6 +8,7 @@ import { Search } from 'lucide-react-native';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { fetchQuests } from '@/services/quests';
@@ -22,10 +23,24 @@ export default function QuickCompleteScreen() {
   const lang = appLang(i18n);
   const [search, setSearch] = useState('');
 
-  const { data: quests = [], isFetching } = useQuery({
+  const { data: quests = [], isFetching, isError, refetch } = useQuery({
     queryKey: ['quick-complete-quests', search],
     queryFn: () => fetchQuests({ search }),
   });
+
+  if (isError) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('quickComplete.title')} />
+        <ErrorState
+          title={t('common.error')}
+          subtitle={t('common.errorSubtitle')}
+          onRetry={() => void refetch()}
+          retryLabel={t('common.retry')}
+        />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">
