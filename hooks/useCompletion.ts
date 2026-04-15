@@ -1,16 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   addComment,
   createCompletion,
   createGroupQuestCompletion,
   createSpontaneousCompletion,
+  deleteComment,
   deleteCompletion,
   fetchComments,
   fetchCompletionById,
   fetchCompletionCounts,
+  reportComment,
+  toggleCommentLike,
   toggleRespect,
   userGaveRespect,
+  userLikedComments,
 } from '@/services/completions';
 import { invalidateCompletionRelated, qk } from '@/hooks/queryKeys';
 
@@ -34,10 +38,15 @@ export function useCompletionSocial(completionId: string, userId: string | undef
   });
 }
 
+const COMMENTS_PAGE_SIZE = 5;
+
 export function useComments(completionId: string) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: qk.completions.comments(completionId),
-    queryFn: () => fetchComments(completionId),
+    queryFn: ({ pageParam = 0 }) => fetchComments(completionId, COMMENTS_PAGE_SIZE, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.reduce((n, p) => n + p.comments.length, 0) : undefined,
     enabled: Boolean(completionId),
   });
 }
@@ -70,6 +79,52 @@ export function useAddComment(completionId: string, userId: string | undefined) 
       void queryClient.invalidateQueries({ queryKey: qk.feed.all });
       void queryClient.invalidateQueries({ queryKey: qk.feed.groupAll });
     },
+  });
+}
+
+export function useDeleteComment(completionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (commentId: string) => deleteComment(commentId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.completions.comments(completionId) });
+      void queryClient.invalidateQueries({ queryKey: qk.completions.commentSocial(completionId) });
+    },
+  });
+}
+
+export function useCommentSocial(completionId: string, userId: string | undefined, commentIds: string[]) {
+  return useQuery({
+    queryKey: [...qk.completions.commentSocial(completionId), commentIds.join(',')],
+    queryFn: async () => {
+      const liked = userId ? await userLikedComments(userId, commentIds) : new Set<string>();
+      return { liked };
+    },
+    enabled: commentIds.length > 0,
+  });
+}
+
+export function useToggleCommentLike(completionId: string, userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ commentId, hasLiked }: { commentId: string; hasLiked: boolean }) => {
+      if (!userId) throw new Error('No user');
+      await toggleCommentLike(commentId, userId, hasLiked);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.completions.commentSocial(completionId) });
+    },
+  });
+}
+
+export function useReportComment() {
+  return useMutation({
+    mutationFn: async ({ commentId, reporterId, reportedUserId, reason }: {
+      commentId: string;
+      reporterId: string;
+      reportedUserId: string;
+      reason: string;
+    }) => reportComment(commentId, reporterId, reportedUserId, reason),
   });
 }
 

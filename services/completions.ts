@@ -274,16 +274,26 @@ export async function toggleRespect(completionId: string, userId: string, has: b
   }
 }
 
-export async function fetchComments(completionId: string): Promise<(CommentRow & { profiles: ProfileBasic | undefined })[]> {
-  const { data: rows, error } = await supabase
-    .from('comments')
-    .select('*')
-    .eq('completion_id', completionId)
-    .order('created_at', { ascending: true });
+export async function fetchComments(
+  completionId: string,
+  limit = 20,
+  offset = 0,
+): Promise<{ comments: (CommentRow & { like_count: number; profiles: ProfileBasic | undefined })[]; hasMore: boolean }> {
+  const { data: rows, error } = await supabase.rpc('fetch_comments_ranked', {
+    p_completion_id: completionId,
+    p_limit: limit + 1,
+    p_offset: offset,
+  });
   if (error) throw error;
-  const list = rows ?? [];
-  if (list.length === 0) return [];
-  return enrichWithProfiles(list, 'user_id', PROFILE_COLS_BASIC);
+  const list = (rows ?? []) as (CommentRow & { like_count: number })[];
+  const hasMore = list.length > limit;
+  const page = hasMore ? list.slice(0, limit) : list;
+  if (page.length === 0) return { comments: [], hasMore: false };
+  const enriched = await enrichWithProfiles(page, 'user_id', PROFILE_COLS_BASIC);
+  return {
+    comments: enriched.map((c, i) => ({ ...c, like_count: page[i].like_count })),
+    hasMore,
+  };
 }
 
 export async function addComment(completionId: string, userId: string, content: string): Promise<CommentRow> {
@@ -294,4 +304,60 @@ export async function addComment(completionId: string, userId: string, content: 
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function deleteComment(commentId: string): Promise<void> {
+  const { error } = await supabase.from('comments').delete().eq('id', commentId);
+  if (error) throw error;
+}
+
+export async function userLikedComments(
+  userId: string,
+  commentIds: string[],
+): Promise<Set<string>> {
+  if (commentIds.length === 0) return new Set();
+  const { data, error } = await supabase
+    .from('comment_reactions')
+    .select('comment_id')
+    .eq('user_id', userId)
+    .in('comment_id', commentIds);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => r.comment_id));
+}
+
+export async function toggleCommentLike(
+  commentId: string,
+  userId: string,
+  hasLiked: boolean,
+): Promise<void> {
+  if (hasLiked) {
+    const { error } = await supabase
+      .from('comment_reactions')
+      .delete()
+      .eq('comment_id', commentId)
+      .eq('user_id', userId);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from('comment_reactions')
+      .insert({ comment_id: commentId, user_id: userId });
+    if (error) throw error;
+  }
+}
+
+export async function reportComment(
+  commentId: string,
+  reporterId: string,
+  reportedUserId: string,
+  reason: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('reports')
+    .insert({
+      comment_id: commentId,
+      reporter_id: reporterId,
+      reported_user_id: reportedUserId,
+      reason,
+    });
+  if (error) throw error;
 }

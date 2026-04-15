@@ -201,10 +201,14 @@ export const en = {
   },
   social: {
     comments: 'Comments',
-    addComment: 'Add a comment',
+    addComment: 'Add a comment...',
     giveRespect: 'Respect',
     removeRespect: 'Un-respect',
     blockUser: 'Block user',
+    deleteComment: 'Delete comment',
+    reportComment: 'Report comment',
+    commentReported: 'Comment reported',
+    viewMoreComments: 'View more comments',
   },
   friends: {
     title: 'Friends',
