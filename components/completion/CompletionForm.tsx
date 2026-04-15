@@ -1,13 +1,15 @@
 import * as ImagePicker from 'expo-image-picker';
-import { useRef, useState } from 'react';
 import { Image } from 'expo-image';
-import { ScrollView, Text, View } from 'react-native';
+import { Camera, RefreshCw } from 'lucide-react-native';
+import { useRef, useState } from 'react';
+import { Alert, Linking, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { colors } from '@/constants/theme';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { PICKER_IMAGES } from '@/lib/pickImage';
 import { uploadCompletionPhoto } from '@/lib/storage';
 import { supabaseErrorMessage } from '@/lib/supabaseErrorMessage';
@@ -54,7 +56,19 @@ export function CompletionForm({
 
   const pick = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) return;
+    if (!perm.granted) {
+      if (!perm.canAskAgain) {
+        Alert.alert(
+          t('complete.permissionDenied'),
+          t('complete.permissionSettings'),
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            { text: t('complete.openSettings'), onPress: () => Linking.openSettings() },
+          ],
+        );
+      }
+      return;
+    }
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: PICKER_IMAGES,
       quality: 0.85,
@@ -100,29 +114,67 @@ export function CompletionForm({
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
       {headerSlot}
 
-      <Button className="mt-4" variant="secondary" onPress={pick}>
-        {t('complete.proof')}
-      </Button>
-      {uri ? <Image source={{ uri }} style={{ width: '100%', height: 224, borderRadius: 12, marginTop: 16, backgroundColor: colors.surfaceElevated }} /> : null}
+      <PressableScale onPress={pick} scaleValue={0.97} className="mt-4">
+        {uri ? (
+          <View className="rounded-2xl overflow-hidden" style={{ backgroundColor: colors.surfaceElevated }}>
+            <Image
+              source={{ uri }}
+              style={{ width: '100%', height: 240, backgroundColor: colors.surfaceElevated }}
+              contentFit="cover"
+            />
+            <View className="absolute bottom-3 right-3 flex-row items-center gap-1.5 bg-background/80 rounded-full px-3 py-1.5">
+              <RefreshCw color={colors.foreground} size={14} />
+              <Text className="text-foreground text-xs font-semibold">{t('complete.changePhoto')}</Text>
+            </View>
+          </View>
+        ) : (
+          <View
+            className="rounded-2xl items-center justify-center py-12"
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1.5,
+              borderColor: colors.surfaceElevated,
+              borderStyle: 'dashed',
+            }}
+          >
+            <View
+              className="w-14 h-14 rounded-full items-center justify-center mb-3"
+              style={{ backgroundColor: colors.primaryGlow }}
+            >
+              <Camera color={colors.primary} size={24} />
+            </View>
+            <Text className="text-foreground font-semibold">{t('complete.proof')}</Text>
+            <Text className="text-muted text-sm mt-1">{t('complete.tapToAdd')}</Text>
+          </View>
+        )}
+      </PressableScale>
 
-      <Input label={t('complete.caption')} value={caption} onChangeText={setCaption} multiline />
-      <Input label={t('complete.rating')} value={rating} onChangeText={setRating} placeholder="1-5" />
+      <View className="bg-surface rounded-2xl p-4 mt-4">
+        <Input label={t('complete.caption')} value={caption} onChangeText={setCaption} multiline />
+        <Input label={t('complete.rating')} value={rating} onChangeText={setRating} placeholder="1-5" />
+      </View>
 
       {children}
 
-      <Text className="text-muted text-sm mb-2 mt-2">{t('complete.coparticipants')}</Text>
-      <PillToggleGroup
-        options={friendOptions}
-        selected={picked}
-        onToggle={toggleParticipant}
-        activeClassName="bg-secondary/20"
-        activeTextClassName="text-secondary"
-      />
+      {friendOptions.length > 0 ? (
+        <View className="bg-surface rounded-2xl p-4 mt-3">
+          <Text className="text-muted text-xs uppercase font-semibold mb-3 tracking-wide">
+            {t('complete.coparticipants')}
+          </Text>
+          <PillToggleGroup
+            options={friendOptions}
+            selected={picked}
+            onToggle={toggleParticipant}
+            activeClassName="bg-secondary/20"
+            activeTextClassName="text-secondary"
+          />
+        </View>
+      ) : null}
 
-      {err ? <Text className="text-danger mt-4">{err}</Text> : null}
+      {err ? <Text className="text-danger mt-4 text-center">{err}</Text> : null}
 
       <Button
-        className="mt-8"
+        className="mt-6"
         onPress={() => void submit()}
         loading={isPending}
         disabled={isPending}
