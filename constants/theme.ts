@@ -14,6 +14,7 @@ export const colors = {
   mutedForeground: '#5C5C6F',
   foreground: '#EDEDF0',
   white: '#FFFFFF',
+  primaryGlow: 'rgba(139,108,255,0.12)',
 } as const;
 
 export const spacing = {

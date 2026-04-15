@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,17 +17,23 @@ export function ScreenHeader({ title, onBack, right }: Props) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center justify-between px-2 py-2">
-        <PressableScale
-          onPress={onBack ?? (() => router.back())}
-          className="p-2 flex-row items-center gap-2"
-          hitSlop={12}
-          scaleValue={0.92}
-        >
-          <ChevronLeft color={colors.foreground} size={24} />
-          <Text className="text-foreground font-bold text-lg">{title}</Text>
-        </PressableScale>
+    <View className="bg-background" style={{ paddingTop: insets.top }}>
+      <View className="flex-row items-center justify-between px-4 py-1">
+        <View className="flex-row items-center gap-3 flex-1">
+          <PressableScale
+            onPress={onBack ?? (() => router.back())}
+            className="w-10 h-10 rounded-full bg-surface items-center justify-center"
+            hitSlop={12}
+            scaleValue={0.9}
+          >
+            <ArrowLeft color={colors.foreground} size={20} />
+          </PressableScale>
+          {title ? (
+            <Text className="text-foreground font-bold text-lg flex-1" numberOfLines={1}>
+              {title}
+            </Text>
+          ) : null}
+        </View>
         {right}
       </View>
     </View>

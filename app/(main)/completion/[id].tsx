@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system/legacy';
+import { File, Paths } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { Flag } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
@@ -98,9 +98,9 @@ export default function CompletionDetailScreen() {
     const { status } = await MediaLibrary.requestPermissionsAsync();
     if (status !== 'granted') return;
     const ext = media.toLowerCase().includes('.png') ? 'png' : 'jpg';
-    const dest = `${FileSystem.cacheDirectory}rupta-${Date.now()}.${ext}`;
-    const { uri } = await FileSystem.downloadAsync(media, dest);
-    await MediaLibrary.createAssetAsync(uri);
+    const dest = new File(Paths.cache, `rupta-${Date.now()}.${ext}`);
+    const downloaded = await File.downloadFileAsync(media, dest);
+    await MediaLibrary.createAssetAsync(downloaded.uri);
   };
 
   return (

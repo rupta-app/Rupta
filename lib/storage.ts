@@ -1,5 +1,4 @@
-import { decode } from 'base64-arraybuffer';
-import * as FileSystem from 'expo-file-system/legacy';
+import { File } from 'expo-file-system';
 
 import { supabase } from '@/lib/supabase';
 
@@ -10,13 +9,12 @@ async function uploadFile(opts: {
   upsert: boolean;
   cacheBust: boolean;
 }): Promise<string> {
-  const base64 = await FileSystem.readAsStringAsync(opts.fileUri, {
-    encoding: 'base64',
-  });
+  const file = new File(opts.fileUri);
+  const arrayBuffer = await file.arrayBuffer();
 
   const { error } = await supabase.storage
     .from('completion-media')
-    .upload(opts.path, decode(base64), {
+    .upload(opts.path, arrayBuffer, {
       contentType: opts.mimeType,
       upsert: opts.upsert,
     });

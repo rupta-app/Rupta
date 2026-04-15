@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system/legacy';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 const imageShareOptions = {
@@ -24,9 +24,10 @@ export async function shareImageToInstagramStories(imageUri: string): Promise<bo
 }
 
 export async function saveImageToCache(uri: string, name: string): Promise<string> {
-  const dest = `${FileSystem.cacheDirectory}${name}`;
-  await FileSystem.copyAsync({ from: uri, to: dest });
-  return dest;
+  const source = new File(uri);
+  const dest = new File(Paths.cache, name);
+  source.copy(dest);
+  return dest.uri;
 }
 
 export async function openShareSheet(fileUri: string): Promise<void> {
