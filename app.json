@@ -10,18 +10,20 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0A0F"
+      "backgroundColor": "#0C0C10"
     },
     "ios": {
       "supportsTablet": true,
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "backgroundColor": "#0C0C10"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/ruptav1.png",
-        "backgroundColor": "#0A0A0F"
+        "backgroundColor": "#0C0C10"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "backgroundColor": "#0C0C10"
     },
     "web": {
       "bundler": "metro",
