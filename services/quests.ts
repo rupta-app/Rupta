@@ -11,7 +11,9 @@ export type QuestFilters = {
   search?: string;
 };
 
-export async function fetchQuests(filters: QuestFilters = {}): Promise<QuestRow[]> {
+export const QUESTS_PAGE_SIZE = 15;
+
+function buildQuestsQuery(filters: QuestFilters = {}) {
   let q = supabase.from('quests').select('*').eq('is_active', true).eq('is_spontaneous', false);
 
   if (filters.category) q = q.eq('category', filters.category);
@@ -23,9 +25,37 @@ export async function fetchQuests(filters: QuestFilters = {}): Promise<QuestRow[
     q = q.or(`title_en.ilike.%${s}%,title_es.ilike.%${s}%,description_en.ilike.%${s}%`);
   }
 
-  const { data, error } = await q.order('aura_reward', { ascending: true });
+  return q;
+}
+
+export async function fetchQuests(filters: QuestFilters = {}): Promise<QuestRow[]> {
+  const { data, error } = await buildQuestsQuery(filters).order('aura_reward', { ascending: true });
   if (error) throw error;
   return (data ?? []) as QuestRow[];
+}
+
+export interface QuestsPage {
+  data: QuestRow[];
+  nextOffset: number | null;
+}
+
+export async function fetchQuestsPage(
+  filters: QuestFilters = {},
+  offset: number = 0,
+): Promise<QuestsPage> {
+  const from = offset;
+  const to = from + QUESTS_PAGE_SIZE - 1;
+  const { data, error } = await buildQuestsQuery(filters)
+    .order('aura_reward', { ascending: true })
+    .order('id', { ascending: true })
+    .range(from, to);
+
+  if (error) throw error;
+  const rows = (data ?? []) as QuestRow[];
+  return {
+    data: rows,
+    nextOffset: rows.length < QUESTS_PAGE_SIZE ? null : from + QUESTS_PAGE_SIZE,
+  };
 }
 
 export async function fetchQuestById(id: string): Promise<QuestRow> {
