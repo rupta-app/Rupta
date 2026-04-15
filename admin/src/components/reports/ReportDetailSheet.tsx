@@ -24,6 +24,7 @@ export function ReportDetailSheet({ report, onClose, onUpdated }: ReportDetailSh
   const [showResolve, setShowResolve] = useState(false);
   const [resolveOptions, setResolveOptions] = useState({
     removeCompletion: true,
+    deleteComment: true,
     warnUser: false,
     flagUser: false,
   });
@@ -31,6 +32,7 @@ export function ReportDetailSheet({ report, onClose, onUpdated }: ReportDetailSh
   if (!report) return null;
 
   const hasCompletion = !!report.completion;
+  const hasComment = !!report.comment;
   const defaultRemove = ['fake_proof', 'stolen_image'].includes(report.reason);
 
   async function handleQuickAction(status: string) {
@@ -52,12 +54,17 @@ export function ReportDetailSheet({ report, onClose, onUpdated }: ReportDetailSh
       await resolveReport(report!.id, {
         removeCompletion: resolveOptions.removeCompletion && hasCompletion,
         completionId: report!.completion_id,
+        deleteComment: resolveOptions.deleteComment && hasComment,
+        commentId: report!.comment_id,
         warnUser: resolveOptions.warnUser,
         flagUser: resolveOptions.flagUser,
         reportedUserId: report!.reported_user_id,
       });
 
       const actions: string[] = ['Report resolved'];
+      if (resolveOptions.deleteComment && hasComment) {
+        actions.push('comment deleted');
+      }
       if (resolveOptions.removeCompletion && hasCompletion) {
         actions.push(`${formatNumber(report!.completion?.aura_earned ?? 0)} AURA clawed back`);
       }
@@ -77,6 +84,7 @@ export function ReportDetailSheet({ report, onClose, onUpdated }: ReportDetailSh
   function openResolveDialog() {
     setResolveOptions({
       removeCompletion: defaultRemove && hasCompletion,
+      deleteComment: hasComment,
       warnUser: false,
       flagUser: false,
     });
@@ -165,6 +173,17 @@ export function ReportDetailSheet({ report, onClose, onUpdated }: ReportDetailSh
           </SheetSection>
         )}
 
+        {report.comment && (
+          <SheetSection title="Linked Comment">
+            <div className="rounded-lg shadow-xs bg-surface-elevated p-3 space-y-1.5">
+              <p className="text-sm text-foreground">{report.comment.content}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(report.comment.created_at), { addSuffix: true })}
+              </p>
+            </div>
+          </SheetSection>
+        )}
+
         {report.status === 'pending' && (
           <SheetSection title="Actions">
             <div className="flex flex-wrap gap-2">
@@ -217,6 +236,23 @@ export function ReportDetailSheet({ report, onClose, onUpdated }: ReportDetailSh
         </DialogDescription>
 
         <div className="space-y-3">
+          {hasComment && (
+            <label className="flex items-start gap-3 rounded-md shadow-xs p-3 cursor-pointer hover:bg-surface-elevated transition-colors">
+              <input
+                type="checkbox"
+                checked={resolveOptions.deleteComment}
+                onChange={(e) =>
+                  setResolveOptions({ ...resolveOptions, deleteComment: e.target.checked })
+                }
+                className="mt-0.5 accent-primary"
+              />
+              <div>
+                <p className="text-sm font-medium text-foreground">Delete linked comment</p>
+                <p className="text-xs text-muted">Permanently removes the comment</p>
+              </div>
+            </label>
+          )}
+
           {hasCompletion && (
             <label className="flex items-start gap-3 rounded-md shadow-xs p-3 cursor-pointer hover:bg-surface-elevated transition-colors">
               <input

@@ -77,36 +77,41 @@ function mapViewRow(r: FeedViewRow) {
   };
 }
 
+export const FEED_PAGE_SIZE = 10;
+
 export async function fetchHomeFeed(
   userId: string,
   friendIds: string[],
   filter: HomeFeedFilter = 'all',
-): Promise<FeedPost[]> {
+  limit = FEED_PAGE_SIZE,
+  offset = 0,
+): Promise<{ posts: FeedPost[]; hasMore: boolean }> {
   const blocked = await fetchBlockedIds(userId);
   const ids = [...friendIds, userId].filter((id) => !blocked.has(id));
-  if (ids.length === 0) return [];
+  if (ids.length === 0) return { posts: [], hasMore: false };
 
+  // Fetch one extra row to detect if there's a next page
   let q = supabase
     .from('feed_completions_enriched' as 'quest_completions')
     .select('*')
     .in('user_id', ids)
     .eq('status', 'active')
     .order('completed_at', { ascending: false })
-    .limit(50);
+    .range(offset, offset + limit);
 
   if (filter === 'official') {
     q = q.eq('quest_source_type', 'official');
   } else if (filter === 'unofficial') {
     // Chain filters: (group OR spontaneous) AND visibility in (public | friends).
-    // Nested `or(and(...),and(...))` is easy to get wrong for PostgREST and can break the feed query.
     q = q.or('quest_source_type.eq.group,quest_source_type.eq.spontaneous').in('visibility', ['public', 'friends']);
   }
 
   const { data: rows, error } = await q;
   if (error) throw error;
-  return ((rows ?? []) as unknown as FeedViewRow[])
-    .filter((r) => !blocked.has(r.user_id))
-    .map(mapViewRow);
+  const all = (rows ?? []) as unknown as FeedViewRow[];
+  const hasMore = all.length > limit;
+  const page = hasMore ? all.slice(0, limit) : all;
+  return { posts: page.map(mapViewRow), hasMore };
 }
 
 export async function fetchGroupFeed(groupId: string): Promise<FeedPost[]> {

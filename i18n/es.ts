@@ -203,10 +203,14 @@ export const es: TranslationKeys = {
   },
   social: {
     comments: 'Comentarios',
-    addComment: 'Escribe un comentario',
+    addComment: 'Escribí un comentario...',
     giveRespect: 'Respect',
     removeRespect: 'Quitar Respect',
     blockUser: 'Bloquear usuario',
+    deleteComment: 'Eliminar comentario',
+    reportComment: 'Reportar comentario',
+    commentReported: 'Comentario reportado',
+    viewMoreComments: 'Ver más comentarios',
   },
   friends: {
     title: 'Amigos',

@@ -10,6 +10,7 @@ export interface AdminReport {
   reviewed_at: string | null;
   reviewed_by: string | null;
   completion_id: string | null;
+  comment_id: string | null;
   reported_user_id: string | null;
   reporter: {
     display_name: string | null;
@@ -37,6 +38,12 @@ export interface AdminReport {
       media_type: string;
     }[];
   } | null;
+  comment: {
+    id: string;
+    content: string;
+    created_at: string;
+    user_id: string;
+  } | null;
 }
 
 interface FetchReportsParams {
@@ -52,13 +59,14 @@ export async function fetchReports({ status, reason, page, pageSize }: FetchRepo
     .select(
       `
       id, reason, description, status, created_at, reviewed_at, reviewed_by,
-      completion_id, reported_user_id,
+      completion_id, comment_id, reported_user_id,
       reporter:profiles!reports_reporter_id_fkey(display_name, username, avatar_url),
       reported_user:profiles!reports_reported_user_id_fkey(id, display_name, username, avatar_url, status, total_aura),
       completion:quest_completions(
         id, status, aura_earned, caption, quest_source_type, completed_at,
         media:quest_media(id, media_url, media_type)
-      )
+      ),
+      comment:comments(id, content, created_at, user_id)
     `,
       { count: 'exact' },
     );
@@ -85,6 +93,7 @@ export async function fetchReports({ status, reason, page, pageSize }: FetchRepo
       completion: completion
         ? { ...completion, media: Array.isArray(completion.media) ? completion.media : [] }
         : null,
+      comment: normalizeJoin((row as Record<string, unknown>).comment),
     };
   }) as AdminReport[];
 
@@ -107,15 +116,15 @@ export async function resolveReport(
   options: {
     removeCompletion?: boolean;
     completionId?: string | null;
+    deleteComment?: boolean;
+    commentId?: string | null;
     warnUser?: boolean;
     flagUser?: boolean;
     reportedUserId?: string | null;
   },
 ) {
-  // Update report status
   await updateReportStatus(reportId, 'resolved');
 
-  // Remove completion if requested (triggers AURA clawback automatically)
   if (options.removeCompletion && options.completionId) {
     const { error } = await adminClient
       .from('quest_completions')
@@ -124,7 +133,14 @@ export async function resolveReport(
     if (error) throw error;
   }
 
-  // Update user status if requested
+  if (options.deleteComment && options.commentId) {
+    const { error } = await adminClient
+      .from('comments')
+      .delete()
+      .eq('id', options.commentId);
+    if (error) throw error;
+  }
+
   if (options.reportedUserId && (options.warnUser || options.flagUser)) {
     const newStatus = options.flagUser ? 'flagged_cheater' : 'warned';
     const { error } = await adminClient

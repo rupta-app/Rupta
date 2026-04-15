@@ -76,14 +76,27 @@ export function ReportsPage() {
         ),
     },
     {
-      key: 'completion',
+      key: 'type',
+      header: 'Type',
+      className: 'w-24',
+      render: (row) => (
+        <span className="text-xs font-medium text-muted">
+          {row.comment_id ? 'Comment' : 'Completion'}
+        </span>
+      ),
+    },
+    {
+      key: 'evidence',
       header: 'Evidence',
       className: 'w-14',
-      render: (row) => (
-        <MediaThumbnail
-          url={row.completion?.media?.[0]?.media_url ?? null}
-        />
-      ),
+      render: (row) =>
+        row.comment ? (
+          <span className="text-xs text-muted-foreground truncate max-w-[120px] block" title={row.comment.content}>
+            {row.comment.content}
+          </span>
+        ) : (
+          <MediaThumbnail url={row.completion?.media?.[0]?.media_url ?? null} />
+        ),
     },
     {
       key: 'status',

@@ -14,6 +14,7 @@ export const qk = {
       ['completion-social', completionId, userId] as const,
     socialAll: ['completion-social'] as const,
     comments: (completionId: string) => ['comments', completionId] as const,
+    commentSocial: (completionId: string) => ['comment-social', completionId] as const,
   },
   profile: {
     detail: (userId: string) => ['profile', userId] as const,
