@@ -6,8 +6,10 @@ import { useQuery } from '@tanstack/react-query';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Input } from '@/components/ui/Input';
 import { useCreateGroup } from '@/hooks/useGroups';
+import { qk } from '@/hooks/queryKeys';
 import { useAuth } from '@/providers/AuthProvider';
 import { canCreateGroup, getUserPlan } from '@/services/entitlements';
 import { countGroupsOwned } from '@/services/groups';
@@ -18,13 +20,27 @@ export default function CreateGroupScreen() {
   const { session, profile } = useAuth();
   const uid = session?.user?.id!;
   const create = useCreateGroup();
-  const { data: ownedCount = 0 } = useQuery({
-    queryKey: ['groups-owned', uid],
+  const { data: ownedCount = 0, isError, refetch } = useQuery({
+    queryKey: qk.groups.owned(uid),
     queryFn: () => countGroupsOwned(uid),
     enabled: Boolean(uid),
   });
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
+
+  if (isError) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('groups.create')} />
+        <ErrorState
+          title={t('common.error')}
+          subtitle={t('common.errorSubtitle')}
+          onRetry={() => void refetch()}
+          retryLabel={t('common.retry')}
+        />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">

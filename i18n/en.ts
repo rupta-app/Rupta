@@ -9,6 +9,8 @@ export const en = {
     back: 'Back',
     loading: 'Loading…',
     error: 'Something went wrong',
+    errorSubtitle: 'Please check your connection and try again.',
+    retry: 'Retry',
     aura: 'AURA',
     respect: 'Respect',
     auraLevel: 'Aura Level',

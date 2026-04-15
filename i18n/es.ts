@@ -11,6 +11,8 @@ export const es: TranslationKeys = {
     back: 'Volver',
     loading: 'Cargando…',
     error: 'Algo salió mal',
+    errorSubtitle: 'Revisá tu conexión e intentá de nuevo.',
+    retry: 'Reintentar',
     aura: 'AURA',
     respect: 'Respect',
     auraLevel: 'Nivel de Aura',
