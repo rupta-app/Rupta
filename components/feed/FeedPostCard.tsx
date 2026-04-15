@@ -43,7 +43,7 @@ export function FeedPostCard({
     ? post.group_quests.title
     : post.quests
       ? questTitle(post.quests as Parameters<typeof questTitle>[0], lang)
-      : 'SideQuest';
+      : t('common.sideQuest');
 
   const displayName = post.profiles?.display_name ?? '?';
   const avatarUrl = post.profiles?.avatar_url;

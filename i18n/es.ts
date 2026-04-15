@@ -18,6 +18,7 @@ export const es: TranslationKeys = {
     lifeList: 'Life List',
     sideQuestGenerator: 'Generador de SideQuest',
     keyboardDone: 'Listo',
+    sideQuest: 'SideQuest',
   },
   auth: {
     login: 'Entrar',
@@ -194,6 +195,7 @@ export const es: TranslationKeys = {
     addComment: 'Escribe un comentario',
     giveRespect: 'Respect',
     removeRespect: 'Quitar Respect',
+    blockUser: 'Bloquear usuario',
   },
   friends: {
     title: 'Amigos',
@@ -211,6 +213,8 @@ export const es: TranslationKeys = {
   groups: {
     title: 'Grupos',
     create: 'Nuevo grupo',
+    groupName: 'Nombre',
+    groupDescription: 'Descripción',
     members: 'Miembros',
     invite: 'Invitar',
     leaderboard: 'AURA del grupo',
@@ -320,6 +324,12 @@ export const es: TranslationKeys = {
     sendFriends: 'Mensajes (pronto)',
     doIt: 'Completar',
     rollAgain: 'Otra vez',
+    crew: 'Crew',
+    place: 'Lugar',
+    any: 'Cualquiera',
+  },
+  share: {
+    sideQuestCompleted: 'SideQuest completado',
   },
   notifications: {
     title: 'Notificaciones',

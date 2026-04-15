@@ -39,7 +39,7 @@ export function FeedPostActions({
     ? post.group_quests.title
     : post.quests
       ? questTitle(post.quests as Parameters<typeof questTitle>[0], lang)
-      : 'SideQuest';
+      : t('common.sideQuest');
   const uname = post.profiles?.username ?? 'rupta';
 
   const heartScale = useSharedValue(1);

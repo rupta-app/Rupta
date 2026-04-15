@@ -34,7 +34,7 @@ export function CompletedStoryCard({
   simpleCategory?: string;
 }) {
   const { t } = useTranslation();
-  const title = simpleTitle ?? (quest ? questTitle(quest, lang) : 'SideQuest');
+  const title = simpleTitle ?? (quest ? questTitle(quest, lang) : t('common.sideQuest'));
   const inner = (
     <View className="flex-1 p-5 justify-between bg-black/55">
       <View>
@@ -44,11 +44,11 @@ export function CompletedStoryCard({
           contentFit="contain"
           style={{ width: 88, height: 26 }}
         />
-        <Text className="text-white/70 text-xs mt-1">SideQuest completed</Text>
+        <Text className="text-white/70 text-xs mt-1">{t('share.sideQuestCompleted')}</Text>
         <Text className="text-white text-2xl font-bold mt-4 leading-8">{title}</Text>
         <Text className="text-primary text-sm font-semibold mt-2 uppercase">
           {simpleCategory ??
-            (quest && category ? formatCategoryLabel(category, lang) : category ?? 'SideQuest')}
+            (quest && category ? formatCategoryLabel(category, lang) : category ?? t('common.sideQuest'))}
         </Text>
       </View>
       <View>

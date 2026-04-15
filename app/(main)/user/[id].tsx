@@ -104,7 +104,7 @@ export default function PublicProfileScreen() {
                 router.back();
               }}
             >
-              Block user
+              {t('social.blockUser')}
             </Button>
           </View>
         ) : null}

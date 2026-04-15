@@ -16,6 +16,7 @@ export const en = {
     lifeList: 'Life List',
     sideQuestGenerator: 'SideQuest Generator',
     keyboardDone: 'Done',
+    sideQuest: 'SideQuest',
   },
   auth: {
     login: 'Log in',
@@ -192,6 +193,7 @@ export const en = {
     addComment: 'Add a comment',
     giveRespect: 'Respect',
     removeRespect: 'Un-respect',
+    blockUser: 'Block user',
   },
   friends: {
     title: 'Friends',
@@ -209,6 +211,8 @@ export const en = {
   groups: {
     title: 'Groups',
     create: 'New group',
+    groupName: 'Name',
+    groupDescription: 'Description',
     members: 'Members',
     invite: 'Invite',
     leaderboard: 'Group AURA',
@@ -318,6 +322,12 @@ export const en = {
     sendFriends: 'Messages (soon)',
     doIt: 'Complete it',
     rollAgain: 'Roll again',
+    crew: 'Crew',
+    place: 'Place',
+    any: 'Any',
+  },
+  share: {
+    sideQuestCompleted: 'SideQuest completed',
   },
   notifications: {
     title: 'Notifications',

@@ -73,7 +73,7 @@ export default function GeneratorScreen() {
           onToggle={setCost}
         />
 
-        <Text className="text-muted text-xs uppercase mt-4 mb-2">Crew</Text>
+        <Text className="text-muted text-xs uppercase mt-4 mb-2">{t('generator.crew')}</Text>
         <PillToggleGroup
           options={[
             { value: 'solo' as const, label: t('generator.solo') },
@@ -84,12 +84,12 @@ export default function GeneratorScreen() {
           containerClassName="flex-row gap-2"
         />
 
-        <Text className="text-muted text-xs uppercase mt-4 mb-2">Place</Text>
+        <Text className="text-muted text-xs uppercase mt-4 mb-2">{t('generator.place')}</Text>
         <PillToggleGroup
           options={[
             { value: 'indoor' as const, label: t('generator.indoor') },
             { value: 'outdoor' as const, label: t('generator.outdoor') },
-            { value: 'any' as const, label: 'Any' },
+            { value: 'any' as const, label: t('generator.any') },
           ]}
           selected={loc}
           onToggle={setLoc}
@@ -107,7 +107,7 @@ export default function GeneratorScreen() {
         <Text className="text-muted text-xs uppercase mt-4 mb-2">{t('generator.category')}</Text>
         <PillToggleGroup
           options={[
-            { value: 'any', label: 'Any' },
+            { value: 'any', label: t('generator.any') },
             ...QUEST_CATEGORIES.map((c) => ({ value: c, label: formatCategoryLabel(c, lang) })),
           ]}
           selected={cat ?? 'any'}

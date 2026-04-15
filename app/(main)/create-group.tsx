@@ -30,8 +30,8 @@ export default function CreateGroupScreen() {
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('groups.create')} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
-        <Input label="Name" value={name} onChangeText={setName} />
-        <Input label="Description" value={desc} onChangeText={setDesc} multiline />
+        <Input label={t('groups.groupName')} value={name} onChangeText={setName} />
+        <Input label={t('groups.groupDescription')} value={desc} onChangeText={setDesc} multiline />
         <Button
           onPress={async () => {
             const plan = getUserPlan(profile);
