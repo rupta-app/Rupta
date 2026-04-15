@@ -6,7 +6,7 @@ export const colors = {
   primary: '#8B6CFF',
   primaryLight: '#A78BFA',
   secondary: '#2DD4A0',
-  respect: '#F5B731',
+  respect: '#FF3040',
   danger: '#EF4444',
   dangerLight: '#F87171',
   border: '#232330',

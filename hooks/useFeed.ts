@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import type { HomeFeedFilter } from '@/services/feed';
-import { fetchFriendIds, fetchGroupFeed, fetchHomeFeed, fetchSuggestedQuest } from '@/services/feed';
+import { FEED_PAGE_SIZE, fetchFriendIds, fetchGroupFeed, fetchHomeFeed, fetchSuggestedQuest } from '@/services/feed';
 import { qk } from '@/hooks/queryKeys';
 
 export function useFriendIds(userId: string | undefined) {
@@ -17,9 +17,12 @@ export function useHomeFeed(
   friendIds: string[],
   filter: HomeFeedFilter = 'all',
 ) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: qk.feed.home(userId ?? '', friendIds.join(','), filter),
-    queryFn: () => fetchHomeFeed(userId!, friendIds, filter),
+    queryFn: ({ pageParam = 0 }) => fetchHomeFeed(userId!, friendIds, filter, FEED_PAGE_SIZE, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.reduce((n, p) => n + p.posts.length, 0) : undefined,
     enabled: Boolean(userId),
   });
 }
