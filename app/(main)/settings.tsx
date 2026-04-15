@@ -34,16 +34,16 @@ export default function SettingsScreen() {
           <PressableScale
             onPress={() => setLang('en')}
             scaleValue={0.96}
-            className={`px-4 py-3 rounded-xl border ${i18n.language.startsWith('en') ? 'border-primary bg-primary/10' : 'border-border'}`}
+            className={`px-4 py-3 rounded-xl ${i18n.language.startsWith('en') ? 'bg-foreground' : 'bg-surfaceElevated'}`}
           >
-            <Text className={`${i18n.language.startsWith('en') ? 'text-foreground' : 'text-muted'}`}>English</Text>
+            <Text className={`${i18n.language.startsWith('en') ? 'text-background font-semibold' : 'text-mutedForeground'}`}>English</Text>
           </PressableScale>
           <PressableScale
             onPress={() => setLang('es')}
             scaleValue={0.96}
-            className={`px-4 py-3 rounded-xl border ${i18n.language.startsWith('es') ? 'border-primary bg-primary/10' : 'border-border'}`}
+            className={`px-4 py-3 rounded-xl ${i18n.language.startsWith('es') ? 'bg-foreground' : 'bg-surfaceElevated'}`}
           >
-            <Text className={`${i18n.language.startsWith('es') ? 'text-foreground' : 'text-muted'}`}>Español</Text>
+            <Text className={`${i18n.language.startsWith('es') ? 'text-background font-semibold' : 'text-mutedForeground'}`}>Español</Text>
           </PressableScale>
         </View>
         <Text className="text-muted mb-4">{t('settings.notifications')}</Text>

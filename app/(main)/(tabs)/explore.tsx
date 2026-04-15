@@ -2,18 +2,17 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Search } from 'lucide-react-native';
+import { Bookmark, Dices, Search } from 'lucide-react-native';
 
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { QUEST_CATEGORIES } from '@/constants/categories';
+import { colors } from '@/constants/theme';
 import { useAuth } from '@/providers/AuthProvider';
 import { useQuests, useSavedQuestIds, useToggleSave } from '@/hooks/useQuests';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
@@ -35,14 +34,14 @@ export default function ExploreScreen() {
 
   const ListFooter = useCallback(
     () => (
-      <View className="py-10 px-2">
-        <Card className="border-primary/30">
+      <View className="py-10 px-4">
+        <View className="bg-surface rounded-3xl p-5">
           <Text className="text-foreground font-bold text-base">{t('explore.suggestTitle')}</Text>
           <Text className="text-muted mt-2 leading-6">{t('explore.suggestBody')}</Text>
-          <Button className="mt-4" variant="secondary" onPress={() => go('/(main)/suggest-quest')}>
+          <Button className="mt-4" variant="primary" onPress={() => go('/(main)/suggest-quest')}>
             {t('explore.suggestCta')}
           </Button>
-        </Card>
+        </View>
       </View>
     ),
     [go, t],
@@ -52,15 +51,6 @@ export default function ExploreScreen() {
     () => (
       <View>
         <View className="px-4 pt-2 pb-2">
-          <Card className="border-primary/40">
-            <Text className="text-foreground font-bold">{t('explore.generatorCtaTitle')}</Text>
-            <Text className="text-muted text-sm mt-1">{t('explore.generatorCtaBody')}</Text>
-            <Button className="mt-3" onPress={() => go('/(main)/generator')}>
-              {t('explore.generatorCtaButton')}
-            </Button>
-          </Card>
-        </View>
-        <View className="px-4 pb-1">
           <Input value={search} onChangeText={setSearch} placeholder={t('common.search')} />
         </View>
         <View className="bg-background">
@@ -93,7 +83,7 @@ export default function ExploreScreen() {
         <View className="h-3" />
       </View>
     ),
-    [category, go, lang, search, t],
+    [category, lang, search, t],
   );
 
   return (
@@ -125,30 +115,40 @@ export default function ExploreScreen() {
           const isSaved = saved.has(item.id);
           return (
             <PressableScale onPress={() => router.push(`/(main)/quest/${item.id}`)} className="px-4" scaleValue={0.98}>
-              <Card className="mb-3">
-                <View className="flex-row justify-between items-start gap-2">
-                  <View className="flex-1 pr-2">
-                    <Text className="text-foreground text-lg font-bold">{questTitle(item, lang)}</Text>
-                    <Text className="text-muted text-xs mt-1 uppercase tracking-wide">
-                      {formatCategoryLabel(item.category, lang)}
-                    </Text>
-                  </View>
-                  <Badge tone="primary">+{item.aura_reward}</Badge>
+              <View className="flex-row items-center py-3.5 border-b border-border/50">
+                <View className="flex-1">
+                  <Text className="text-foreground text-base font-semibold">{questTitle(item, lang)}</Text>
+                  <Text className="text-mutedForeground text-xs mt-0.5">
+                    {formatCategoryLabel(item.category, lang)}
+                  </Text>
                 </View>
+                <Text className="text-primary text-sm font-bold mr-3">+{item.aura_reward}</Text>
                 <PressableScale
                   onPress={() => toggle.mutate({ questId: item.id, currentlySaved: isSaved })}
-                  className="mt-3"
-                  scaleValue={0.95}
+                  hitSlop={10}
+                  scaleValue={0.9}
                 >
-                  <Text className="text-secondary text-sm font-semibold">
-                    {isSaved ? t('quest.unsaved') : `+ ${t('common.lifeList')}`}
-                  </Text>
+                  <Bookmark
+                    color={isSaved ? colors.secondary : colors.muted}
+                    fill={isSaved ? colors.secondary : 'none'}
+                    size={20}
+                    strokeWidth={2}
+                  />
                 </PressableScale>
-              </Card>
+              </View>
             </PressableScale>
           );
         }}
       />
+
+      <PressableScale
+        onPress={() => go('/(main)/generator')}
+        className="absolute bottom-6 right-5 w-14 h-14 rounded-full bg-primary items-center justify-center"
+        scaleValue={0.9}
+        haptic
+      >
+        <Dices color={colors.white} size={24} />
+      </PressableScale>
     </View>
   );
 }

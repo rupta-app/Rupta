@@ -37,11 +37,11 @@ export default function ActivityStyleOnboarding() {
             onPress={() => toggle(s)}
             scaleValue={0.95}
             hitSlop={4}
-            className={`px-4 py-3 rounded-full border ${
-              draft.activityStyles.includes(s) ? 'border-secondary bg-secondary/15' : 'border-border bg-surface'
+            className={`px-4 py-3 rounded-full ${
+              draft.activityStyles.includes(s) ? 'bg-foreground' : 'bg-surfaceElevated'
             }`}
           >
-            <Text className="text-foreground text-sm font-medium">{s.replace(/_/g, ' ')}</Text>
+            <Text className={`text-sm font-medium ${draft.activityStyles.includes(s) ? 'text-background' : 'text-mutedForeground'}`}>{s.replace(/_/g, ' ')}</Text>
           </PressableScale>
         ))}
       </View>

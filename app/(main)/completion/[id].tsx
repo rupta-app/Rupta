@@ -189,7 +189,7 @@ export default function CompletionDetailScreen() {
           {uid && uid !== data.user_id ? (
             <Pressable
               onPress={() => setReportOpen(true)}
-              className="mt-5 flex-row items-center gap-3 py-3 px-1 rounded-xl border border-danger/40 bg-danger/5"
+              className="mt-5 flex-row items-center gap-3 py-3 px-3 rounded-xl bg-danger/10"
             >
               <Flag color={colors.dangerLight} size={22} strokeWidth={2} />
               <Text className="text-danger font-semibold flex-1">{t('report.flagSuspicious')}</Text>

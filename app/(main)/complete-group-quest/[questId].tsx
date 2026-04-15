@@ -1,10 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { CompletionForm } from '@/components/completion/CompletionForm';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { useCreateGroupQuestCompletion } from '@/hooks/useCompletion';
 import { useFriendsList } from '@/hooks/useFriends';
 import { useGroupChallengesList } from '@/hooks/useChallenges';
@@ -67,33 +68,36 @@ export default function CompleteGroupQuestScreen() {
         <Text className="text-muted text-sm mb-2 mt-4">{t('groups.postVisibility')}</Text>
         <View className="flex-row flex-wrap gap-2">
           {(['group', 'friends', 'public', 'private'] as const).map((v) => (
-            <Pressable
+            <PressableScale
               key={v}
               onPress={() => setVisibility(v)}
-              className={`px-3 py-2 rounded-lg border ${visibility === v ? 'border-primary' : 'border-border'}`}
+              scaleValue={0.95}
+              className={`px-3 py-2 rounded-lg ${visibility === v ? 'bg-foreground' : 'bg-surfaceElevated'}`}
             >
-              <Text className="text-foreground capitalize">{v}</Text>
-            </Pressable>
+              <Text className={`capitalize ${visibility === v ? 'text-background font-semibold' : 'text-mutedForeground'}`}>{v}</Text>
+            </PressableScale>
           ))}
         </View>
 
         {activeChallenges.length > 0 ? (
           <>
             <Text className="text-muted text-sm mb-2 mt-4">{t('groups.optionalChallenge')}</Text>
-            <Pressable
+            <PressableScale
               onPress={() => setChallengeId(undefined)}
-              className={`px-3 py-2 rounded-lg border mb-2 ${!challengeId ? 'border-primary' : 'border-border'}`}
+              scaleValue={0.95}
+              className={`px-3 py-2 rounded-lg mb-2 ${!challengeId ? 'bg-foreground' : 'bg-surfaceElevated'}`}
             >
-              <Text className="text-foreground">{t('groups.noChallenge')}</Text>
-            </Pressable>
+              <Text className={`${!challengeId ? 'text-background font-semibold' : 'text-mutedForeground'}`}>{t('groups.noChallenge')}</Text>
+            </PressableScale>
             {activeChallenges.map((c: { id: string; title: string }) => (
-              <Pressable
+              <PressableScale
                 key={c.id}
                 onPress={() => setChallengeId(c.id)}
-                className={`px-3 py-2 rounded-lg border mb-2 ${challengeId === c.id ? 'border-primary' : 'border-border'}`}
+                scaleValue={0.95}
+                className={`px-3 py-2 rounded-lg mb-2 ${challengeId === c.id ? 'bg-foreground' : 'bg-surfaceElevated'}`}
               >
-                <Text className="text-foreground">{c.title}</Text>
-              </Pressable>
+                <Text className={`${challengeId === c.id ? 'text-background font-semibold' : 'text-mutedForeground'}`}>{c.title}</Text>
+              </PressableScale>
             ))}
           </>
         ) : null}

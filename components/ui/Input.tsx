@@ -63,7 +63,7 @@ export function Input({
         returnKeyType={multiline ? 'default' : 'done'}
         blurOnSubmit={!multiline}
         onSubmitEditing={!multiline ? () => Keyboard.dismiss() : undefined}
-        className={`bg-surface border border-border rounded-xl px-4 text-foreground text-base ${multiline ? 'py-3 min-h-[100px]' : 'py-3.5'} ${error ? 'border-danger' : ''}`}
+        className={`bg-surfaceElevated rounded-xl px-4 text-foreground text-base ${multiline ? 'py-3 min-h-[100px]' : 'py-3.5'} ${error ? 'border border-danger' : ''}`}
       />
       {error ? <Text className="text-danger text-xs mt-1">{error}</Text> : null}
     </View>

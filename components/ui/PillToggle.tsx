@@ -8,22 +8,26 @@ type PillToggleProps = {
   onPress: () => void;
   activeClassName?: string;
   inactiveClassName?: string;
+  activeTextClassName?: string;
+  inactiveTextClassName?: string;
 };
 
 export function PillToggle({
   label,
   active,
   onPress,
-  activeClassName = 'border-primary bg-primary/15',
-  inactiveClassName = 'border-border bg-surface',
+  activeClassName = 'bg-foreground',
+  inactiveClassName = 'bg-surfaceElevated',
+  activeTextClassName = 'text-background',
+  inactiveTextClassName = 'text-mutedForeground',
 }: PillToggleProps) {
   return (
     <PressableScale
       onPress={onPress}
       scaleValue={0.94}
-      className={`px-4 py-2.5 rounded-full border ${active ? activeClassName : inactiveClassName}`}
+      className={`px-4 py-2 rounded-full ${active ? activeClassName : inactiveClassName}`}
     >
-      <Text className={`text-sm font-medium ${active ? 'text-foreground' : 'text-muted'}`}>{label}</Text>
+      <Text className={`text-sm font-medium ${active ? activeTextClassName : inactiveTextClassName}`}>{label}</Text>
     </PressableScale>
   );
 }
@@ -34,6 +38,8 @@ type PillToggleGroupProps<T extends string> = {
   onToggle: (value: T) => void;
   activeClassName?: string;
   inactiveClassName?: string;
+  activeTextClassName?: string;
+  inactiveTextClassName?: string;
   containerClassName?: string;
 };
 
@@ -43,6 +49,8 @@ export function PillToggleGroup<T extends string>({
   onToggle,
   activeClassName,
   inactiveClassName,
+  activeTextClassName,
+  inactiveTextClassName,
   containerClassName = 'flex-row flex-wrap gap-2',
 }: PillToggleGroupProps<T>) {
   const isActive = (value: T) => {
@@ -61,6 +69,8 @@ export function PillToggleGroup<T extends string>({
           onPress={() => onToggle(opt.value)}
           activeClassName={activeClassName}
           inactiveClassName={inactiveClassName}
+          activeTextClassName={activeTextClassName}
+          inactiveTextClassName={inactiveTextClassName}
         />
       ))}
     </View>

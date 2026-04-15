@@ -37,11 +37,11 @@ export default function LanguageOnboarding() {
               setDraft({ language: o.k });
               setAppLanguage(o.k);
             }}
-            className={`flex-1 min-w-[44%] px-5 py-4 rounded-2xl border-2 ${
-              draft.language === o.k ? 'border-primary bg-primary/15' : 'border-border bg-surface'
+            className={`flex-1 min-w-[44%] px-5 py-4 rounded-2xl ${
+              draft.language === o.k ? 'bg-foreground' : 'bg-surfaceElevated'
             }`}
           >
-            <Text className="text-foreground font-semibold text-center text-base">{o.label}</Text>
+            <Text className={`font-semibold text-center text-base ${draft.language === o.k ? 'text-background' : 'text-mutedForeground'}`}>{o.label}</Text>
           </Pressable>
         ))}
       </View>

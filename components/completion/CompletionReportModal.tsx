@@ -38,7 +38,7 @@ export function CompletionReportModal({
         <Pressable
           key={item}
           onPress={() => setReason(item)}
-          className={`py-3 border-b border-border ${reason === item ? 'bg-primary/10' : ''}`}
+          className={`py-3 border-b border-border/30 ${reason === item ? 'bg-primary/10' : ''}`}
         >
           <Text className="text-foreground">
             {item === 'fake_proof'

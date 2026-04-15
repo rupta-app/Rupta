@@ -128,7 +128,7 @@ export default function NotificationsScreen() {
           const isFriendRequest = item.type === 'friend_request';
           return (
             <PressableScale onPress={() => onOpen(item)} scaleValue={0.98}>
-              <Card className={`mb-2 ${item.is_read ? 'opacity-60' : 'border-primary/40'}`}>
+              <Card className={`mb-2 ${item.is_read ? 'opacity-60' : ''}`}>
                 <Text className="text-foreground font-semibold">{item.title}</Text>
                 <Text className="text-muted text-sm mt-1">{item.body}</Text>
                 {isFriendRequest ? (

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { LayoutChangeEvent, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -13,55 +13,58 @@ type Props<T extends string> = {
 };
 
 export function SegmentedTabBar<T extends string>({ tabs, active, onChange }: Props<T>) {
-  const tabWidths = useRef<number[]>(new Array(tabs.length).fill(0));
+  const segmentLayout = useRef<{ x: number; width: number }[]>([]);
   const indicatorLeft = useSharedValue(0);
   const indicatorWidth = useSharedValue(0);
 
   const activeIndex = tabs.findIndex((t) => t.key === active);
 
-  useEffect(() => {
-    const w = tabWidths.current[activeIndex];
-    if (w > 0) {
-      const left = tabWidths.current.slice(0, activeIndex).reduce((a, b) => a + b, 0);
-      indicatorLeft.value = withTiming(left, { duration: 250 });
-      indicatorWidth.value = withTiming(w, { duration: 250 });
-    }
+  const applyIndicator = useCallback(() => {
+    if (activeIndex < 0) return;
+    const seg = segmentLayout.current[activeIndex];
+    if (!seg || seg.width <= 0) return;
+    indicatorLeft.value = withTiming(seg.x, { duration: 250 });
+    indicatorWidth.value = withTiming(seg.width, { duration: 250 });
   }, [activeIndex, indicatorLeft, indicatorWidth]);
+
+  useEffect(() => {
+    applyIndicator();
+  }, [applyIndicator]);
+
+  const handleSegmentLayout = useCallback(
+    (index: number) => (e: LayoutChangeEvent) => {
+      const { x, width } = e.nativeEvent.layout;
+      segmentLayout.current[index] = { x, width };
+      applyIndicator();
+    },
+    [applyIndicator],
+  );
 
   const indicatorStyle = useAnimatedStyle(() => ({
     left: indicatorLeft.value,
     width: indicatorWidth.value,
   }));
 
-  const handleLayout = (index: number) => (e: LayoutChangeEvent) => {
-    tabWidths.current[index] = e.nativeEvent.layout.width;
-    if (index === activeIndex) {
-      const left = tabWidths.current.slice(0, index).reduce((a, b) => a + b, 0);
-      indicatorLeft.value = left;
-      indicatorWidth.value = e.nativeEvent.layout.width;
-    }
-  };
-
   return (
-    <View className="border-b border-border">
+    <View>
       <View className="flex-row relative">
         {tabs.map(({ key, label }, index) => {
           const isActive = active === key;
           return (
-            <PressableScale
-              key={key}
-              onPress={() => onChange(key)}
-              scaleValue={0.96}
-              className="flex-1 items-center py-2.5"
-              onLayout={handleLayout(index)}
-            >
-              <Text
-                className={`text-sm font-semibold ${isActive ? 'text-foreground' : 'text-muted'}`}
-                numberOfLines={1}
+            <View key={key} className="flex-1" onLayout={handleSegmentLayout(index)}>
+              <PressableScale
+                onPress={() => onChange(key)}
+                scaleValue={0.96}
+                className="items-center py-2.5"
               >
-                {label}
-              </Text>
-            </PressableScale>
+                <Text
+                  className={`text-sm font-semibold ${isActive ? 'text-foreground' : 'text-muted'}`}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+              </PressableScale>
+            </View>
           );
         })}
         <Animated.View

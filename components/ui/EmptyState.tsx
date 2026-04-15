@@ -18,15 +18,17 @@ export function EmptyState({
   action?: { label: string; onPress: () => void };
 }) {
   return (
-    <Animated.View entering={FadeIn.duration(300)} className="flex-1 items-center justify-center py-16 px-8">
-      <Icon size={48} color={colors.muted} strokeWidth={1.5} opacity={0.4} />
-      <Text className="text-foreground text-lg font-semibold text-center mt-4">{title}</Text>
+    <Animated.View entering={FadeIn.duration(300)} className="flex-1 items-center justify-center py-24 px-8">
+      <View className="w-16 h-16 rounded-2xl bg-surfaceElevated items-center justify-center mb-4">
+        <Icon size={28} color={colors.muted} strokeWidth={1.5} />
+      </View>
+      <Text className="text-foreground text-xl font-bold text-center">{title}</Text>
       {subtitle ? (
         <Text className="text-muted text-sm text-center mt-2 leading-6 px-6">{subtitle}</Text>
       ) : null}
       {action ? (
         <View className="mt-6">
-          <Button variant="secondary" onPress={action.onPress}>
+          <Button variant="primary" onPress={action.onPress}>
             {action.label}
           </Button>
         </View>

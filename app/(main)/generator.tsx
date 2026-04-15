@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { QUEST_CATEGORIES } from '@/constants/categories';
@@ -72,8 +71,6 @@ export default function GeneratorScreen() {
           options={COSTS.map((c) => ({ value: c, label: c }))}
           selected={cost}
           onToggle={setCost}
-          activeClassName="border-primary bg-primary/15"
-          inactiveClassName="border-border"
         />
 
         <Text className="text-muted text-xs uppercase mt-4 mb-2">Crew</Text>
@@ -84,8 +81,6 @@ export default function GeneratorScreen() {
           ]}
           selected={solo ? 'solo' : 'friends'}
           onToggle={(v) => setSolo(v === 'solo')}
-          activeClassName="border-primary"
-          inactiveClassName="border-border"
           containerClassName="flex-row gap-2"
         />
 
@@ -98,8 +93,6 @@ export default function GeneratorScreen() {
           ]}
           selected={loc}
           onToggle={setLoc}
-          activeClassName="border-primary"
-          inactiveClassName="border-border"
           containerClassName="flex-row gap-2"
         />
 
@@ -108,8 +101,6 @@ export default function GeneratorScreen() {
           options={(['low', 'medium', 'high'] as const).map((e) => ({ value: e, label: e }))}
           selected={energy ?? 'medium'}
           onToggle={setEnergy}
-          activeClassName="border-primary bg-primary/15"
-          inactiveClassName="border-border"
           containerClassName="flex-row gap-2"
         />
 
@@ -133,7 +124,7 @@ export default function GeneratorScreen() {
 
         {picked ? (
           <Animated.View entering={FadeInDown.duration(420).springify()}>
-            <Card className="mt-6 border-primary/40 overflow-hidden">
+            <View className="bg-surface rounded-3xl p-5 mt-6">
               <Text className="text-muted text-xs uppercase">{t('generator.resultTitle')}</Text>
               <Text className="text-foreground text-xl font-black mt-1">{questTitle(picked, lang)}</Text>
               <View className="flex-row flex-wrap gap-2 mt-3">
@@ -156,7 +147,7 @@ export default function GeneratorScreen() {
                   {t('generator.rollAgain')}
                 </Button>
               </View>
-            </Card>
+            </View>
           </Animated.View>
         ) : null}
       </ScrollView>

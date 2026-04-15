@@ -6,6 +6,7 @@ import { Alert, ScrollView, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { colors } from '@/constants/theme';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -84,7 +85,7 @@ export default function GroupSettingsScreen() {
           {group.avatar_url ? (
             <Image
               source={{ uri: group.avatar_url }}
-              className="w-28 h-28 rounded-2xl bg-surfaceElevated mb-4"
+              style={{ width: 112, height: 112, borderRadius: 16, backgroundColor: colors.surfaceElevated, marginBottom: 16 }}
             />
           ) : (
             <View className="mb-4">

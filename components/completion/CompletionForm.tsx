@@ -115,7 +115,8 @@ export function CompletionForm({
         options={friendOptions}
         selected={picked}
         onToggle={toggleParticipant}
-        activeClassName="border-secondary bg-secondary/15"
+        activeClassName="bg-secondary/20"
+        activeTextClassName="text-secondary"
       />
 
       {err ? <Text className="text-danger mt-4">{err}</Text> : null}

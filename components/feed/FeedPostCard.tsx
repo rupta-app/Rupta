@@ -4,8 +4,6 @@ import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
 import { questTitle } from '@/utils/questCopy';
@@ -47,55 +45,58 @@ export function FeedPostCard({
       ? questTitle(post.quests as Parameters<typeof questTitle>[0], lang)
       : 'SideQuest';
 
+  const displayName = post.profiles?.display_name ?? '?';
+  const avatarUrl = post.profiles?.avatar_url;
+  const category = post.quests?.category
+    ? formatCategoryLabel(post.quests.category, lang)
+    : post.group_quests
+      ? t('feed.groupQuest')
+      : null;
+  const auraPending = isSpontaneousAuraPending(post.quest_source_type, post.aura_earned);
+
   return (
-    <Card className="mb-4 p-0 overflow-hidden" variant="elevated">
+    <View className="mb-6">
       <PressableScale
         onPress={() => router.push(`/(main)/completion/${post.id}`)}
         scaleValue={0.98}
         haptic={false}
       >
-        <View className="flex-row items-center gap-3 p-4 pb-2">
-          <Avatar url={post.profiles?.avatar_url} name={post.profiles?.display_name ?? '?'} size={40} />
-          <View className="flex-1">
-            <Text className="text-foreground font-semibold">{post.profiles?.display_name}</Text>
-            <Text className="text-muted text-xs">@{post.profiles?.username}</Text>
-          </View>
-          <View className="items-end gap-1">
-            {post.quest_source_type === 'group' ? (
-              <Badge tone="secondary">{post.groups?.name ?? t('feed.groupQuest')}</Badge>
-            ) : post.quest_source_type === 'spontaneous' ? (
-              <Badge tone="secondary">{t('feed.spontaneousQuest')}</Badge>
-            ) : null}
-            {isSpontaneousAuraPending(post.quest_source_type, post.aura_earned) ? (
-              <Badge tone="secondary">{t('feed.auraPendingReview')}</Badge>
-            ) : (
-              <Badge tone="primary">+{post.aura_earned} AURA</Badge>
-            )}
-          </View>
-        </View>
         {media ? (
-          <View className="mx-4 overflow-hidden rounded-2xl bg-surfaceElevated">
-            <Image
-              source={{ uri: media }}
-              style={{ width: '100%', aspectRatio: 4 / 3, maxHeight: 300 }}
-              contentFit="cover"
-              transition={{ effect: 'cross-dissolve', duration: 200 }}
-            />
+          <View className="relative">
+            <View className="overflow-hidden rounded-3xl bg-surfaceElevated">
+              <Image
+                source={{ uri: media }}
+                style={{ width: '100%', aspectRatio: 3 / 4 }}
+                contentFit="cover"
+                transition={{ effect: 'cross-dissolve', duration: 200 }}
+              />
+            </View>
+            <View className="absolute bottom-3 left-3 flex-row items-center bg-black/50 rounded-full pl-1 pr-3 py-1">
+              <Avatar url={avatarUrl} name={displayName} size={24} />
+              <Text className="text-white text-xs font-semibold ml-1.5">{displayName}</Text>
+            </View>
           </View>
-        ) : null}
-        <View className="p-4 pt-2">
-          <Text className="text-foreground text-lg font-bold">{title}</Text>
-          {post.quests?.category ? (
-            <Text className="text-muted text-xs uppercase mt-1 tracking-wide">
-              {formatCategoryLabel(post.quests.category, lang)}
-            </Text>
-          ) : post.group_quests ? (
-            <Text className="text-muted text-xs uppercase mt-1 tracking-wide">{t('feed.groupQuest')}</Text>
+        ) : (
+          <View className="flex-row items-center gap-2.5 mb-2">
+            <Avatar url={avatarUrl} name={displayName} size={32} />
+            <Text className="text-foreground font-semibold text-sm">{displayName}</Text>
+          </View>
+        )}
+
+        <View className="flex-row items-center justify-between mt-2">
+          <Text className="text-foreground text-base font-bold flex-1 mr-2">{title}</Text>
+          {!auraPending ? (
+            <Text className="text-primary text-sm font-bold">+{post.aura_earned} AURA</Text>
           ) : null}
-          {post.caption ? <Text className="text-muted mt-2">{post.caption}</Text> : null}
         </View>
+        {category ? (
+          <Text className="text-mutedForeground text-xs mt-0.5">{category}</Text>
+        ) : null}
+        {post.caption ? (
+          <Text className="text-muted text-sm mt-1">{post.caption}</Text>
+        ) : null}
       </PressableScale>
       <FeedPostActions post={post} lang={lang} viewerId={viewerId} />
-    </Card>
+    </View>
   );
 }
