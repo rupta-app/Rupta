@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Trophy } from 'lucide-react-native';
+import { Trophy } from 'lucide-react-native';
 import { memo, useCallback, useMemo, useState } from 'react';
-import { FlatList, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -11,10 +11,9 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { SegmentedTabBar } from '@/components/ui/SegmentedTabBar';
 import { GroupCard } from '@/components/social/GroupCard';
-import { PressableScale } from '@/components/ui/PressableScale';
 import { colors } from '@/constants/theme';
 import { useFriendsLeaderboard, useGlobalLeaderboard } from '@/hooks/useLeaderboard';
-import { useGroupLeaderboard, useMyGroups } from '@/hooks/useGroups';
+import { useMyGroups } from '@/hooks/useGroups';
 import type { LeaderboardPeriod } from '@/services/leaderboard';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -37,6 +36,8 @@ type LeaderboardFiltersHeaderProps = {
   scopeTabs: { key: ScopeTab; label: string }[];
   scope: ScopeTab;
   onScopeChange: (tab: ScopeTab) => void;
+  /** Group ranks use all-time group AURA only; week/month/year filter is hidden. */
+  showPeriodFilter: boolean;
   periodOptions: { value: LeaderboardPeriod; label: string }[];
   period: LeaderboardPeriod;
   onPeriodChange: (p: LeaderboardPeriod) => void;
@@ -47,6 +48,7 @@ const LeaderboardFiltersHeader = memo(function LeaderboardFiltersHeader({
   scopeTabs,
   scope,
   onScopeChange,
+  showPeriodFilter,
   periodOptions,
   period,
   onPeriodChange,
@@ -55,23 +57,27 @@ const LeaderboardFiltersHeader = memo(function LeaderboardFiltersHeader({
   return (
     <View className="bg-background pb-1">
       <SegmentedTabBar tabs={scopeTabs} active={scope} onChange={onScopeChange} />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled
-        style={{ flexGrow: 0 }}
-        className="mt-3"
-        contentContainerStyle={{ gap: 8, paddingRight: 16 }}
-      >
-        <PillToggleGroup
-          options={periodOptions}
-          selected={period}
-          onToggle={onPeriodChange}
-          containerClassName="flex-row gap-2"
-        />
-      </ScrollView>
-      <Text className="text-foreground text-lg font-bold mt-4">{periodTitle}</Text>
+      {showPeriodFilter ? (
+        <>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+            style={{ flexGrow: 0 }}
+            className="mt-3"
+            contentContainerStyle={{ gap: 8, paddingRight: 16 }}
+          >
+            <PillToggleGroup
+              options={periodOptions}
+              selected={period}
+              onToggle={onPeriodChange}
+              containerClassName="flex-row gap-2"
+            />
+          </ScrollView>
+          <Text className="text-foreground text-lg font-bold mt-4">{periodTitle}</Text>
+        </>
+      ) : null}
     </View>
   );
 });
@@ -83,12 +89,12 @@ export default function LeaderboardScreen() {
   const uid = session?.user?.id;
   const [scope, setScope] = useState<ScopeTab>('global');
   const [period, setPeriod] = useState<LeaderboardPeriod>('all');
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   const g = useGlobalLeaderboard(period);
   const f = useFriendsLeaderboard(uid, period);
   const { data: myGroups = [] } = useMyGroups(uid);
-  const glb = useGroupLeaderboard(selectedGroupId ?? undefined, period);
+
+  const globalRows = useMemo(() => g.data?.pages.flatMap((p) => p.rows) ?? [], [g.data]);
 
   const periodOptions = useMemo(
     () => [
@@ -125,14 +131,29 @@ export default function LeaderboardScreen() {
 
   const onScopeChange = useCallback((tab: ScopeTab) => {
     setScope(tab);
-    if (tab !== 'groups') setSelectedGroupId(null);
   }, []);
 
-  const showGroupPicker = scope === 'groups' && !selectedGroupId;
-  const showGroupBoard = scope === 'groups' && selectedGroupId;
+  const showGroupPicker = scope === 'groups';
 
-  const { data = [], isLoading } =
-    scope === 'global' ? g : scope === 'friends' ? f : showGroupBoard ? glb : { data: [], isLoading: false };
+  const listData: LbRow[] = useMemo(() => {
+    if (scope === 'global') return globalRows;
+    if (scope === 'friends') return f.data ?? [];
+    return [];
+  }, [scope, globalRows, f.data]);
+
+  const listLoading =
+    scope === 'global'
+      ? g.isLoading && !g.data
+      : scope === 'friends'
+        ? f.isLoading && !f.data
+        : false;
+
+  const useGlobalLbPagination = scope === 'global';
+  const isFetchingNextGlobalPage = g.isFetchingNextPage;
+
+  const onGlobalLbEndReached = useCallback(() => {
+    if (g.hasNextPage && !g.isFetchingNextPage) void g.fetchNextPage();
+  }, [g]);
 
   const renderLbItem = useCallback(({ item, index }: { item: LbRow; index: number }) => (
     <LeaderboardRow
@@ -140,24 +161,28 @@ export default function LeaderboardScreen() {
       displayName={item.display_name}
       username={item.username}
       avatarUrl={item.avatar_url}
-      aura={showGroupBoard && item.total_group_aura !== undefined ? item.total_group_aura : item.period_aura}
+      aura={item.period_aura}
       onPress={() => router.push(`/(main)/user/${item.id}`)}
     />
-  ), [router, showGroupBoard]);
+  ), [router]);
 
-  const renderGroupPicker = useCallback(({
-    item,
-  }: {
-    item: { id: string; name: string; description?: string | null; avatar_url?: string | null };
-  }) => (
-    <GroupCard group={item} onPress={() => setSelectedGroupId(item.id)} />
-  ), []);
+  const renderGroupPicker = useCallback(
+    ({
+      item,
+    }: {
+      item: { id: string; name: string; description?: string | null; avatar_url?: string | null };
+    }) => (
+      <GroupCard group={item} onPress={() => router.push(`/(main)/group/${item.id}`)} />
+    ),
+    [router],
+  );
 
   const filtersHeader = (
     <LeaderboardFiltersHeader
       scopeTabs={scopeTabs}
       scope={scope}
       onScopeChange={onScopeChange}
+      showPeriodFilter={scope !== 'groups'}
       periodOptions={periodOptions}
       period={period}
       onPeriodChange={setPeriod}
@@ -188,37 +213,26 @@ export default function LeaderboardScreen() {
             maxToRenderPerBatch={10}
           />
         </Animated.View>
-      ) : showGroupBoard ? (
-        <Animated.View entering={FadeIn.duration(200)} className="flex-1" key="group-board">
-          <PressableScale onPress={() => setSelectedGroupId(null)} className="flex-row items-center px-4 py-2" scaleValue={0.95} hitSlop={12}>
-            <ChevronLeft color={colors.foreground} size={24} />
-            <Text className="text-primary ml-1">{t('common.back')}</Text>
-          </PressableScale>
-          <FlatList
-            data={data}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={LIST_PAD}
-            ListHeaderComponent={<View className="bg-background pt-2">{filtersHeader}</View>}
-            nestedScrollEnabled
-            ListEmptyComponent={
-              isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
-            }
-            renderItem={renderLbItem}
-            initialNumToRender={15}
-            maxToRenderPerBatch={10}
-          />
-        </Animated.View>
       ) : (
         <Animated.View entering={FadeIn.duration(200)} className="flex-1" key={`${scope}-${period}`}>
           <FlatList
-            data={data}
+            data={listData}
             keyExtractor={(item) => item.id}
             contentContainerStyle={LIST_PAD}
             ListHeaderComponent={<View className="bg-background pt-2">{filtersHeader}</View>}
             nestedScrollEnabled
             ListEmptyComponent={
-              isLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
+              listLoading ? null : <EmptyState icon={Trophy} title={t('empty.noResults')} />
             }
+            ListFooterComponent={
+              useGlobalLbPagination && isFetchingNextGlobalPage ? (
+                <View className="py-4 items-center">
+                  <ActivityIndicator color={colors.primary} />
+                </View>
+              ) : null
+            }
+            onEndReached={useGlobalLbPagination ? onGlobalLbEndReached : undefined}
+            onEndReachedThreshold={0.4}
             renderItem={renderLbItem}
             initialNumToRender={15}
             maxToRenderPerBatch={10}

@@ -4,11 +4,11 @@ import type { LeaderboardPeriod } from '@/services/leaderboard';
 import {
   createGroup,
   fetchGroupDetail,
+  fetchGroupLeaderboard,
   fetchGroupSettings,
   fetchMyGroups,
   fetchPendingGroupInvites,
   fetchPublicGroups,
-  groupLeaderboard,
   inviteToGroup,
   joinPublicGroup,
   respondGroupInvite,
@@ -36,7 +36,7 @@ export function useGroupDetail(groupId: string | undefined) {
 export function useGroupLeaderboard(groupId: string | undefined, period: LeaderboardPeriod = 'all') {
   return useQuery({
     queryKey: qk.groups.lb(groupId ?? '', period),
-    queryFn: () => groupLeaderboard(groupId!, period),
+    queryFn: () => fetchGroupLeaderboard(groupId!, period),
     enabled: Boolean(groupId),
   });
 }

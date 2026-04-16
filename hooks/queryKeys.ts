@@ -84,6 +84,7 @@ export const qk = {
   },
   leaderboard: {
     global: (period: string) => ['lb-global', period] as const,
+    /** Invalidate all global leaderboard infinite queries (any period). */
     globalAll: ['lb-global'] as const,
     friends: (userId: string, period: string) =>
       ['lb-friends', userId, period] as const,
@@ -101,6 +102,8 @@ export function invalidateCompletionRelated(queryClient: QueryClient, userId?: s
   void queryClient.invalidateQueries({ queryKey: qk.feed.all });
   void queryClient.invalidateQueries({ queryKey: qk.feed.groupAll });
   void queryClient.invalidateQueries({ queryKey: qk.groups.lbAll });
+  void queryClient.invalidateQueries({ queryKey: qk.leaderboard.globalAll });
+  void queryClient.invalidateQueries({ queryKey: qk.leaderboard.friendsAll });
   void queryClient.invalidateQueries({ queryKey: qk.challenges.lbAll });
   void queryClient.invalidateQueries({ queryKey: qk.quests.officialCountAll });
   void queryClient.invalidateQueries({ queryKey: qk.quests.lifeCompletionCountsAll });

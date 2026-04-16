@@ -3,9 +3,8 @@ import type { Database, QuestCreationRule } from '@/types/database';
 import { supabase } from '@/lib/supabase';
 import { paginateQuery } from '@/services/_pagination';
 import type { ProfileBasic, ProfileFull, ProfileWithAura } from '@/services/_profiles';
-import { aggregateByUser, enrichWithProfiles, fetchProfilesByIds, PROFILE_COLS_AURA, PROFILE_COLS_FULL } from '@/services/_profiles';
-import type { LeaderboardPeriod } from '@/services/leaderboard';
-import { periodSinceIso } from '@/services/leaderboard';
+import { enrichWithProfiles, fetchProfilesByIds, PROFILE_COLS_AURA, PROFILE_COLS_FULL } from '@/services/_profiles';
+import { type LeaderboardPeriod, periodSinceIso } from '@/services/leaderboard';
 
 type GroupRow = Database['public']['Tables']['groups']['Row'];
 type GroupSettingsRow = Database['public']['Tables']['group_settings']['Row'];
@@ -105,7 +104,7 @@ export async function fetchPendingGroupInvites(userId: string): Promise<(Databas
   }));
 }
 
-type GroupLeaderboardRow = {
+export type GroupLeaderboardRow = {
   id: string;
   username: string;
   display_name: string;
@@ -129,58 +128,14 @@ async function fetchGroupCompletionAggRows(groupId: string, sinceIso: string) {
   );
 }
 
-/** Group ranks: all-time uses group_member_scores; shorter windows sum completions in the group. */
-export async function groupLeaderboard(groupId: string, period: LeaderboardPeriod = 'all'): Promise<GroupLeaderboardRow[]> {
-  if (period === 'all') {
-    const { data: scores, error } = await supabase
-      .from('group_member_scores')
-      .select('user_id, total_group_aura')
-      .eq('group_id', groupId)
-      .order('total_group_aura', { ascending: false });
-    if (error) throw error;
-    const list = scores ?? [];
-    if (list.length === 0) {
-      const { data: mems } = await supabase.from('group_members').select('user_id').eq('group_id', groupId);
-      const ids = (mems ?? []).map((m) => m.user_id);
-      if (ids.length === 0) return [];
-      const profiles = await fetchProfilesByIds(ids, PROFILE_COLS_FULL);
-      return profiles.map(
-        (p): GroupLeaderboardRow => {
-          const fp = p as ProfileFull;
-          return {
-            id: fp.id,
-            username: fp.username,
-            display_name: fp.display_name,
-            avatar_url: fp.avatar_url,
-            total_aura: fp.total_aura,
-            yearly_aura: fp.yearly_aura,
-            total_group_aura: 0,
-            period_aura: 0,
-          };
-        },
-      );
-    }
-    const enriched = await enrichWithProfiles(list, 'user_id', PROFILE_COLS_FULL);
-    return enriched
-      .filter((s) => s.profiles != null)
-      .map((s): GroupLeaderboardRow => {
-        const prof = s.profiles! as ProfileFull;
-        return {
-          id: prof.id,
-          username: prof.username,
-          display_name: prof.display_name,
-          avatar_url: prof.avatar_url,
-          total_aura: prof.total_aura,
-          yearly_aura: prof.yearly_aura,
-          total_group_aura: s.total_group_aura,
-          period_aura: s.total_group_aura,
-        };
-      });
-  }
+async function fetchGroupMemberUserIds(groupId: string): Promise<string[]> {
+  const { data, error } = await supabase.from('group_members').select('user_id').eq('group_id', groupId);
+  if (error) throw error;
+  const ids = (data ?? []).map((m) => m.user_id);
+  return [...new Set(ids)].sort((a, b) => a.localeCompare(b));
+}
 
-  const since = periodSinceIso(period);
-  const rows = await fetchGroupCompletionAggRows(groupId, since);
-  const ordered = aggregateByUser(rows, 50);
+async function mapOrderedToGroupRows(ordered: { userId: string; score: number }[]): Promise<GroupLeaderboardRow[]> {
   if (ordered.length === 0) return [];
   const profiles = await fetchProfilesByIds(
     ordered.map((o) => o.userId),
@@ -192,7 +147,7 @@ export async function groupLeaderboard(groupId: string, period: LeaderboardPerio
       const p = pmap.get(userId);
       if (!p) return null;
       const fp = p as ProfileFull;
-      const row: GroupLeaderboardRow = {
+      return {
         id: fp.id,
         username: fp.username,
         display_name: fp.display_name,
@@ -202,9 +157,47 @@ export async function groupLeaderboard(groupId: string, period: LeaderboardPerio
         total_group_aura: score,
         period_aura: score,
       };
-      return row;
     })
     .filter((row): row is GroupLeaderboardRow => row !== null);
+}
+
+/** All members, sorted by score (0 if no group aura in window / no score row). */
+async function buildFullGroupLeaderboardSorted(
+  groupId: string,
+  period: LeaderboardPeriod,
+): Promise<GroupLeaderboardRow[]> {
+  const memberIds = await fetchGroupMemberUserIds(groupId);
+  if (memberIds.length === 0) return [];
+
+  if (period === 'all') {
+    const { data: scores, error } = await supabase
+      .from('group_member_scores')
+      .select('user_id, total_group_aura')
+      .eq('group_id', groupId);
+    if (error) throw error;
+    const smap = new Map((scores ?? []).map((s) => [s.user_id, s.total_group_aura]));
+    const ordered = memberIds.map((userId) => ({ userId, score: smap.get(userId) ?? 0 }));
+    ordered.sort((a, b) => b.score - a.score || a.userId.localeCompare(b.userId));
+    return mapOrderedToGroupRows(ordered);
+  }
+
+  const since = periodSinceIso(period);
+  const rows = await fetchGroupCompletionAggRows(groupId, since);
+  const sums = new Map<string, number>();
+  for (const r of rows) {
+    sums.set(r.user_id, (sums.get(r.user_id) ?? 0) + r.aura_earned);
+  }
+  const ordered = memberIds.map((userId) => ({ userId, score: sums.get(userId) ?? 0 }));
+  ordered.sort((a, b) => b.score - a.score || a.userId.localeCompare(b.userId));
+  return mapOrderedToGroupRows(ordered);
+}
+
+/** Full group leaderboard (all members, including 0 score). Member lists stay small enough to load in one request. */
+export async function fetchGroupLeaderboard(
+  groupId: string,
+  period: LeaderboardPeriod = 'all',
+): Promise<GroupLeaderboardRow[]> {
+  return buildFullGroupLeaderboardSorted(groupId, period);
 }
 
 export async function fetchGroupSettings(groupId: string): Promise<GroupSettingsRow> {

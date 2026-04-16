@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { paginateQuery } from '@/services/_pagination';
 import type { ProfileFull } from '@/services/_profiles';
-import { aggregateByUser, fetchProfilesByIds, PROFILE_COLS_FULL } from '@/services/_profiles';
+import { fetchProfilesByIds, PROFILE_COLS_FULL } from '@/services/_profiles';
 
 import { fetchFriendIds } from '@/services/feed';
 
@@ -19,6 +19,8 @@ export type LeaderboardRow = {
   total_group_aura?: number;
 };
 
+export const LEADERBOARD_PAGE_SIZE = 50;
+
 export function periodSinceIso(period: Exclude<LeaderboardPeriod, 'all'>): string {
   const d = new Date();
   d.setUTCHours(0, 0, 0, 0);
@@ -35,6 +37,16 @@ export function periodSinceIso(period: Exclude<LeaderboardPeriod, 'all'>): strin
 }
 
 type CompletionAggRow = { user_id: string; aura_earned: number };
+
+type RpcGlobalRow = {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  total_aura: number | string;
+  yearly_aura: number | string;
+  period_aura: number | string;
+};
 
 async function fetchOfficialAuraRowsSince(
   sinceIso: string,
@@ -54,9 +66,15 @@ async function fetchOfficialAuraRowsSince(
   });
 }
 
-async function profilesForLeaderboard(
-  ordered: { userId: string; score: number }[],
-): Promise<LeaderboardRow[]> {
+function sumOfficialAuraByUser(rows: CompletionAggRow[]): Map<string, number> {
+  const sum = new Map<string, number>();
+  for (const r of rows) {
+    sum.set(r.user_id, (sum.get(r.user_id) ?? 0) + r.aura_earned);
+  }
+  return sum;
+}
+
+async function profilesForLeaderboard(ordered: { userId: string; score: number }[]): Promise<LeaderboardRow[]> {
   if (ordered.length === 0) return [];
   const ids = ordered.map((o) => o.userId);
   const profiles = await fetchProfilesByIds(ids, PROFILE_COLS_FULL);
@@ -66,7 +84,7 @@ async function profilesForLeaderboard(
       const p = pmap.get(userId);
       if (!p) return null;
       const fp = p as ProfileFull;
-      const row: LeaderboardRow = {
+      return {
         id: fp.id,
         username: fp.username,
         display_name: fp.display_name,
@@ -75,45 +93,42 @@ async function profilesForLeaderboard(
         yearly_aura: fp.yearly_aura,
         period_aura: score,
       };
-      return row;
     })
     .filter((r): r is LeaderboardRow => r !== null);
 }
 
-/** Official-quest AURA earned in the window (global or restricted to user ids). */
-export async function officialAuraLeaderboard(period: LeaderboardPeriod, limit = 50, userIds?: string[]): Promise<LeaderboardRow[]> {
-  if (period === 'all') {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(PROFILE_COLS_FULL)
-      .order('total_aura', { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-    return (data ?? []).map((p): LeaderboardRow => ({
-      id: p.id,
-      username: p.username,
-      display_name: p.display_name,
-      avatar_url: p.avatar_url,
-      total_aura: p.total_aura,
-      yearly_aura: p.yearly_aura,
-      period_aura: p.total_aura,
-    }));
-  }
-
-  const since = periodSinceIso(period);
-  const rows = await fetchOfficialAuraRowsSince(since, userIds);
-
-  const ordered = aggregateByUser(rows, limit);
-  return profilesForLeaderboard(ordered);
+/** One page of global ranks (every profile; window score or all-time total_aura). */
+export async function fetchGlobalLeaderboardPage(
+  period: LeaderboardPeriod,
+  offset: number,
+  pageSize = LEADERBOARD_PAGE_SIZE,
+): Promise<{ rows: LeaderboardRow[]; hasMore: boolean }> {
+  const pSince = period === 'all' ? null : periodSinceIso(period);
+  const { data, error } = await supabase.rpc('leaderboard_global_page', {
+    p_since: pSince,
+    p_limit: pageSize,
+    p_offset: offset,
+  });
+  if (error) throw error;
+  const raw = (data ?? []) as RpcGlobalRow[];
+  const rows: LeaderboardRow[] = raw.map((p) => ({
+    id: p.id,
+    username: p.username,
+    display_name: p.display_name,
+    avatar_url: p.avatar_url,
+    total_aura: Number(p.total_aura),
+    yearly_aura: Number(p.yearly_aura),
+    period_aura: Number(p.period_aura),
+  }));
+  return { rows, hasMore: raw.length === pageSize };
 }
 
-export async function globalLeaderboard(period: LeaderboardPeriod, limit = 50): Promise<LeaderboardRow[]> {
-  return officialAuraLeaderboard(period, limit);
-}
-
-export async function friendsLeaderboard(userId: string, period: LeaderboardPeriod, limit = 50): Promise<LeaderboardRow[]> {
+/** Friends + self, all periods; window scores include 0 for anyone with no completions in range. */
+export async function friendsLeaderboard(userId: string, period: LeaderboardPeriod): Promise<LeaderboardRow[]> {
   const friendIds = await fetchFriendIds(userId);
-  const ids = [...friendIds, userId];
+  const ids = [...new Set([...friendIds, userId])].sort((a, b) => a.localeCompare(b));
+  if (ids.length === 0) return [];
+
   if (period === 'all') {
     const { data, error } = await supabase
       .from('profiles')
@@ -131,5 +146,11 @@ export async function friendsLeaderboard(userId: string, period: LeaderboardPeri
       period_aura: p.total_aura,
     }));
   }
-  return officialAuraLeaderboard(period, limit, ids);
+
+  const since = periodSinceIso(period);
+  const rows = await fetchOfficialAuraRowsSince(since, ids);
+  const sums = sumOfficialAuraByUser(rows);
+  const ordered = ids.map((id) => ({ userId: id, score: sums.get(id) ?? 0 }));
+  ordered.sort((a, b) => b.score - a.score || a.userId.localeCompare(b.userId));
+  return profilesForLeaderboard(ordered);
 }
