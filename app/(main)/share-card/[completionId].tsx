@@ -8,8 +8,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 import ViewShot from 'react-native-view-shot';
 
+import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { CompletedStoryCard } from '@/components/share/CompletedStoryCard';
 import { Button } from '@/components/ui/Button';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { colors } from '@/constants/theme';
 import { useCompletion } from '@/hooks/useCompletion';
 import { openShareSheet, shareImageToInstagramStories } from '@/lib/share';
@@ -120,10 +122,19 @@ export default function ShareCardScreen() {
     }
   };
 
-  if (isLoading || !data || !data.profiles || (!data.quests && !data.group_quests)) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (!data?.profiles) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title="" />
+        <ErrorState title={t('common.error')} subtitle={t('common.errorSubtitle')} />
       </View>
     );
   }

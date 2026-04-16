@@ -8,18 +8,28 @@ import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { useChallenge, useChallengeLeaderboard } from '@/hooks/useChallenges';
 
 export default function ChallengeDetailScreen() {
   const { challengeId } = useLocalSearchParams<{ challengeId: string }>();
   const { t } = useTranslation();
-  const { data: ch, isLoading } = useChallenge(challengeId);
+  const { data: ch, isLoading, isError } = useChallenge(challengeId);
   const { data: lb = [] } = useChallengeLeaderboard(challengeId);
 
-  if (isLoading || !ch) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError || !ch) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('common.error')} />
+        <ErrorState title={t('common.error')} subtitle={t('common.errorSubtitle')} />
       </View>
     );
   }

@@ -10,6 +10,7 @@ import { colors } from '@/constants/theme';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Card } from '@/components/ui/Card';
 import { useGroupDetail, useGroupSettings, useUpdateGroup, useUpdateGroupSettings } from '@/hooks/useGroups';
 import { PICKER_IMAGES } from '@/lib/pickImage';
@@ -22,7 +23,7 @@ export default function GroupSettingsScreen() {
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id!;
-  const { data, isLoading } = useGroupDetail(id);
+  const { data, isLoading, isError } = useGroupDetail(id);
   const { data: settings } = useGroupSettings(id);
   const updateSettings = useUpdateGroupSettings(id);
   const updateGroup = useUpdateGroup(id);
@@ -52,10 +53,19 @@ export default function GroupSettingsScreen() {
     }
   };
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('common.error')} />
+        <ErrorState title={t('common.error')} subtitle={t('common.errorSubtitle')} />
       </View>
     );
   }

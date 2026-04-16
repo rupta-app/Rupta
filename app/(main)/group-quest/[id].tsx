@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { useGroupQuest, useSubmitGroupQuestForReview } from '@/hooks/useGroupQuests';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -15,13 +16,22 @@ export default function GroupQuestDetailScreen() {
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id!;
-  const { data: q, isLoading } = useGroupQuest(id);
+  const { data: q, isLoading, isError } = useGroupQuest(id);
   const submit = useSubmitGroupQuestForReview();
 
-  if (isLoading || !q) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError || !q) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('common.error')} />
+        <ErrorState title={t('common.error')} subtitle={t('common.errorSubtitle')} />
       </View>
     );
   }
