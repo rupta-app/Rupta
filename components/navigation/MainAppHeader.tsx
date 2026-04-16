@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Bell, Plus, Settings, Users } from 'lucide-react-native';
+import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -34,7 +35,8 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
   const insets = useSafeAreaInsets();
   const { profile, session } = useAuth();
   const uid = session?.user?.id;
-  const { data: notifs = [] } = useNotifications(uid);
+  const { data: notifsData } = useNotifications(uid);
+  const notifs = useMemo(() => notifsData?.pages.flat() ?? [], [notifsData]);
   const unread = notifs.filter((n: { is_read: boolean }) => !n.is_read).length;
 
   const showAvatar = variant !== 'profile';

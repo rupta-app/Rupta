@@ -28,9 +28,12 @@ export function useHomeFeed(
 }
 
 export function useGroupFeed(groupId: string | undefined) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: qk.feed.group(groupId ?? ''),
-    queryFn: () => fetchGroupFeed(groupId!),
+    queryFn: ({ pageParam = 0 }) => fetchGroupFeed(groupId!, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, _all, page) =>
+      lastPage.hasMore ? page + 1 : undefined,
     enabled: Boolean(groupId),
   });
 }

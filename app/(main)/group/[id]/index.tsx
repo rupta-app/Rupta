@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { FileText, Settings, Swords, Trophy, UserPlus } from 'lucide-react-native';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -40,7 +40,8 @@ export default function GroupDetailScreen() {
   const { data, isLoading, isError } = useGroupDetail(id);
   const { data: lb = [] } = useGroupLeaderboard(id);
   const { data: gQuests = [] } = useGroupQuestsList(id, uid);
-  const { data: feed = [], isLoading: feedLoading } = useGroupFeed(id);
+  const { data: feedData, isLoading: feedLoading } = useGroupFeed(id);
+  const feed = useMemo(() => feedData?.pages.flatMap((p) => p.posts) ?? [], [feedData]);
 
   const posts = useFeedWithCounts(feed, 'group', uid);
 

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { memo } from 'react';
 import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -30,7 +31,7 @@ export type FeedPost = {
   gaveRespect?: boolean;
 };
 
-export function FeedPostCard({
+export const FeedPostCard = memo(function FeedPostCard({
   post,
   lang,
   viewerId,
@@ -130,4 +131,4 @@ export function FeedPostCard({
       </View>
     </PressableScale>
   );
-}
+});

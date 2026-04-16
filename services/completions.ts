@@ -34,12 +34,13 @@ async function insertMediaAndParticipants(
   });
   if (mErr) throw mErr;
 
-  for (const uid of participantIds) {
-    if (uid === userId) continue;
-    const { error: pErr } = await supabase.from('completion_participants').insert({
-      completion_id: completionId,
-      user_id: uid,
-    });
+  const participantRows = participantIds
+    .filter((uid) => uid !== userId)
+    .map((uid) => ({ completion_id: completionId, user_id: uid }));
+  if (participantRows.length > 0) {
+    const { error: pErr } = await supabase
+      .from('completion_participants')
+      .insert(participantRows);
     if (pErr) throw pErr;
   }
 }

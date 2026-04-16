@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/database';
+import { QUEST_CATEGORIES } from '@/constants/categories';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
@@ -41,14 +42,23 @@ export async function fetchProfileStats(userId: string): Promise<{
   categoryCompletionPct: number;
   lifeListCount: number;
 }> {
-  const { data: completions } = await supabase
-    .from('quest_completions')
-    .select('id, quest_id, completed_at')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .in('quest_source_type', ['official', 'spontaneous']);
+  const [{ data: completions }, { count: savedCount }] = await Promise.all([
+    supabase
+      .from('quest_completions')
+      .select('id, quest_id, completed_at')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .in('quest_source_type', ['official', 'spontaneous']),
+    supabase
+      .from('saved_quests')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId),
+  ]);
 
-  const { data: quests } = await supabase.from('quests').select('id, category');
+  const qids = [...new Set((completions ?? []).map((c) => c.quest_id).filter(Boolean))] as string[];
+  const { data: quests } = qids.length > 0
+    ? await supabase.from('quests').select('id, category').in('id', qids)
+    : { data: [] as { id: string; category: string }[] };
 
   const questMap = new Map((quests ?? []).map((q) => [q.id, q.category]));
   const cats = new Set<string>();
@@ -57,12 +67,7 @@ export async function fetchProfileStats(userId: string): Promise<{
     if (cat) cats.add(cat);
   });
 
-  const { count: savedCount } = await supabase
-    .from('saved_quests')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId);
-
-  const totalQuestCategories = new Set((quests ?? []).map((q) => q.category)).size;
+  const totalQuestCategories = QUEST_CATEGORIES.length;
 
   return {
     questsCompleted: completions?.length ?? 0,

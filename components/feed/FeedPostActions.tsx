@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Heart, MessageCircle, Send } from 'lucide-react-native';
+import { memo } from 'react';
 import { Alert, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
@@ -13,7 +14,7 @@ import { questTitle } from '@/utils/questCopy';
 
 import type { FeedPost } from './FeedPostCard';
 
-export function FeedPostActions({
+export const FeedPostActions = memo(function FeedPostActions({
   post,
   lang,
   viewerId,
@@ -98,4 +99,4 @@ export function FeedPostActions({
       </PressableScale>
     </View>
   );
-}
+});

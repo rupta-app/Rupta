@@ -50,12 +50,11 @@ export async function fetchGroupDetail(groupId: string): Promise<{
   group: Pick<GroupRow, 'id' | 'name' | 'description' | 'avatar_url' | 'owner_id' | 'created_at'>;
   members: (Database['public']['Tables']['group_members']['Row'] & { profiles: ProfileWithAura | undefined })[];
 }> {
-  const { data: group, error } = await supabase.from('groups').select('id, name, description, avatar_url, owner_id, created_at').eq('id', groupId).single();
+  const [{ data: group, error }, { data: members, error: mErr }] = await Promise.all([
+    supabase.from('groups').select('id, name, description, avatar_url, owner_id, created_at').eq('id', groupId).single(),
+    supabase.from('group_members').select('*').eq('group_id', groupId),
+  ]);
   if (error) throw error;
-  const { data: members, error: mErr } = await supabase
-    .from('group_members')
-    .select('*')
-    .eq('group_id', groupId);
   if (mErr) throw mErr;
   const enriched = await enrichWithProfiles(members ?? [], 'user_id', PROFILE_COLS_AURA);
   return { group, members: enriched };

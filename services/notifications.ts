@@ -4,13 +4,20 @@ import { supabase } from '@/lib/supabase';
 
 type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 
-export async function fetchNotifications(userId: string): Promise<NotificationRow[]> {
+export const NOTIF_PAGE_SIZE = 30;
+
+export async function fetchNotifications(
+  userId: string,
+  page = 0,
+  pageSize = NOTIF_PAGE_SIZE,
+): Promise<NotificationRow[]> {
+  const from = page * pageSize;
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .limit(100);
+    .range(from, from + pageSize - 1);
   if (error) throw error;
   return data ?? [];
 }

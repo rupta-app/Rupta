@@ -112,16 +112,24 @@ export async function fetchHomeFeed(
   return { posts: page.map(mapViewRow), hasMore };
 }
 
-export async function fetchGroupFeed(groupId: string): Promise<FeedPost[]> {
+export async function fetchGroupFeed(
+  groupId: string,
+  page = 0,
+  pageSize = FEED_PAGE_SIZE,
+): Promise<{ posts: FeedPost[]; hasMore: boolean }> {
+  const from = page * pageSize;
   const { data: rows, error } = await supabase
     .from('feed_completions_enriched' as 'quest_completions')
     .select('*')
     .eq('group_id', groupId)
     .eq('status', 'active')
     .order('completed_at', { ascending: false })
-    .limit(50);
+    .range(from, from + pageSize);
   if (error) throw error;
-  return ((rows ?? []) as unknown as FeedViewRow[]).map(mapViewRow);
+  const all = ((rows ?? []) as unknown as FeedViewRow[]);
+  const hasMore = all.length > pageSize;
+  const page_ = hasMore ? all.slice(0, pageSize) : all;
+  return { posts: page_.map(mapViewRow), hasMore };
 }
 
 export async function fetchSuggestedQuest(userId: string, preferredCategories: string[]): Promise<QuestRow | null> {

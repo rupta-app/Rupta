@@ -347,6 +347,7 @@ export const en = {
   notifications: {
     title: 'Notifications',
     empty: 'All quiet.',
+    readAll: 'Read all',
   },
   report: {
     title: 'Report',

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Text, View } from 'react-native';
 import { Medal, Trophy } from 'lucide-react-native';
 
@@ -31,7 +32,7 @@ function RankIndicator({ rank }: { rank: number }) {
   return <Text className="text-muted w-6 text-lg font-bold">#{rank}</Text>;
 }
 
-export function LeaderboardRow({ rank, displayName, username, avatarUrl, aura, onPress }: Props) {
+export const LeaderboardRow = memo(function LeaderboardRow({ rank, displayName, username, avatarUrl, aura, onPress }: Props) {
   const isTop3 = rank <= 3;
 
   const content = (
@@ -59,4 +60,4 @@ export function LeaderboardRow({ rank, displayName, username, avatarUrl, aura, o
     );
   }
   return content;
-}
+});

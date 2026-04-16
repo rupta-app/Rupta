@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router';
-import { Alert, FlatList, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { ActivityIndicator, Alert, FlatList, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Bell } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { colors } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -32,7 +34,8 @@ export default function NotificationsScreen() {
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id;
-  const { data: items = [] } = useNotifications(uid);
+  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } = useNotifications(uid);
+  const items = useMemo(() => data?.pages.flat() ?? [], [data]);
   const markOne = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead(uid);
   const respond = useRespondFriendRequest();
@@ -113,7 +116,7 @@ export default function NotificationsScreen() {
         title={t('notifications.title')}
         right={
           <Button variant="ghost" className="min-h-0 py-1" onPress={() => markAll.mutate()}>
-            Read all
+            {t('notifications.readAll')}
           </Button>
         }
       />
@@ -122,6 +125,9 @@ export default function NotificationsScreen() {
         keyExtractor={(item: NotificationRow) => item.id}
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         ListEmptyComponent={<EmptyState icon={Bell} title={t('empty.noNotifications')} />}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator color={colors.primary} className="py-4" /> : null}
+        onEndReached={() => { if (hasNextPage && !isFetchingNextPage) void fetchNextPage(); }}
+        onEndReachedThreshold={0.5}
         initialNumToRender={12}
         maxToRenderPerBatch={8}
         renderItem={({ item }: { item: NotificationRow }) => {

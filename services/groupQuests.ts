@@ -95,19 +95,29 @@ export async function createGroupQuest(
 }
 
 export async function fetchGroupQuests(groupId: string, includeDraftsForUserId?: string): Promise<GroupQuestRow[]> {
-  let q = supabase.from('group_quests').select('*').eq('group_id', groupId).order('created_at', { ascending: false });
+  let q = supabase
+    .from('group_quests')
+    .select('*')
+    .eq('group_id', groupId)
+    .order('created_at', { ascending: false });
+
+  if (!includeDraftsForUserId) {
+    q = q.in('status', ['active', 'submitted_for_review']);
+  }
+
   const { data, error } = await q;
   if (error) throw error;
   const rows = data ?? [];
-  if (!includeDraftsForUserId) {
-    return rows.filter((r) => r.status === 'active' || r.status === 'submitted_for_review');
+
+  if (includeDraftsForUserId) {
+    return rows.filter(
+      (r) =>
+        r.status === 'active' ||
+        r.status === 'submitted_for_review' ||
+        (r.status === 'draft' && r.creator_id === includeDraftsForUserId),
+    );
   }
-  return rows.filter(
-    (r) =>
-      r.status === 'active' ||
-      r.status === 'submitted_for_review' ||
-      (r.status === 'draft' && r.creator_id === includeDraftsForUserId),
-  );
+  return rows;
 }
 
 export async function fetchGroupQuestById(id: string): Promise<GroupQuestRow> {
