@@ -1,12 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchNotifications, markAllRead, markNotificationRead } from '@/services/notifications';
+import { fetchNotifications, markAllRead, markNotificationRead, NOTIF_PAGE_SIZE } from '@/services/notifications';
 import { qk } from '@/hooks/queryKeys';
 
 export function useNotifications(userId: string | undefined) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: qk.notifications.all(userId ?? ''),
-    queryFn: () => fetchNotifications(userId!),
+    queryFn: ({ pageParam = 0 }) => fetchNotifications(userId!, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, _all, page) =>
+      lastPage.length < NOTIF_PAGE_SIZE ? undefined : page + 1,
     enabled: Boolean(userId),
   });
 }

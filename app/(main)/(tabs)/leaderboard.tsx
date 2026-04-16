@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Trophy } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -44,6 +44,16 @@ export default function LeaderboardScreen() {
   const f = useFriendsLeaderboard(uid, period);
   const { data: myGroups = [] } = useMyGroups(uid);
   const glb = useGroupLeaderboard(selectedGroupId ?? undefined, period);
+
+  const periodOptions = useMemo(
+    () => [
+      { value: 'week' as const, label: t('leaderboard.thisWeek') },
+      { value: 'month' as const, label: t('leaderboard.thisMonth') },
+      { value: 'year' as const, label: t('leaderboard.thisYear') },
+      { value: 'all' as const, label: t('leaderboard.allTime') },
+    ],
+    [t],
+  );
 
   const showGroupPicker = scope === 'groups' && !selectedGroupId;
   const showGroupBoard = scope === 'groups' && selectedGroupId;
@@ -102,12 +112,7 @@ export default function LeaderboardScreen() {
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3" contentContainerStyle={{ gap: 8, paddingRight: 16 }}>
           <PillToggleGroup
-            options={[
-              { value: 'week' as const, label: t('leaderboard.thisWeek') },
-              { value: 'month' as const, label: t('leaderboard.thisMonth') },
-              { value: 'year' as const, label: t('leaderboard.thisYear') },
-              { value: 'all' as const, label: t('leaderboard.allTime') },
-            ]}
+            options={periodOptions}
             selected={period}
             onToggle={setPeriod}
             containerClassName="flex-row gap-2"

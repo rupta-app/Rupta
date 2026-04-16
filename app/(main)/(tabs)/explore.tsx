@@ -14,11 +14,22 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CATEGORY_CONFIG, QUEST_CATEGORIES } from '@/constants/categories';
 import { colors } from '@/constants/theme';
+import type { Database } from '@/types/database';
 import { useAuth } from '@/providers/AuthProvider';
 import { useInfiniteQuests, usePrefetchCategoryPages, useSavedQuestIds, useToggleSave } from '@/hooks/useQuests';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
 import { appLang } from '@/utils/lang';
 import { questTitle, questDescription } from '@/utils/questCopy';
+
+const PILL_SCROLL_STYLE = {
+  paddingHorizontal: 16,
+  paddingTop: 2,
+  paddingBottom: 6,
+  gap: 8,
+  alignItems: 'center' as const,
+  flexDirection: 'row' as const,
+};
+const LIST_CONTENT_STYLE = { paddingBottom: 120 };
 
 export default function ExploreScreen() {
   const { t, i18n } = useTranslation();
@@ -45,6 +56,63 @@ export default function ExploreScreen() {
   const uid = session?.user?.id;
   const { data: saved = new Set<string>() } = useSavedQuestIds(uid);
   const toggle = useToggleSave(uid);
+
+  const categoryOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All' },
+      ...QUEST_CATEGORIES.map((c) => ({ value: c, label: formatCategoryLabel(c, lang) })),
+    ],
+    [lang],
+  );
+
+  const savedIds = saved;
+  const renderItem = useCallback(
+    ({ item }: { item: Database['public']['Tables']['quests']['Row'] }) => {
+      const isSaved = savedIds.has(item.id);
+      const cat = CATEGORY_CONFIG[item.category] ?? CATEGORY_CONFIG.random;
+      const desc = questDescription(item, lang);
+      return (
+        <PressableScale onPress={() => router.push(`/(main)/quest/${item.id}`)} className="px-4 mb-3" scaleValue={0.97}>
+          <View className="bg-surface rounded-2xl p-4" style={{ borderLeftWidth: 3, borderLeftColor: cat.accent }}>
+            <View className="mb-2.5">
+              <QuestCardHeader category={item.category} difficulty={item.difficulty} lang={lang} size="sm">
+                <PressableScale
+                  onPress={() => toggle.mutate({ questId: item.id, currentlySaved: isSaved })}
+                  hitSlop={10}
+                  scaleValue={0.9}
+                  className="ml-3"
+                >
+                  <Bookmark
+                    color={isSaved ? colors.secondary : colors.muted}
+                    fill={isSaved ? colors.secondary : 'none'}
+                    size={20}
+                    strokeWidth={2}
+                  />
+                </PressableScale>
+              </QuestCardHeader>
+            </View>
+            <Text className="text-foreground text-base font-bold leading-5 mb-1" numberOfLines={2}>
+              {questTitle(item, lang)}
+            </Text>
+            {desc ? (
+              <Text className="text-muted text-sm leading-5 mb-3" numberOfLines={2}>
+                {desc}
+              </Text>
+            ) : null}
+            <View className="flex-row items-center">
+              <View
+                className="flex-row items-center rounded-full px-3 py-1"
+                style={{ backgroundColor: colors.primaryGlow }}
+              >
+                <Text className="text-primary text-xs font-bold">+{item.aura_reward} AURA</Text>
+              </View>
+            </View>
+          </View>
+        </PressableScale>
+      );
+    },
+    [savedIds, lang, toggle, router],
+  );
 
   const ListFooter = useCallback(
     () => (
@@ -75,20 +143,10 @@ export default function ExploreScreen() {
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled
           style={{ flexGrow: 0 }}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 2,
-            paddingBottom: 6,
-            gap: 8,
-            alignItems: 'center',
-            flexDirection: 'row',
-          }}
+          contentContainerStyle={PILL_SCROLL_STYLE}
         >
           <PillToggleGroup
-            options={[
-              { value: 'all', label: 'All' },
-              ...QUEST_CATEGORIES.map((c) => ({ value: c, label: formatCategoryLabel(c, lang) })),
-            ]}
+            options={categoryOptions}
             selected={category ?? 'all'}
             onToggle={(v) => setCategory(v === 'all' ? undefined : v)}
             containerClassName="flex-row gap-2"
@@ -110,7 +168,7 @@ export default function ExploreScreen() {
             <ListFooter />
           )
         }
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={LIST_CONTENT_STYLE}
         refreshing={isRefetching}
         onRefresh={() => refetch()}
         onEndReached={() => {
@@ -130,53 +188,7 @@ export default function ExploreScreen() {
             <EmptyState icon={Search} title={t('empty.noResults')} />
           )
         }
-        renderItem={({ item }) => {
-          const isSaved = saved.has(item.id);
-          const cat = CATEGORY_CONFIG[item.category] ?? CATEGORY_CONFIG.random;
-          const desc = questDescription(item, lang);
-          return (
-            <PressableScale onPress={() => router.push(`/(main)/quest/${item.id}`)} className="px-4 mb-3" scaleValue={0.97}>
-              <View className="bg-surface rounded-2xl p-4" style={{ borderLeftWidth: 3, borderLeftColor: cat.accent }}>
-                <View className="mb-2.5">
-                  <QuestCardHeader category={item.category} difficulty={item.difficulty} lang={lang} size="sm">
-                    <PressableScale
-                      onPress={() => toggle.mutate({ questId: item.id, currentlySaved: isSaved })}
-                      hitSlop={10}
-                      scaleValue={0.9}
-                      className="ml-3"
-                    >
-                      <Bookmark
-                        color={isSaved ? colors.secondary : colors.muted}
-                        fill={isSaved ? colors.secondary : 'none'}
-                        size={20}
-                        strokeWidth={2}
-                      />
-                    </PressableScale>
-                  </QuestCardHeader>
-                </View>
-
-                <Text className="text-foreground text-base font-bold leading-5 mb-1" numberOfLines={2}>
-                  {questTitle(item, lang)}
-                </Text>
-
-                {desc ? (
-                  <Text className="text-muted text-sm leading-5 mb-3" numberOfLines={2}>
-                    {desc}
-                  </Text>
-                ) : null}
-
-                <View className="flex-row items-center">
-                  <View
-                    className="flex-row items-center rounded-full px-3 py-1"
-                    style={{ backgroundColor: colors.primaryGlow }}
-                  >
-                    <Text className="text-primary text-xs font-bold">+{item.aura_reward} AURA</Text>
-                  </View>
-                </View>
-              </View>
-            </PressableScale>
-          );
-        }}
+        renderItem={renderItem}
       />
 
       <PressableScale

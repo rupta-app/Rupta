@@ -349,6 +349,7 @@ export const es: TranslationKeys = {
   notifications: {
     title: 'Notificaciones',
     empty: 'Todo tranquilo.',
+    readAll: 'Marcar todo como leído',
   },
   report: {
     title: 'Reportar',

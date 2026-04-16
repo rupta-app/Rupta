@@ -33,26 +33,26 @@ export async function fetchFriendRequestRelation(
   currentUserId: string,
   otherUserId: string,
 ): Promise<FriendRequestRelation> {
-  const { data: inc, error: incErr } = await supabase
-    .from('friend_requests')
-    .select('id')
-    .eq('receiver_id', currentUserId)
-    .eq('sender_id', otherUserId)
-    .eq('status', 'pending')
-    .maybeSingle();
+  const [{ data: inc, error: incErr }, { data: out, error: outErr }] = await Promise.all([
+    supabase
+      .from('friend_requests')
+      .select('id')
+      .eq('receiver_id', currentUserId)
+      .eq('sender_id', otherUserId)
+      .eq('status', 'pending')
+      .maybeSingle(),
+    supabase
+      .from('friend_requests')
+      .select('id')
+      .eq('sender_id', currentUserId)
+      .eq('receiver_id', otherUserId)
+      .eq('status', 'pending')
+      .maybeSingle(),
+  ]);
   if (incErr) throw incErr;
-  if (inc?.id) return { kind: 'incoming', requestId: inc.id };
-
-  const { data: out, error: outErr } = await supabase
-    .from('friend_requests')
-    .select('id')
-    .eq('sender_id', currentUserId)
-    .eq('receiver_id', otherUserId)
-    .eq('status', 'pending')
-    .maybeSingle();
   if (outErr) throw outErr;
+  if (inc?.id) return { kind: 'incoming', requestId: inc.id };
   if (out?.id) return { kind: 'outgoing', requestId: out.id };
-
   return { kind: 'none' };
 }
 

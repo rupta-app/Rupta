@@ -24,6 +24,8 @@ import { useFeedWithCounts } from '@/hooks/useFeedWithCounts';
 import { appLang } from '@/utils/lang';
 import { questTitle } from '@/utils/questCopy';
 
+const HOME_CONTENT_STYLE = { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48, flexGrow: 1 };
+
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
@@ -68,14 +70,19 @@ export default function HomeScreen() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const filterOptions = useMemo(
+    () => [
+      { value: 'all' as const, label: t('feed.filterAll') },
+      { value: 'official' as const, label: t('feed.filterOfficial') },
+      { value: 'unofficial' as const, label: t('feed.filterUnofficial') },
+    ],
+    [t],
+  );
+
   const listHeader = (
     <>
       <PillToggleGroup
-        options={[
-          { value: 'all' as const, label: t('feed.filterAll') },
-          { value: 'official' as const, label: t('feed.filterOfficial') },
-          { value: 'unofficial' as const, label: t('feed.filterUnofficial') },
-        ]}
+        options={filterOptions}
         selected={feedFilter}
         onToggle={setFeedFilter}
         containerClassName="flex-row flex-wrap gap-2 mb-4"
@@ -120,7 +127,7 @@ export default function HomeScreen() {
         data={posts}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48, flexGrow: 1 }}
+        contentContainerStyle={HOME_CONTENT_STYLE}
         ListHeaderComponent={listHeader}
         ListFooterComponent={listFooter}
         ListEmptyComponent={listEmpty}
