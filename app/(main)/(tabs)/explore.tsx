@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Bookmark, Dices, Search } from 'lucide-react-native';
@@ -31,6 +31,61 @@ const PILL_SCROLL_STYLE = {
 };
 const LIST_CONTENT_STYLE = { paddingBottom: 120 };
 
+const SEARCH_DEBOUNCE_MS = 320;
+
+type ExploreSearchAndFiltersProps = {
+  placeholder: string;
+  category: string | undefined;
+  categoryOptions: { value: string; label: string }[];
+  onCategoryToggle: (value: string) => void;
+  onDebouncedSearchChange: (query: string) => void;
+};
+
+/**
+ * Local draft + debounced query keeps the list header reference stable so FlatList does not
+ * remount the TextInput on every keystroke (which was dismissing the keyboard).
+ */
+const ExploreSearchAndFilters = memo(function ExploreSearchAndFilters({
+  placeholder,
+  category,
+  categoryOptions,
+  onCategoryToggle,
+  onDebouncedSearchChange,
+}: ExploreSearchAndFiltersProps) {
+  const [draft, setDraft] = useState('');
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      onDebouncedSearchChange(draft);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [draft, onDebouncedSearchChange]);
+
+  return (
+    <View className="bg-background">
+      <View className="px-4 pt-2 pb-2">
+        <Input value={draft} onChangeText={setDraft} placeholder={placeholder} />
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={PILL_SCROLL_STYLE}
+      >
+        <PillToggleGroup
+          options={categoryOptions}
+          selected={category ?? 'all'}
+          onToggle={onCategoryToggle}
+          containerClassName="flex-row gap-2"
+        />
+      </ScrollView>
+      <View className="h-3" />
+    </View>
+  );
+});
+
 export default function ExploreScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
@@ -42,12 +97,18 @@ export default function ExploreScreen() {
     data,
     isLoading,
     refetch,
-    isRefetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuests({ category, search });
   const quests = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+
+  /** Only show pull-to-refresh while the user pulled; tying `refreshing` to query refetch dismisses the keyboard on every search keystroke. */
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+  const onPullRefresh = useCallback(() => {
+    setPullRefreshing(true);
+    void refetch().finally(() => setPullRefreshing(false));
+  }, [refetch]);
 
   const prefetch = usePrefetchCategoryPages();
   useEffect(() => { prefetch(); }, [prefetch]);
@@ -129,36 +190,28 @@ export default function ExploreScreen() {
     [go, t],
   );
 
+  const onCategoryToggle = useCallback((v: string) => {
+    setCategory(v === 'all' ? undefined : v);
+  }, []);
+
   return (
     <View className="flex-1 bg-background">
       <MainAppHeader variant="explore" />
-
-      <View className="px-4 pt-2 pb-2">
-        <Input value={search} onChangeText={setSearch} placeholder={t('common.search')} />
-      </View>
-      <View className="bg-background">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          nestedScrollEnabled
-          style={{ flexGrow: 0 }}
-          contentContainerStyle={PILL_SCROLL_STYLE}
-        >
-          <PillToggleGroup
-            options={categoryOptions}
-            selected={category ?? 'all'}
-            onToggle={(v) => setCategory(v === 'all' ? undefined : v)}
-            containerClassName="flex-row gap-2"
-          />
-        </ScrollView>
-      </View>
-      <View className="h-3" />
 
       <FlatList
         style={{ flex: 1 }}
         data={quests}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          <ExploreSearchAndFilters
+            placeholder={t('common.search')}
+            category={category}
+            categoryOptions={categoryOptions}
+            onCategoryToggle={onCategoryToggle}
+            onDebouncedSearchChange={setSearch}
+          />
+        }
+        nestedScrollEnabled
         ListFooterComponent={
           isFetchingNextPage ? (
             <View className="py-6 items-center">
@@ -169,8 +222,9 @@ export default function ExploreScreen() {
           )
         }
         contentContainerStyle={LIST_CONTENT_STYLE}
-        refreshing={isRefetching}
-        onRefresh={() => refetch()}
+        refreshing={pullRefreshing}
+        onRefresh={onPullRefresh}
+        keyboardDismissMode="none"
         onEndReached={() => {
           if (hasNextPage && !isFetchingNextPage) fetchNextPage();
         }}
