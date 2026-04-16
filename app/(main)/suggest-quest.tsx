@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
@@ -35,12 +36,29 @@ export default function SuggestQuestScreen() {
     }
   };
 
+  const suggestAnother = () => {
+    setTitle('');
+    setDescription('');
+    setErr('');
+    setDone(false);
+  };
+
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('suggestQuest.title')} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         {done ? (
-          <Text className="text-foreground text-lg font-semibold">{t('suggestQuest.thanks')}</Text>
+          <View>
+            <Text className="text-foreground text-lg font-semibold">
+              {t('suggestQuest.thanks')}
+            </Text>
+            <Button className="mt-6" onPress={() => router.back()}>
+              {t('suggestQuest.done')}
+            </Button>
+            <Button className="mt-3" variant="ghost" onPress={suggestAnother}>
+              {t('suggestQuest.suggestAnother')}
+            </Button>
+          </View>
         ) : (
           <>
             <Text className="text-muted leading-6 mb-4">{t('suggestQuest.intro')}</Text>

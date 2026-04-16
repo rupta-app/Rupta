@@ -147,6 +147,8 @@ export const en = {
     submit: 'Send suggestion',
     thanks: 'Thanks! We will review within 24h.',
     titleRequired: 'Add a short title.',
+    done: 'Done',
+    suggestAnother: 'Suggest another',
   },
   completion: {
     share: 'Share',
