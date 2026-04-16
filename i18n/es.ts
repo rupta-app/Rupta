@@ -149,6 +149,8 @@ export const es: TranslationKeys = {
     submit: 'Enviar sugerencia',
     thanks: '¡Gracias! Revisamos en menos de 24h.',
     titleRequired: 'Añade un título corto.',
+    done: 'Listo',
+    suggestAnother: 'Sugerir otra',
   },
   completion: {
     share: 'Compartir',
