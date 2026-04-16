@@ -16,6 +16,7 @@ import { colors } from '@/constants/theme';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { PressableScale } from '@/components/ui/PressableScale';
 import {
   useCompletion,
@@ -63,7 +64,7 @@ export default function CompletionDetailScreen() {
   const gave = social?.gaveRespect ?? false;
   const counts = social?.counts ?? { respects: 0, comments: 0 };
 
-  const { heartStyle } = useHeartAnimation(social, gave);
+  const { heartStyle } = useHeartAnimation(gave);
 
   if (!completionId) {
     return (
@@ -73,10 +74,19 @@ export default function CompletionDetailScreen() {
     );
   }
 
-  if (isLoading || !data?.profiles || (!data.quests && !data.group_quests)) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (!data?.profiles) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title="" />
+        <ErrorState title={t('common.error')} subtitle={t('common.errorSubtitle')} />
       </View>
     );
   }

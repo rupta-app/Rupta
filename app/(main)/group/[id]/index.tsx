@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
 import { useGroupDetail, useGroupLeaderboard } from '@/hooks/useGroups';
@@ -36,20 +37,29 @@ export default function GroupDetailScreen() {
   const uid = session?.user?.id ?? profile?.id;
   const [section, setSection] = useState<Section>('rankings');
 
-  const { data, isLoading } = useGroupDetail(id);
+  const { data, isLoading, isError } = useGroupDetail(id);
   const { data: lb = [] } = useGroupLeaderboard(id);
   const { data: gQuests = [] } = useGroupQuestsList(id, uid);
   const { data: feed = [], isLoading: feedLoading } = useGroupFeed(id);
 
-  const posts = useFeedWithCounts(feed, 'group-feed-counts');
+  const posts = useFeedWithCounts(feed, 'group', uid);
 
   const myMember = data?.members.find((m: { user_id: string }) => m.user_id === uid);
   const canAdmin = myMember?.role === 'owner' || myMember?.role === 'admin';
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('common.error')} />
+        <ErrorState title={t('common.error')} subtitle={t('common.errorSubtitle')} />
       </View>
     );
   }

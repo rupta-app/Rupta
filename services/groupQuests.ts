@@ -111,8 +111,9 @@ export async function fetchGroupQuests(groupId: string, includeDraftsForUserId?:
 }
 
 export async function fetchGroupQuestById(id: string): Promise<GroupQuestRow> {
-  const { data, error } = await supabase.from('group_quests').select('*').eq('id', id).single();
+  const { data, error } = await supabase.from('group_quests').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error('Group quest not found or access denied');
   return data;
 }
 

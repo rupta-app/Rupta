@@ -6,6 +6,7 @@ import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { useFriendsList } from '@/hooks/useFriends';
 import { useGroupDetail, useInviteToGroup } from '@/hooks/useGroups';
 import { useAuth } from '@/providers/AuthProvider';
@@ -16,14 +17,23 @@ export default function GroupPeopleScreen() {
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id!;
-  const { data, isLoading } = useGroupDetail(id);
+  const { data, isLoading, isError } = useGroupDetail(id);
   const { data: friends = [] } = useFriendsList(uid);
   const invite = useInviteToGroup();
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('common.error')} />
+        <ErrorState title={t('common.error')} subtitle={t('common.errorSubtitle')} />
       </View>
     );
   }

@@ -235,8 +235,10 @@ export async function fetchCompletionById(id: string): Promise<CompletionRow & {
 
 export async function fetchCompletionCounts(completionIds: string[]): Promise<Map<string, { respects: number; comments: number }>> {
   if (completionIds.length === 0) return new Map<string, { respects: number; comments: number }>();
-  const { data: reacts } = await supabase.from('reactions').select('completion_id').in('completion_id', completionIds);
-  const { data: coms } = await supabase.from('comments').select('completion_id').in('completion_id', completionIds);
+  const [{ data: reacts }, { data: coms }] = await Promise.all([
+    supabase.from('reactions').select('completion_id').in('completion_id', completionIds),
+    supabase.from('comments').select('completion_id').in('completion_id', completionIds),
+  ]);
   const map = new Map<string, { respects: number; comments: number }>();
   completionIds.forEach((id) => map.set(id, { respects: 0, comments: 0 }));
   (reacts ?? []).forEach((r) => {
@@ -258,6 +260,16 @@ export async function userGaveRespect(completionId: string, userId: string): Pro
     .eq('user_id', userId)
     .maybeSingle();
   return Boolean(data);
+}
+
+export async function userGaveRespectBatch(completionIds: string[], userId: string): Promise<Set<string>> {
+  if (completionIds.length === 0) return new Set<string>();
+  const { data } = await supabase
+    .from('reactions')
+    .select('completion_id')
+    .in('completion_id', completionIds)
+    .eq('user_id', userId);
+  return new Set((data ?? []).map((r) => r.completion_id));
 }
 
 export async function toggleRespect(completionId: string, userId: string, has: boolean): Promise<void> {

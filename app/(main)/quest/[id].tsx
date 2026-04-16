@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Button } from '@/components/ui/Button';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { QuestCardHeader } from '@/components/ui/QuestCardHeader';
 import { CATEGORY_CONFIG } from '@/constants/categories';
@@ -39,7 +40,7 @@ export default function QuestDetailScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const lang = appLang(i18n);
-  const { data: quest, isLoading } = useQuest(id);
+  const { data: quest, isLoading, isError } = useQuest(id);
   const { session } = useAuth();
   const uid = session?.user?.id;
   const { data: saved = new Set<string>() } = useSavedQuestIds(uid);
@@ -49,10 +50,19 @@ export default function QuestDetailScreen() {
   const capped = quest ? isAtCompletionCap(quest, myCount) : false;
   const rules = useMemo(() => (quest ? completionRuleLines(quest, t) : []), [quest, t]);
 
-  if (isLoading || !quest) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted">{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError || !quest) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('common.error')} />
+        <ErrorState title={t('common.error')} subtitle={t('common.errorSubtitle')} />
       </View>
     );
   }

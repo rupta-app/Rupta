@@ -6,7 +6,7 @@ import Animated from 'react-native-reanimated';
 
 import { colors } from '@/constants/theme';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { useCompletionSocial, useToggleRespect } from '@/hooks/useCompletion';
+import { useToggleRespect } from '@/hooks/useCompletion';
 import { useHeartAnimation } from '@/hooks/useHeartAnimation';
 import { buildCompletionShareMessage, shareCompletionGeneric, shareToWhatsApp } from '@/lib/shareLinks';
 import { questTitle } from '@/utils/questCopy';
@@ -24,10 +24,9 @@ export function FeedPostActions({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { data: social } = useCompletionSocial(post.id, viewerId);
   const toggleR = useToggleRespect(post.id, viewerId);
-  const gave = social?.gaveRespect ?? false;
-  const counts = social?.counts ?? { respects: post.respectCount ?? 0, comments: post.commentCount ?? 0 };
+  const gave = post.gaveRespect ?? false;
+  const counts = { respects: post.respectCount ?? 0, comments: post.commentCount ?? 0 };
 
   const title = post.group_quests?.title
     ? post.group_quests.title
@@ -36,7 +35,7 @@ export function FeedPostActions({
       : t('common.sideQuest');
   const uname = post.profiles?.username ?? 'rupta';
 
-  const { heartStyle } = useHeartAnimation(social, gave);
+  const { heartStyle } = useHeartAnimation(gave);
 
   const openShare = () => {
     const msg = buildCompletionShareMessage(title, uname);

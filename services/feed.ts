@@ -90,7 +90,6 @@ export async function fetchHomeFeed(
   const ids = [...friendIds, userId].filter((id) => !blocked.has(id));
   if (ids.length === 0) return { posts: [], hasMore: false };
 
-  // Fetch one extra row to detect if there's a next page
   let q = supabase
     .from('feed_completions_enriched' as 'quest_completions')
     .select('*')
@@ -102,7 +101,6 @@ export async function fetchHomeFeed(
   if (filter === 'official') {
     q = q.eq('quest_source_type', 'official');
   } else if (filter === 'unofficial') {
-    // Chain filters: (group OR spontaneous) AND visibility in (public | friends).
     q = q.or('quest_source_type.eq.group,quest_source_type.eq.spontaneous').in('visibility', ['public', 'friends']);
   }
 
