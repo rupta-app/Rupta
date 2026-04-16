@@ -109,6 +109,7 @@ properties: {
 
 - Epic cards on the main board are named `[Epica] X` (with the bracket prefix).
 - New backlog work goes to `Status: Backlog` with `Tags: dev` (unless clearly design/product).
+- **Bugs always go to `Status: MVP`**, never `Backlog` — the user wants bugs prioritized into the current MVP scope.
 - Don't auto-assign owners — leave `Assign` empty unless told who.
 - When restructuring, confirm the plan with the user before mass-creating or moving cards.
 
