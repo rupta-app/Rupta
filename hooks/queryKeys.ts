@@ -7,6 +7,10 @@ export const qk = {
       ['feed', userId, friendIds, filter] as const,
     group: (groupId: string) => ['group-feed', groupId] as const,
     groupAll: ['group-feed'] as const,
+    countsAll: ['feed-counts'] as const,
+    respectAll: ['feed-counts-respect'] as const,
+    groupCountsAll: ['group-feed-counts'] as const,
+    groupRespectAll: ['group-feed-counts-respect'] as const,
   },
   completions: {
     detail: (id: string) => ['completion', id] as const,

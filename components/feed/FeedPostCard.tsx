@@ -27,6 +27,7 @@ export type FeedPost = {
   quest_media?: { media_url: string }[];
   respectCount?: number;
   commentCount?: number;
+  gaveRespect?: boolean;
 };
 
 export function FeedPostCard({

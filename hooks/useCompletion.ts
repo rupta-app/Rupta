@@ -62,6 +62,10 @@ export function useToggleRespect(completionId: string, userId: string | undefine
       void queryClient.invalidateQueries({ queryKey: qk.completions.socialAll });
       void queryClient.invalidateQueries({ queryKey: qk.feed.all });
       void queryClient.invalidateQueries({ queryKey: qk.feed.groupAll });
+      void queryClient.invalidateQueries({ queryKey: qk.feed.countsAll });
+      void queryClient.invalidateQueries({ queryKey: qk.feed.respectAll });
+      void queryClient.invalidateQueries({ queryKey: qk.feed.groupCountsAll });
+      void queryClient.invalidateQueries({ queryKey: qk.feed.groupRespectAll });
     },
   });
 }

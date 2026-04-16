@@ -49,12 +49,12 @@ export default function HomeScreen() {
   } = useHomeFeed(session?.user?.id, friendIds, feedFilter);
   const { data: suggested } = useSuggestedQuest(session?.user?.id, profile?.preferred_categories ?? []);
 
-  const feed = useMemo(() => data?.pages.flatMap((p) => p.posts) ?? [], [data]);
-  const posts = useFeedWithCounts(feed, 'feed-counts');
   const viewerId = session?.user?.id ?? profile?.id;
+  const feed = useMemo(() => data?.pages.flatMap((p) => p.posts) ?? [], [data]);
+  const posts = useFeedWithCounts(feed, 'home', viewerId);
 
   const renderItem = useCallback(
-    ({ item }: { item: FeedPost & { respectCount: number; commentCount: number } }) => (
+    ({ item }: { item: FeedPost & { respectCount: number; commentCount: number; gaveRespect: boolean } }) => (
       <FeedPostCard post={item} lang={lang} viewerId={viewerId} />
     ),
     [lang, viewerId],
