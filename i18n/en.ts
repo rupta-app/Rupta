@@ -96,6 +96,8 @@ export const en = {
   search: {
     title: 'Search',
     placeholder: 'People & groups',
+    findPeoplePlaceholder: 'Name or @username',
+    findPeopleHint: 'Enter at least 2 characters to find people on Rupta.',
     people: 'People',
     myGroups: 'My groups',
     noPeople: 'No matches — try another name or @username.',
@@ -213,9 +215,13 @@ export const en = {
     viewMoreComments: 'View more comments',
   },
   friends: {
+    hubTitle: 'Friends & groups',
     title: 'Friends',
     requests: 'Requests',
     searchUsers: 'Find people',
+    openGroupsTab: 'Open Groups tab',
+    noGroupInvitesTitle: 'No group invites yet',
+    noGroupInvitesBody: 'Invites you get will show up here. You can still create or join groups from the Groups tab.',
     pending: 'Pending',
     accept: 'Accept',
     reject: 'Reject',

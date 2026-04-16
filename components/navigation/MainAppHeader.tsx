@@ -98,11 +98,11 @@ export function MainAppHeader({ variant }: { variant: MainHeaderVariant }) {
           ) : null}
           {showSearch ? (
             <PressableScale
-              onPress={() => go('/(main)/unified-search')}
+              onPress={() => go('/(main)/friends')}
               className="p-2.5 shrink-0"
               hitSlop={12}
               scaleValue={0.9}
-              accessibilityLabel="Friends and groups search"
+              accessibilityLabel={t('friends.hubTitle')}
             >
               <Users color={colors.foreground} size={22} strokeWidth={2} />
             </PressableScale>

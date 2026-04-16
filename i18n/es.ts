@@ -98,6 +98,8 @@ export const es: TranslationKeys = {
   search: {
     title: 'Buscar',
     placeholder: 'Gente y grupos',
+    findPeoplePlaceholder: 'Nombre o @usuario',
+    findPeopleHint: 'Escribí al menos 2 caracteres para buscar gente en Rupta.',
     people: 'Personas',
     myGroups: 'Mis grupos',
     noPeople: 'Sin resultados — prueba otro nombre o @usuario.',
@@ -215,9 +217,13 @@ export const es: TranslationKeys = {
     viewMoreComments: 'Ver más comentarios',
   },
   friends: {
+    hubTitle: 'Amigos y grupos',
     title: 'Amigos',
     requests: 'Solicitudes',
     searchUsers: 'Buscar gente',
+    openGroupsTab: 'Ir a Grupos',
+    noGroupInvitesTitle: 'Todavía no tenés invitaciones a grupos',
+    noGroupInvitesBody: 'Las invitaciones que recibas van a aparecer acá. Igual podés crear o unirte a grupos desde la pestaña Grupos.',
     pending: 'Pendiente',
     accept: 'Aceptar',
     reject: 'Rechazar',

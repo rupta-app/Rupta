@@ -40,6 +40,7 @@ export default function MainLayout() {
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="life-list" />
       <Stack.Screen name="unified-search" />
+      <Stack.Screen name="find-people" />
       <Stack.Screen name="messages" />
       <Stack.Screen name="quick-complete" />
     </Stack>
