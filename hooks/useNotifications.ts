@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchNotifications, markAllRead, markNotificationRead, NOTIF_PAGE_SIZE } from '@/services/notifications';
+import { clearAllNotifications, fetchNotifications, markNotificationRead, NOTIF_PAGE_SIZE } from '@/services/notifications';
 import { qk } from '@/hooks/queryKeys';
 
 export function useNotifications(userId: string | undefined) {
@@ -24,12 +24,15 @@ export function useMarkNotificationRead() {
   });
 }
 
-export function useMarkAllNotificationsRead(userId: string | undefined) {
+export function useClearAllNotifications(userId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => markAllRead(userId!),
+    mutationFn: () => clearAllNotifications(userId!),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: qk.notifications.all(userId!) });
+      void queryClient.resetQueries({ queryKey: qk.notifications.all(userId!) });
+      void queryClient.invalidateQueries({ queryKey: qk.notifications.prefix });
+      void queryClient.invalidateQueries({ queryKey: qk.friends.requestsInAll });
+      void queryClient.invalidateQueries({ queryKey: qk.friends.relation });
     },
   });
 }

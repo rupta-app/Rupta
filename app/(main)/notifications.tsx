@@ -6,23 +6,16 @@ import { Bell } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { colors } from '@/constants/theme';
+import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '@/hooks/useNotifications';
-import { useRespondFriendRequest } from '@/hooks/useFriends';
+import { useClearAllNotifications, useMarkNotificationRead, useNotifications } from '@/hooks/useNotifications';
+import { useIncomingFriendRequests, useRespondFriendRequest } from '@/hooks/useFriends';
 import { useAuth } from '@/providers/AuthProvider';
 import { findPendingIncomingRequestId } from '@/services/friends';
-
-type NotificationRow = {
-  id: string;
-  title: string;
-  body: string;
-  is_read: boolean;
-  type: string;
-  data: unknown;
-};
+import type { NotificationListItem } from '@/services/notifications';
 
 function asNotificationData(data: unknown): Record<string, string | undefined> {
   if (typeof data === 'object' && data !== null) return data as Record<string, string | undefined>;
@@ -36,11 +29,13 @@ export default function NotificationsScreen() {
   const uid = session?.user?.id;
   const { data, hasNextPage, fetchNextPage, isFetchingNextPage } = useNotifications(uid);
   const items = useMemo(() => data?.pages.flat() ?? [], [data]);
+  const { data: incomingFriendReqs = [] } = useIncomingFriendRequests(uid);
+  const canClearInbox = items.length > 0 || incomingFriendReqs.length > 0;
   const markOne = useMarkNotificationRead();
-  const markAll = useMarkAllNotificationsRead(uid);
+  const clearAll = useClearAllNotifications(uid);
   const respond = useRespondFriendRequest();
 
-  const onOpen = (row: NotificationRow) => {
+  const onOpen = (row: NotificationListItem) => {
     markOne.mutate(row.id);
     const d = asNotificationData(row.data);
     if (row.type === 'comment' || row.type === 'respect') {
@@ -54,14 +49,14 @@ export default function NotificationsScreen() {
     }
   };
 
-  const resolveRequestId = async (row: NotificationRow): Promise<string | undefined> => {
+  const resolveRequestId = async (row: NotificationListItem): Promise<string | undefined> => {
     const d = asNotificationData(row.data);
     if (d.request_id) return d.request_id;
     if (!uid || !d.sender_id) return undefined;
     return (await findPendingIncomingRequestId(uid, d.sender_id)) ?? undefined;
   };
 
-  const onAcceptFriend = async (row: NotificationRow) => {
+  const onAcceptFriend = async (row: NotificationListItem) => {
     let requestId: string | undefined;
     try {
       requestId = await resolveRequestId(row);
@@ -87,7 +82,7 @@ export default function NotificationsScreen() {
     );
   };
 
-  const onRejectFriend = async (row: NotificationRow) => {
+  const onRejectFriend = async (row: NotificationListItem) => {
     let requestId: string | undefined;
     try {
       requestId = await resolveRequestId(row);
@@ -115,14 +110,27 @@ export default function NotificationsScreen() {
       <ScreenHeader
         title={t('notifications.title')}
         right={
-          <Button variant="ghost" className="min-h-0 py-1" onPress={() => markAll.mutate()}>
-            {t('notifications.readAll')}
+          <Button
+            variant="ghost"
+            className="min-h-0 py-1"
+            disabled={!canClearInbox || clearAll.isPending}
+            loading={clearAll.isPending}
+            onPress={() => {
+              if (!canClearInbox) return;
+              clearAll.mutate(undefined, {
+                onError: (e) => {
+                  Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e));
+                },
+              });
+            }}
+          >
+            {t('notifications.clearAll')}
           </Button>
         }
       />
       <FlatList
         data={items}
-        keyExtractor={(item: NotificationRow) => item.id}
+        keyExtractor={(item: NotificationListItem) => item.id}
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         ListEmptyComponent={<EmptyState icon={Bell} title={t('empty.noNotifications')} />}
         ListFooterComponent={isFetchingNextPage ? <ActivityIndicator color={colors.primary} className="py-4" /> : null}
@@ -130,32 +138,56 @@ export default function NotificationsScreen() {
         onEndReachedThreshold={0.5}
         initialNumToRender={12}
         maxToRenderPerBatch={8}
-        renderItem={({ item }: { item: NotificationRow }) => {
+        renderItem={({ item }: { item: NotificationListItem }) => {
           const isFriendRequest = item.type === 'friend_request';
+          const sender = item.friendRequestSender;
+
+          if (isFriendRequest) {
+            return (
+              <Card className={`mb-2 ${item.is_read ? 'opacity-60' : ''}`}>
+                <PressableScale onPress={() => onOpen(item)} scaleValue={0.98}>
+                  {sender ? (
+                    <View className="flex-row gap-3 items-center">
+                      <Avatar url={sender.avatar_url} name={sender.display_name} size={48} />
+                      <View className="flex-1 min-w-0">
+                        <Text className="text-foreground font-semibold">{sender.display_name}</Text>
+                        <Text className="text-muted text-xs">@{sender.username}</Text>
+                        <Text className="text-muted text-sm mt-1">{t('notifications.friendRequestMessage')}</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <>
+                      <Text className="text-foreground font-semibold">{item.title}</Text>
+                      <Text className="text-muted text-sm mt-1">{item.body}</Text>
+                    </>
+                  )}
+                </PressableScale>
+                <View className="flex-row gap-2 mt-3">
+                  <Button
+                    loading={respond.isPending}
+                    onPress={() => void onAcceptFriend(item)}
+                    className="flex-1 py-2 px-3 min-h-0"
+                  >
+                    {t('friends.accept')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    loading={respond.isPending}
+                    onPress={() => void onRejectFriend(item)}
+                    className="flex-1 py-2 px-3 min-h-0"
+                  >
+                    {t('friends.reject')}
+                  </Button>
+                </View>
+              </Card>
+            );
+          }
+
           return (
             <PressableScale onPress={() => onOpen(item)} scaleValue={0.98}>
               <Card className={`mb-2 ${item.is_read ? 'opacity-60' : ''}`}>
                 <Text className="text-foreground font-semibold">{item.title}</Text>
                 <Text className="text-muted text-sm mt-1">{item.body}</Text>
-                {isFriendRequest ? (
-                  <View className="flex-row gap-2 mt-3">
-                    <Button
-                      loading={respond.isPending}
-                      onPress={() => void onAcceptFriend(item)}
-                      className="flex-1 py-2 px-3 min-h-0"
-                    >
-                      {t('friends.accept')}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      loading={respond.isPending}
-                      onPress={() => void onRejectFriend(item)}
-                      className="flex-1 py-2 px-3 min-h-0"
-                    >
-                      {t('friends.reject')}
-                    </Button>
-                  </View>
-                ) : null}
               </Card>
             </PressableScale>
           );

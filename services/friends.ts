@@ -24,6 +24,19 @@ export async function respondFriendRequest(requestId: string, accept: boolean): 
   if (error) throw error;
 }
 
+/** Reject every pending request where this user is the receiver (e.g. clear inbox). */
+export async function rejectAllPendingIncomingFriendRequests(receiverId: string): Promise<void> {
+  const { error } = await supabase
+    .from('friend_requests')
+    .update({
+      status: 'rejected',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('receiver_id', receiverId)
+    .eq('status', 'pending');
+  if (error) throw error;
+}
+
 export type FriendRequestRelation =
   | { kind: 'incoming'; requestId: string }
   | { kind: 'outgoing'; requestId: string }

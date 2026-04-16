@@ -351,7 +351,8 @@ export const es: TranslationKeys = {
   notifications: {
     title: 'Notificaciones',
     empty: 'Todo tranquilo.',
-    readAll: 'Marcar todo como leído',
+    clearAll: 'Borrar todo',
+    friendRequestMessage: 'Te mandó una solicitud de amistad.',
   },
   report: {
     title: 'Reportar',

@@ -349,7 +349,8 @@ export const en = {
   notifications: {
     title: 'Notifications',
     empty: 'All quiet.',
-    readAll: 'Read all',
+    clearAll: 'Clear all',
+    friendRequestMessage: 'Sent you a friend request.',
   },
   report: {
     title: 'Report',
