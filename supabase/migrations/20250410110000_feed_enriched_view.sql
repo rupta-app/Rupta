@@ -45,7 +45,6 @@ FROM public.quest_completions c
   LEFT JOIN public.quests q ON q.id = c.quest_id
   LEFT JOIN public.group_quests gq ON gq.id = c.group_quest_id
   LEFT JOIN public.groups g ON g.id = c.group_id;
-
 -- Grant access to authenticated and service_role
 GRANT SELECT ON public.feed_completions_enriched TO authenticated;
 GRANT SELECT ON public.feed_completions_enriched TO service_role;

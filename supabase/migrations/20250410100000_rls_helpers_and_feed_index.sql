@@ -21,11 +21,9 @@ AS $$
       AND m.role IN ('owner', 'admin')
   );
 $$;
-
 REVOKE ALL ON FUNCTION public.is_group_admin(uuid, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.is_group_admin(uuid, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_group_admin(uuid, uuid) TO service_role;
-
 -- ---------------------------------------------------------------------------
 -- 2. Replace inline membership checks with helper function calls
 -- ---------------------------------------------------------------------------
@@ -35,58 +33,49 @@ DROP POLICY IF EXISTS gs_select_member ON public.group_settings;
 CREATE POLICY gs_select_member ON public.group_settings FOR SELECT TO authenticated USING (
   public.is_group_member(group_settings.group_id, auth.uid())
 );
-
 -- group_settings: UPDATE (admin/owner only)
 DROP POLICY IF EXISTS gs_update_admin ON public.group_settings;
 CREATE POLICY gs_update_admin ON public.group_settings FOR UPDATE TO authenticated USING (
   public.is_group_admin(group_settings.group_id, auth.uid())
 );
-
 -- group_quests: SELECT
 DROP POLICY IF EXISTS gq_select_member ON public.group_quests;
 CREATE POLICY gq_select_member ON public.group_quests FOR SELECT TO authenticated USING (
   public.is_group_member(group_quests.group_id, auth.uid())
 );
-
 -- group_quests: INSERT
 DROP POLICY IF EXISTS gq_insert_member ON public.group_quests;
 CREATE POLICY gq_insert_member ON public.group_quests FOR INSERT TO authenticated WITH CHECK (
   creator_id = auth.uid()
   AND public.is_group_member(group_quests.group_id, auth.uid())
 );
-
 -- group_quests: UPDATE (creator or admin)
 DROP POLICY IF EXISTS gq_update_creator_admin ON public.group_quests;
 CREATE POLICY gq_update_creator_admin ON public.group_quests FOR UPDATE TO authenticated USING (
   creator_id = auth.uid()
   OR public.is_group_admin(group_quests.group_id, auth.uid())
 );
-
 -- group_challenges: SELECT
 DROP POLICY IF EXISTS gc_select_member ON public.group_challenges;
 CREATE POLICY gc_select_member ON public.group_challenges FOR SELECT TO authenticated USING (
   public.is_group_member(group_challenges.group_id, auth.uid())
 );
-
 -- group_challenges: INSERT
 DROP POLICY IF EXISTS gc_insert_member ON public.group_challenges;
 CREATE POLICY gc_insert_member ON public.group_challenges FOR INSERT TO authenticated WITH CHECK (
   creator_id = auth.uid()
   AND public.is_group_member(group_challenges.group_id, auth.uid())
 );
-
 -- group_challenges: UPDATE (admin only)
 DROP POLICY IF EXISTS gc_update_admin ON public.group_challenges;
 CREATE POLICY gc_update_admin ON public.group_challenges FOR UPDATE TO authenticated USING (
   public.is_group_admin(group_challenges.group_id, auth.uid())
 );
-
 -- group_member_scores: SELECT
 DROP POLICY IF EXISTS gms_select_member ON public.group_member_scores;
 CREATE POLICY gms_select_member ON public.group_member_scores FOR SELECT TO authenticated USING (
   public.is_group_member(group_member_scores.group_id, auth.uid())
 );
-
 -- groups: UPDATE (owner or admin)
 DROP POLICY IF EXISTS groups_update_owner_admin ON public.groups;
 CREATE POLICY groups_update_owner_admin ON public.groups FOR UPDATE TO authenticated USING (
@@ -96,7 +85,6 @@ CREATE POLICY groups_update_owner_admin ON public.groups FOR UPDATE TO authentic
   owner_id = auth.uid()
   OR public.is_group_admin(groups.id, auth.uid())
 );
-
 -- completion visibility: use is_group_member for group visibility check
 DROP POLICY IF EXISTS completions_select ON public.quest_completions;
 CREATE POLICY completions_select ON public.quest_completions FOR SELECT TO authenticated USING (
@@ -129,7 +117,6 @@ CREATE POLICY completions_select ON public.quest_completions FOR SELECT TO authe
     )
   )
 );
-
 -- quest_media: use is_group_member for group visibility check
 DROP POLICY IF EXISTS quest_media_select ON public.quest_media;
 CREATE POLICY quest_media_select ON public.quest_media FOR SELECT TO authenticated USING (
@@ -165,7 +152,6 @@ CREATE POLICY quest_media_select ON public.quest_media FOR SELECT TO authenticat
       )
   )
 );
-
 -- ---------------------------------------------------------------------------
 -- 3. Composite index for feed queries
 -- ---------------------------------------------------------------------------
@@ -173,6 +159,5 @@ CREATE POLICY quest_media_select ON public.quest_media FOR SELECT TO authenticat
 CREATE INDEX IF NOT EXISTS idx_completions_feed_optimized
 ON public.quest_completions (status, quest_source_type, completed_at DESC)
 WHERE status = 'active';
-
 -- Drop the old less-specific index that this supersedes
 DROP INDEX IF EXISTS idx_completions_source;

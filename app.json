@@ -23,7 +23,16 @@
         "backgroundColor": "#0C0C10"
       },
       "predictiveBackGestureEnabled": false,
-      "backgroundColor": "#0C0C10"
+      "backgroundColor": "#0C0C10",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +46,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Rupta needs photo access to attach SideQuest proof."
+          "photosPermission": "Rupta needs photo access to attach SideQuest proof.",
+          "cameraPermission": "Rupta uses the camera to record SideQuest proof.",
+          "microphonePermission": "Rupta uses the microphone to record videos of your SideQuest proof."
         }
       ],
       [
@@ -46,7 +57,9 @@
           "photosPermission": "Rupta saves your story card when you choose Save.",
           "savePhotosPermission": "Rupta saves your story card when you choose Save."
         }
-      ]
+      ],
+      "expo-video",
+      "react-native-compressor"
     ],
     "experiments": {
       "typedRoutes": true

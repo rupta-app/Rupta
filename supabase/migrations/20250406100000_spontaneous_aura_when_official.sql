@@ -133,7 +133,6 @@ BEGIN
   RAISE EXCEPTION 'Invalid quest_source_type';
 END;
 $$;
-
 CREATE OR REPLACE FUNCTION public.apply_completion_aura_earned_delta()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -191,20 +190,17 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 DROP TRIGGER IF EXISTS trg_quest_completion_aura_earned_delta ON public.quest_completions;
 CREATE TRIGGER trg_quest_completion_aura_earned_delta
   AFTER UPDATE OF aura_earned ON public.quest_completions
   FOR EACH ROW
   WHEN (OLD.aura_earned IS DISTINCT FROM NEW.aura_earned)
   EXECUTE FUNCTION public.apply_completion_aura_earned_delta();
-
 COMMENT ON FUNCTION public.apply_completion_aura_earned_delta() IS
   'When reviewers raise aura_earned (e.g. spontaneous approved), apply delta to profile/group/challenge scores.';
-
 -- Reviewer example (service role / SQL editor):
 -- UPDATE public.quest_completions
 --   SET aura_earned = 42, quest_source_type = 'official'
 --   WHERE id = '<completion_uuid>';
 -- UPDATE public.quests SET is_spontaneous = false, spontaneous_review_status = 'promoted'
---   WHERE id = (SELECT quest_id FROM public.quest_completions WHERE id = '<completion_uuid>');
+--   WHERE id = (SELECT quest_id FROM public.quest_completions WHERE id = '<completion_uuid>');;

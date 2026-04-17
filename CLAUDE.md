@@ -16,7 +16,7 @@
 | Backend | Supabase (Postgres, Auth, Storage, RLS) |
 | Server state | TanStack Query v5 (30s staleTime, 1 retry) |
 | Images | expo-image (cached, use `style` not `className`, `contentFit` not `resizeMode`) |
-| Client state | React Context (auth only) — no Zustand stores in use |
+| Client state | React Context (auth); Zustand for ephemeral UI state (onboarding draft, carousel index, video mute/position) |
 | Validation | Zod |
 | i18n | i18next + react-i18next + expo-localization |
 | Icons | lucide-react-native |
@@ -50,7 +50,7 @@ rupta/
 ├── providers/              # React context providers
 │   ├── AuthProvider.tsx    # Session + profile context
 │   └── QueryProvider.tsx   # TanStack Query client config
-├── stores/                 # Zustand stores (only onboardingStore for draft form data)
+├── stores/                 # Zustand stores (onboarding draft, carousel index, video mute/position)
 ├── lib/                    # Utilities and configuration
 │   ├── supabase.ts         # Supabase client init (AsyncStorage, auto-refresh)
 │   ├── aura.ts             # AURA level math (exponential thresholds)

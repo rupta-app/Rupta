@@ -37,13 +37,13 @@ export default function CompleteQuestScreen() {
         userId={uid}
         friends={friends}
         isPending={create.isPending}
-        onSubmit={async ({ mediaUrl, caption, rating, participantIds }) => {
+        onSubmit={async ({ media, caption, rating, participantIds }) => {
           const completion = await create.mutateAsync({
             userId: uid,
             questId: quest.id,
             caption,
             rating,
-            mediaUrl,
+            media,
             participantIds,
           });
           await refreshProfile();

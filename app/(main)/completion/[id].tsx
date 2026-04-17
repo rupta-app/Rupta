@@ -3,12 +3,13 @@ import { File, Paths } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { EllipsisVertical, Heart, MessageCircle, Send } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
-import { Image, type ImageLoadEventData } from 'expo-image';
+import { type ImageLoadEventData } from 'expo-image';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { CompletionComments } from '@/components/completion/CompletionComments';
+import { CompletionMediaCarousel } from '@/components/completion/CompletionMediaCarousel';
 import { CompletionReportModal } from '@/components/completion/CompletionReportModal';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { CATEGORY_CONFIG } from '@/constants/categories';
@@ -55,7 +56,7 @@ export default function CompletionDetailScreen() {
   const toggleR = useToggleRespect(completionId ?? '', uid);
   const deletePost = useDeleteCompletion(completionId ?? '', data?.user_id);
   const [reportOpen, setReportOpen] = useState(false);
-  const [imageAspect, setImageAspect] = useState(3 / 4);
+  const [imageAspect, setImageAspect] = useState(5 / 4);
   const onImageLoad = useCallback((e: ImageLoadEventData) => {
     const { width, height } = e.source;
     if (width && height) setImageAspect(width / height);
@@ -91,7 +92,10 @@ export default function CompletionDetailScreen() {
     );
   }
 
-  const media = data.quest_media?.[0]?.media_url;
+  const mediaItems = data.quest_media ?? [];
+  const firstMedia = mediaItems[0];
+  const firstIsPhoto = !firstMedia || firstMedia.media_type !== 'video';
+  const downloadableUrl = firstIsPhoto ? firstMedia?.media_url ?? null : null;
   const qTitle = data.group_quests?.title
     ? data.group_quests.title
     : data.quests
@@ -118,12 +122,12 @@ export default function CompletionDetailScreen() {
   };
 
   const downloadPhoto = async () => {
-    if (!media) return;
+    if (!downloadableUrl) return;
     const { status } = await MediaLibrary.requestPermissionsAsync();
     if (status !== 'granted') return;
-    const ext = media.toLowerCase().includes('.png') ? 'png' : 'jpg';
+    const ext = downloadableUrl.toLowerCase().includes('.png') ? 'png' : 'jpg';
     const dest = new File(Paths.cache, `rupta-${Date.now()}.${ext}`);
-    const downloaded = await File.downloadFileAsync(media, dest);
+    const downloaded = await File.downloadFileAsync(downloadableUrl, dest);
     await MediaLibrary.createAssetAsync(downloaded.uri);
   };
 
@@ -184,14 +188,13 @@ export default function CompletionDetailScreen() {
             ) : null}
           </View>
 
-          {/* Hero image */}
-          {media ? (
-            <Image
-              source={{ uri: media }}
-              style={{ width: '100%', aspectRatio: imageAspect }}
-              contentFit="cover"
-              onLoad={onImageLoad}
-              transition={{ effect: 'cross-dissolve', duration: 200 }}
+          {/* Hero media carousel */}
+          {mediaItems.length > 0 && completionId ? (
+            <CompletionMediaCarousel
+              items={mediaItems}
+              postId={completionId}
+              onPhotoLoad={onImageLoad}
+              aspectRatio={imageAspect}
             />
           ) : null}
 
@@ -233,7 +236,7 @@ export default function CompletionDetailScreen() {
               <PressableScale
                 onPress={() => {
                   const options: { text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }[] = [];
-                  if (media) {
+                  if (downloadableUrl) {
                     options.push({
                       text: t('completion.downloadImage'),
                       onPress: () => void downloadPhoto(),

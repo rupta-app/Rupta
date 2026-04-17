@@ -5,14 +5,12 @@
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro'));
-
 -- ---------------------------------------------------------------------------
 -- group_members: admin role
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.group_members DROP CONSTRAINT IF EXISTS group_members_role_check;
 ALTER TABLE public.group_members
   ADD CONSTRAINT group_members_role_check CHECK (role IN ('owner', 'admin', 'member'));
-
 -- ---------------------------------------------------------------------------
 -- group_settings (one row per group)
 -- ---------------------------------------------------------------------------
@@ -25,9 +23,7 @@ CREATE TABLE public.group_settings (
   is_public BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX idx_group_settings_public ON public.group_settings (is_public) WHERE is_public = TRUE;
-
 -- ---------------------------------------------------------------------------
 -- group_quests
 -- ---------------------------------------------------------------------------
@@ -59,10 +55,8 @@ CREATE TABLE public.group_quests (
   ),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX idx_group_quests_group ON public.group_quests (group_id);
 CREATE INDEX idx_group_quests_status ON public.group_quests (group_id, status);
-
 -- ---------------------------------------------------------------------------
 -- group_challenges
 -- ---------------------------------------------------------------------------
@@ -82,10 +76,8 @@ CREATE TABLE public.group_challenges (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CHECK (end_date >= start_date)
 );
-
 CREATE INDEX idx_group_challenges_group ON public.group_challenges (group_id);
 CREATE INDEX idx_group_challenges_active ON public.group_challenges (group_id, status);
-
 -- ---------------------------------------------------------------------------
 -- Scoring tables
 -- ---------------------------------------------------------------------------
@@ -97,10 +89,8 @@ CREATE TABLE public.group_member_scores (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (group_id, user_id)
 );
-
 CREATE INDEX idx_group_member_scores_group ON public.group_member_scores (group_id);
 CREATE INDEX idx_group_member_scores_leader ON public.group_member_scores (group_id, total_group_aura DESC);
-
 CREATE TABLE public.challenge_scores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   challenge_id UUID NOT NULL REFERENCES public.group_challenges (id) ON DELETE CASCADE,
@@ -109,9 +99,7 @@ CREATE TABLE public.challenge_scores (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (challenge_id, user_id)
 );
-
 CREATE INDEX idx_challenge_scores_challenge ON public.challenge_scores (challenge_id, score DESC);
-
 -- ---------------------------------------------------------------------------
 -- quest_completions: dual quest system + visibility + challenge link
 -- ---------------------------------------------------------------------------
@@ -126,21 +114,17 @@ ALTER TABLE public.quest_completions
     visibility IN ('public', 'friends', 'group', 'private')
   ),
   ADD COLUMN IF NOT EXISTS aura_scope TEXT NOT NULL DEFAULT 'official' CHECK (aura_scope IN ('official', 'group'));
-
 -- Allow NULL quest_id for group completions only
 ALTER TABLE public.quest_completions ALTER COLUMN quest_id DROP NOT NULL;
-
 ALTER TABLE public.quest_completions DROP CONSTRAINT IF EXISTS quest_completions_source_consistency;
 ALTER TABLE public.quest_completions ADD CONSTRAINT quest_completions_source_consistency CHECK (
   (quest_source_type = 'official' AND quest_id IS NOT NULL AND group_quest_id IS NULL)
   OR
   (quest_source_type = 'group' AND group_quest_id IS NOT NULL AND group_id IS NOT NULL AND quest_id IS NULL)
 );
-
 CREATE INDEX IF NOT EXISTS idx_completions_source ON public.quest_completions (quest_source_type);
 CREATE INDEX IF NOT EXISTS idx_completions_group ON public.quest_completions (group_id, completed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_completions_challenge ON public.quest_completions (challenge_id);
-
 -- ---------------------------------------------------------------------------
 -- Default aura_scope from quest_source_type (enforce consistency on write)
 -- ---------------------------------------------------------------------------
@@ -157,11 +141,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_quest_completion_aura_scope
   BEFORE INSERT OR UPDATE OF quest_source_type ON public.quest_completions
   FOR EACH ROW EXECUTE FUNCTION public.sync_completion_aura_scope();
-
 -- ---------------------------------------------------------------------------
 -- Replace validation: official vs group quest
 -- ---------------------------------------------------------------------------
@@ -275,7 +257,6 @@ BEGIN
   RAISE EXCEPTION 'Invalid quest_source_type';
 END;
 $$;
-
 -- ---------------------------------------------------------------------------
 -- Challenge: does this completion add to challenge score?
 -- ---------------------------------------------------------------------------
@@ -309,7 +290,6 @@ BEGIN
   RETURN FALSE;
 END;
 $$;
-
 -- ---------------------------------------------------------------------------
 -- Award AURA / group scores / challenge scores
 -- ---------------------------------------------------------------------------
@@ -363,7 +343,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- ---------------------------------------------------------------------------
 -- Clawback on removal
 -- ---------------------------------------------------------------------------
@@ -412,7 +391,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- ---------------------------------------------------------------------------
 -- group_settings row when group is created
 -- ---------------------------------------------------------------------------
@@ -429,19 +407,16 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- Note: SECURITY DEFINER inserts bypass RLS on group_settings
 
 CREATE TRIGGER trg_group_settings_row
   AFTER INSERT ON public.groups
   FOR EACH ROW EXECUTE FUNCTION public.add_group_settings_row();
-
 -- Backfill settings for existing groups
 INSERT INTO public.group_settings (group_id)
 SELECT g.id FROM public.groups g
 WHERE NOT EXISTS (SELECT 1 FROM public.group_settings s WHERE s.group_id = g.id)
 ON CONFLICT (group_id) DO NOTHING;
-
 -- ---------------------------------------------------------------------------
 -- RLS new tables
 -- ---------------------------------------------------------------------------
@@ -450,13 +425,11 @@ ALTER TABLE public.group_quests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.group_challenges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.group_member_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.challenge_scores ENABLE ROW LEVEL SECURITY;
-
 -- Helper: is member of group
 -- group_settings: members can read; owner/admin can update
 CREATE POLICY gs_select_member ON public.group_settings FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM public.group_members m WHERE m.group_id = group_settings.group_id AND m.user_id = auth.uid())
 );
-
 CREATE POLICY gs_update_admin ON public.group_settings FOR UPDATE TO authenticated USING (
   EXISTS (
     SELECT 1 FROM public.group_members m
@@ -465,17 +438,14 @@ CREATE POLICY gs_update_admin ON public.group_settings FOR UPDATE TO authenticat
       AND m.role IN ('owner', 'admin')
   )
 );
-
 -- group_quests
 CREATE POLICY gq_select_member ON public.group_quests FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM public.group_members m WHERE m.group_id = group_quests.group_id AND m.user_id = auth.uid())
 );
-
 CREATE POLICY gq_insert_member ON public.group_quests FOR INSERT TO authenticated WITH CHECK (
   creator_id = auth.uid()
   AND EXISTS (SELECT 1 FROM public.group_members m WHERE m.group_id = group_quests.group_id AND m.user_id = auth.uid())
 );
-
 CREATE POLICY gq_update_creator_admin ON public.group_quests FOR UPDATE TO authenticated USING (
   creator_id = auth.uid()
   OR EXISTS (
@@ -483,12 +453,10 @@ CREATE POLICY gq_update_creator_admin ON public.group_quests FOR UPDATE TO authe
     WHERE m.group_id = group_quests.group_id AND m.user_id = auth.uid() AND m.role IN ('owner', 'admin')
   )
 );
-
 -- group_challenges
 CREATE POLICY gc_select_member ON public.group_challenges FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM public.group_members m WHERE m.group_id = group_challenges.group_id AND m.user_id = auth.uid())
 );
-
 CREATE POLICY gc_insert_member ON public.group_challenges FOR INSERT TO authenticated WITH CHECK (
   creator_id = auth.uid()
   AND EXISTS (
@@ -496,19 +464,16 @@ CREATE POLICY gc_insert_member ON public.group_challenges FOR INSERT TO authenti
     WHERE m.group_id = group_challenges.group_id AND m.user_id = auth.uid()
   )
 );
-
 CREATE POLICY gc_update_admin ON public.group_challenges FOR UPDATE TO authenticated USING (
   EXISTS (
     SELECT 1 FROM public.group_members m
     WHERE m.group_id = group_challenges.group_id AND m.user_id = auth.uid() AND m.role IN ('owner', 'admin')
   )
 );
-
 -- group_member_scores
 CREATE POLICY gms_select_member ON public.group_member_scores FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM public.group_members m WHERE m.group_id = group_member_scores.group_id AND m.user_id = auth.uid())
 );
-
 -- challenge_scores
 CREATE POLICY cs_select_member ON public.challenge_scores FOR SELECT TO authenticated USING (
   EXISTS (
@@ -517,7 +482,6 @@ CREATE POLICY cs_select_member ON public.challenge_scores FOR SELECT TO authenti
     WHERE gc.id = challenge_scores.challenge_id
   )
 );
-
 -- ---------------------------------------------------------------------------
 -- Groups: allow reading public groups (for discovery / join)
 -- ---------------------------------------------------------------------------
@@ -529,7 +493,6 @@ CREATE POLICY groups_select_visible ON public.groups FOR SELECT TO authenticated
     WHERE s.group_id = groups.id AND s.is_public = TRUE
   )
 );
-
 -- ---------------------------------------------------------------------------
 -- Join public group: self-insert as member
 -- ---------------------------------------------------------------------------
@@ -540,7 +503,6 @@ CREATE POLICY gm_insert_join_public ON public.group_members FOR INSERT TO authen
     WHERE s.group_id = group_members.group_id AND s.is_public = TRUE
   )
 );
-
 -- ---------------------------------------------------------------------------
 -- quest_completions SELECT: respect visibility for non-owners
 -- ---------------------------------------------------------------------------
@@ -578,7 +540,6 @@ CREATE POLICY completions_select ON public.quest_completions FOR SELECT TO authe
     )
   )
 );
-
 -- ---------------------------------------------------------------------------
 -- quest_media SELECT: align with completion visibility
 -- ---------------------------------------------------------------------------

@@ -55,11 +55,9 @@ AS $$
       )
     );
 $$;
-
 REVOKE ALL ON FUNCTION public.can_view_completion(uuid, uuid, text, text, text, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.can_view_completion(uuid, uuid, text, text, text, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.can_view_completion(uuid, uuid, text, text, text, uuid) TO service_role;
-
 -- ---------------------------------------------------------------------------
 -- 2. Simplify completions_select policy
 -- ---------------------------------------------------------------------------
@@ -75,7 +73,6 @@ CREATE POLICY completions_select ON public.quest_completions FOR SELECT TO authe
     group_id
   )
 );
-
 -- ---------------------------------------------------------------------------
 -- 3. Simplify quest_media_select policy
 -- ---------------------------------------------------------------------------
@@ -95,7 +92,6 @@ CREATE POLICY quest_media_select ON public.quest_media FOR SELECT TO authenticat
       )
   )
 );
-
 -- ---------------------------------------------------------------------------
 -- 4. Simplify gq_select_member policy (group quests visible via completion)
 -- ---------------------------------------------------------------------------

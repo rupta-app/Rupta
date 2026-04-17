@@ -139,7 +139,8 @@ export default function ShareCardScreen() {
     );
   }
 
-  const bg = data.quest_media?.[0]?.media_url;
+  const firstMedia = data.quest_media?.[0];
+  const bg = firstMedia && firstMedia.media_type !== 'video' ? firstMedia.media_url : undefined;
   const simpleTitle = data.group_quests?.title;
   const simpleCategory = data.group_quests ? t('feed.groupQuest') : undefined;
 

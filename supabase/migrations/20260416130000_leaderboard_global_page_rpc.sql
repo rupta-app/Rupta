@@ -45,5 +45,4 @@ AS $$
   ORDER BY s.period_aura DESC, s.total_aura DESC, s.username ASC
   LIMIT p_limit OFFSET p_offset;
 $$;
-
 GRANT EXECUTE ON FUNCTION public.leaderboard_global_page(timestamptz, integer, integer) TO authenticated;

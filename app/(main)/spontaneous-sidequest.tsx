@@ -34,7 +34,7 @@ export default function SpontaneousSidequestScreen() {
         friends={friends}
         isPending={create.isPending}
         submitLabel={t('spontaneous.post')}
-        onSubmit={async ({ mediaUrl, caption, rating, participantIds }) => {
+        onSubmit={async ({ media, caption, rating, participantIds }) => {
           const trimmed = title.trim();
           if (trimmed.length < TITLE_MIN) throw new Error(t('spontaneous.titleTooShort'));
           if (trimmed.length > TITLE_MAX) throw new Error(t('spontaneous.titleTooLong'));
@@ -48,7 +48,7 @@ export default function SpontaneousSidequestScreen() {
             suggestedAura: auraNum,
             caption,
             rating,
-            mediaUrl,
+            media,
             participantIds,
           });
           await refreshProfile();
