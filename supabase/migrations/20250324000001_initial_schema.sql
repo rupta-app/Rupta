@@ -23,11 +23,9 @@ CREATE TABLE public.profiles (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX idx_profiles_username_lower ON public.profiles (LOWER(username));
 CREATE INDEX idx_profiles_total_aura ON public.profiles (total_aura DESC);
 CREATE INDEX idx_profiles_yearly_aura ON public.profiles (yearly_aura DESC);
-
 CREATE TABLE public.quests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title_en TEXT NOT NULL,
@@ -48,10 +46,8 @@ CREATE TABLE public.quests (
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX idx_quests_category ON public.quests (category);
 CREATE INDEX idx_quests_active ON public.quests (is_active);
-
 CREATE TABLE public.quest_completions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -63,12 +59,10 @@ CREATE TABLE public.quest_completions (
   completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX idx_completions_user ON public.quest_completions (user_id);
 CREATE INDEX idx_completions_quest ON public.quest_completions (quest_id);
 CREATE INDEX idx_completions_completed_at ON public.quest_completions (completed_at DESC);
 CREATE INDEX idx_completions_feed ON public.quest_completions (status, completed_at DESC);
-
 CREATE TABLE public.quest_media (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   completion_id UUID NOT NULL REFERENCES public.quest_completions (id) ON DELETE CASCADE,
@@ -77,7 +71,6 @@ CREATE TABLE public.quest_media (
   order_index SMALLINT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE TABLE public.completion_participants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   completion_id UUID NOT NULL REFERENCES public.quest_completions (id) ON DELETE CASCADE,
@@ -85,7 +78,6 @@ CREATE TABLE public.completion_participants (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (completion_id, user_id)
 );
-
 CREATE TABLE public.reactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -93,9 +85,7 @@ CREATE TABLE public.reactions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, completion_id)
 );
-
 CREATE INDEX idx_reactions_completion ON public.reactions (completion_id);
-
 CREATE TABLE public.comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -103,9 +93,7 @@ CREATE TABLE public.comments (
   content TEXT NOT NULL CHECK (char_length(content) <= 500),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX idx_comments_completion ON public.comments (completion_id);
-
 CREATE TABLE public.friend_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   sender_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -116,9 +104,7 @@ CREATE TABLE public.friend_requests (
   UNIQUE (sender_id, receiver_id),
   CHECK (sender_id <> receiver_id)
 );
-
 CREATE INDEX idx_friend_requests_receiver ON public.friend_requests (receiver_id, status);
-
 CREATE TABLE public.friendships (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_a_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -127,10 +113,8 @@ CREATE TABLE public.friendships (
   UNIQUE (user_a_id, user_b_id),
   CHECK (user_a_id < user_b_id)
 );
-
 CREATE INDEX idx_friendships_a ON public.friendships (user_a_id);
 CREATE INDEX idx_friendships_b ON public.friendships (user_b_id);
-
 CREATE TABLE public.groups (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -139,7 +123,6 @@ CREATE TABLE public.groups (
   owner_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE TABLE public.group_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id UUID NOT NULL REFERENCES public.groups (id) ON DELETE CASCADE,
@@ -148,10 +131,8 @@ CREATE TABLE public.group_members (
   joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (group_id, user_id)
 );
-
 CREATE INDEX idx_group_members_group ON public.group_members (group_id);
 CREATE INDEX idx_group_members_user ON public.group_members (user_id);
-
 CREATE TABLE public.group_invites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id UUID NOT NULL REFERENCES public.groups (id) ON DELETE CASCADE,
@@ -160,10 +141,8 @@ CREATE TABLE public.group_invites (
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE UNIQUE INDEX group_invites_one_pending ON public.group_invites (group_id, invitee_id)
   WHERE status = 'pending';
-
 CREATE TABLE public.saved_quests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -171,9 +150,7 @@ CREATE TABLE public.saved_quests (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, quest_id)
 );
-
 CREATE INDEX idx_saved_quests_user ON public.saved_quests (user_id);
-
 CREATE TABLE public.reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   reporter_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -188,10 +165,8 @@ CREATE TABLE public.reports (
   reviewed_at TIMESTAMPTZ,
   reviewed_by UUID REFERENCES public.profiles (id)
 );
-
 CREATE INDEX idx_reports_status ON public.reports (status);
 CREATE INDEX idx_reports_completion ON public.reports (completion_id);
-
 CREATE TABLE public.notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -204,9 +179,7 @@ CREATE TABLE public.notifications (
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE INDEX idx_notifications_user ON public.notifications (user_id, is_read, created_at DESC);
-
 CREATE TABLE public.blocked_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   blocker_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
@@ -215,9 +188,7 @@ CREATE TABLE public.blocked_users (
   UNIQUE (blocker_id, blocked_id),
   CHECK (blocker_id <> blocked_id)
 );
-
 CREATE INDEX idx_blocked_blocker ON public.blocked_users (blocker_id);
-
 -- Auto-create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
@@ -235,11 +206,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
 -- Quest completion validation + aura from quest
 CREATE OR REPLACE FUNCTION public.validate_and_set_quest_completion()
 RETURNS TRIGGER
@@ -286,11 +255,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_quest_completion_validate
   BEFORE INSERT ON public.quest_completions
   FOR EACH ROW EXECUTE FUNCTION public.validate_and_set_quest_completion();
-
 -- Award AURA on active completion insert
 CREATE OR REPLACE FUNCTION public.award_aura_on_completion()
 RETURNS TRIGGER
@@ -310,11 +277,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_quest_completion_aura
   AFTER INSERT ON public.quest_completions
   FOR EACH ROW EXECUTE FUNCTION public.award_aura_on_completion();
-
 -- Subtract AURA if completion removed after being active (moderation)
 CREATE OR REPLACE FUNCTION public.adjust_aura_on_completion_status()
 RETURNS TRIGGER
@@ -334,11 +299,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_quest_completion_status_change
   AFTER UPDATE ON public.quest_completions
   FOR EACH ROW EXECUTE FUNCTION public.adjust_aura_on_completion_status();
-
 CREATE OR REPLACE FUNCTION public.touch_profile_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -348,11 +311,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_profiles_updated
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.touch_profile_updated_at();
-
 -- Friend request accepted -> friendship row
 CREATE OR REPLACE FUNCTION public.on_friend_request_accepted()
 RETURNS TRIGGER
@@ -379,11 +340,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_friend_request_accepted
   AFTER UPDATE ON public.friend_requests
   FOR EACH ROW EXECUTE FUNCTION public.on_friend_request_accepted();
-
 -- Add group owner as first member
 CREATE OR REPLACE FUNCTION public.add_group_owner_member()
 RETURNS TRIGGER
@@ -397,11 +356,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_group_owner_member
   AFTER INSERT ON public.groups
   FOR EACH ROW EXECUTE FUNCTION public.add_group_owner_member();
-
 -- Add member when group invite accepted
 CREATE OR REPLACE FUNCTION public.on_group_invite_accepted()
 RETURNS TRIGGER
@@ -418,11 +375,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_group_invite_accepted
   AFTER UPDATE ON public.group_invites
   FOR EACH ROW EXECUTE FUNCTION public.on_group_invite_accepted();
-
 -- In-app notifications (server-side)
 CREATE OR REPLACE FUNCTION public.notify_on_respect()
 RETURNS TRIGGER
@@ -447,11 +402,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_notify_respect
   AFTER INSERT ON public.reactions
   FOR EACH ROW EXECUTE FUNCTION public.notify_on_respect();
-
 CREATE OR REPLACE FUNCTION public.notify_on_comment()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -475,11 +428,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_notify_comment
   AFTER INSERT ON public.comments
   FOR EACH ROW EXECUTE FUNCTION public.notify_on_comment();
-
 CREATE OR REPLACE FUNCTION public.notify_on_friend_request()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -500,11 +451,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_notify_friend_request
   AFTER INSERT ON public.friend_requests
   FOR EACH ROW EXECUTE FUNCTION public.notify_on_friend_request();
-
 CREATE OR REPLACE FUNCTION public.notify_on_group_invite()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -525,11 +474,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE TRIGGER trg_notify_group_invite
   AFTER INSERT ON public.group_invites
   FOR EACH ROW EXECUTE FUNCTION public.notify_on_group_invite();
-
 -- RLS
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quests ENABLE ROW LEVEL SECURITY;
@@ -547,15 +494,12 @@ ALTER TABLE public.saved_quests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blocked_users ENABLE ROW LEVEL SECURITY;
-
 -- Profiles
 CREATE POLICY profiles_select_authenticated ON public.profiles FOR SELECT TO authenticated USING (true);
 CREATE POLICY profiles_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK (id = auth.uid());
 CREATE POLICY profiles_update_own ON public.profiles FOR UPDATE TO authenticated USING (id = auth.uid());
-
 -- Quests
 CREATE POLICY quests_select ON public.quests FOR SELECT TO authenticated USING (is_active = TRUE);
-
 -- Quest completions
 CREATE POLICY completions_select ON public.quest_completions FOR SELECT TO authenticated USING (
   user_id = auth.uid()
@@ -567,10 +511,8 @@ CREATE POLICY completions_select ON public.quest_completions FOR SELECT TO authe
     )
   )
 );
-
 CREATE POLICY completions_insert_own ON public.quest_completions FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
 CREATE POLICY completions_update_own ON public.quest_completions FOR UPDATE TO authenticated USING (user_id = auth.uid());
-
 -- Quest media
 CREATE POLICY quest_media_select ON public.quest_media FOR SELECT TO authenticated USING (
   EXISTS (
@@ -591,70 +533,56 @@ CREATE POLICY quest_media_select ON public.quest_media FOR SELECT TO authenticat
 CREATE POLICY quest_media_insert ON public.quest_media FOR INSERT TO authenticated WITH CHECK (
   EXISTS (SELECT 1 FROM public.quest_completions c WHERE c.id = completion_id AND c.user_id = auth.uid())
 );
-
 -- Completion participants
 CREATE POLICY participants_select ON public.completion_participants FOR SELECT TO authenticated USING (true);
 CREATE POLICY participants_insert ON public.completion_participants FOR INSERT TO authenticated WITH CHECK (
   EXISTS (SELECT 1 FROM public.quest_completions c WHERE c.id = completion_id AND c.user_id = auth.uid())
 );
-
 -- Reactions
 CREATE POLICY reactions_select ON public.reactions FOR SELECT TO authenticated USING (true);
 CREATE POLICY reactions_insert_own ON public.reactions FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
 CREATE POLICY reactions_delete_own ON public.reactions FOR DELETE TO authenticated USING (user_id = auth.uid());
-
 -- Comments
 CREATE POLICY comments_select ON public.comments FOR SELECT TO authenticated USING (true);
 CREATE POLICY comments_insert_own ON public.comments FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
 CREATE POLICY comments_delete_own ON public.comments FOR DELETE TO authenticated USING (user_id = auth.uid());
-
 -- Friend requests
 CREATE POLICY fr_select ON public.friend_requests FOR SELECT TO authenticated USING (sender_id = auth.uid() OR receiver_id = auth.uid());
 CREATE POLICY fr_insert ON public.friend_requests FOR INSERT TO authenticated WITH CHECK (sender_id = auth.uid());
 CREATE POLICY fr_update ON public.friend_requests FOR UPDATE TO authenticated USING (receiver_id = auth.uid() OR sender_id = auth.uid());
-
 -- Friendships (visible if involved)
 CREATE POLICY friendships_select ON public.friendships FOR SELECT TO authenticated USING (user_a_id = auth.uid() OR user_b_id = auth.uid());
-
 -- Groups
 CREATE POLICY groups_select_member ON public.groups FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM public.group_members m WHERE m.group_id = groups.id AND m.user_id = auth.uid())
 );
 CREATE POLICY groups_insert ON public.groups FOR INSERT TO authenticated WITH CHECK (owner_id = auth.uid());
-
 -- Group members (inserts via SECURITY DEFINER triggers only)
 CREATE POLICY gm_select ON public.group_members FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM public.group_members m WHERE m.group_id = group_members.group_id AND m.user_id = auth.uid())
 );
-
 -- Group invites
 CREATE POLICY gi_select ON public.group_invites FOR SELECT TO authenticated USING (invitee_id = auth.uid() OR inviter_id = auth.uid());
 CREATE POLICY gi_insert ON public.group_invites FOR INSERT TO authenticated WITH CHECK (inviter_id = auth.uid());
 CREATE POLICY gi_update_invitee ON public.group_invites FOR UPDATE TO authenticated USING (invitee_id = auth.uid());
-
 -- Saved quests
 CREATE POLICY saved_select_own ON public.saved_quests FOR SELECT TO authenticated USING (user_id = auth.uid());
 CREATE POLICY saved_mutate_own ON public.saved_quests FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
-
 -- Reports
 CREATE POLICY reports_insert ON public.reports FOR INSERT TO authenticated WITH CHECK (reporter_id = auth.uid());
 CREATE POLICY reports_select_own ON public.reports FOR SELECT TO authenticated USING (reporter_id = auth.uid());
-
 -- Notifications
 CREATE POLICY notif_select_own ON public.notifications FOR SELECT TO authenticated USING (user_id = auth.uid());
 CREATE POLICY notif_update_own ON public.notifications FOR UPDATE TO authenticated USING (user_id = auth.uid());
 -- Self-targeted rows only (e.g. weekly quest reminder generated client-side / future cron)
 CREATE POLICY notif_insert_self ON public.notifications FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
-
 -- Blocked users
 CREATE POLICY blocked_select_own ON public.blocked_users FOR SELECT TO authenticated USING (blocker_id = auth.uid());
 CREATE POLICY blocked_mutate_own ON public.blocked_users FOR ALL TO authenticated USING (blocker_id = auth.uid()) WITH CHECK (blocker_id = auth.uid());
-
 -- Storage bucket (run in dashboard or separate migration)
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('completion-media', 'completion-media', TRUE)
 ON CONFLICT (id) DO NOTHING;
-
 CREATE POLICY "completion_media_read" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'completion-media');
 CREATE POLICY "completion_media_insert_own" ON storage.objects FOR INSERT TO authenticated WITH CHECK (
   bucket_id = 'completion-media' AND (storage.foldername(name))[1] = auth.uid()::text

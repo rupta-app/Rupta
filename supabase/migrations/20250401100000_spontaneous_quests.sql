@@ -7,18 +7,14 @@ ALTER TABLE public.quests
     spontaneous_review_status IS NULL
     OR spontaneous_review_status IN ('pending_catalog', 'promoted', 'rejected')
   );
-
 CREATE INDEX IF NOT EXISTS idx_quests_spontaneous ON public.quests (is_spontaneous) WHERE is_spontaneous = TRUE;
-
 COMMENT ON COLUMN public.quests.is_spontaneous IS 'User-submitted quest; hidden from catalog browse via app filter';
 COMMENT ON COLUMN public.quests.spontaneous_review_status IS 'Review pipeline for spontaneous → optional promotion to catalog';
-
 -- quest_completions: add spontaneous source
 ALTER TABLE public.quest_completions DROP CONSTRAINT IF EXISTS quest_completions_quest_source_type_check;
 ALTER TABLE public.quest_completions ADD CONSTRAINT quest_completions_quest_source_type_check CHECK (
   quest_source_type IN ('official', 'group', 'spontaneous')
 );
-
 ALTER TABLE public.quest_completions DROP CONSTRAINT IF EXISTS quest_completions_source_consistency;
 ALTER TABLE public.quest_completions ADD CONSTRAINT quest_completions_source_consistency CHECK (
   (quest_source_type = 'official' AND quest_id IS NOT NULL AND group_quest_id IS NULL)
@@ -27,7 +23,6 @@ ALTER TABLE public.quest_completions ADD CONSTRAINT quest_completions_source_con
   OR
   (quest_source_type = 'spontaneous' AND quest_id IS NOT NULL AND group_quest_id IS NULL)
 );
-
 -- Aura: spontaneous counts toward profile official aura (same as catalog completions)
 CREATE OR REPLACE FUNCTION public.sync_completion_aura_scope()
 RETURNS TRIGGER
@@ -42,7 +37,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 CREATE OR REPLACE FUNCTION public.validate_and_set_quest_completion()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -110,7 +104,7 @@ BEGIN
     IF cnt > 0 THEN
       RAISE EXCEPTION 'This spontaneous SideQuest was already posted';
     END IF;
-    NEW.aura_earned := 0;
+    NEW.aura_earned := q.aura_reward;
     RETURN NEW;
   END IF;
 
@@ -175,7 +169,6 @@ BEGIN
   RAISE EXCEPTION 'Invalid quest_source_type';
 END;
 $$;
-
 -- Authenticated users may insert only spontaneous quest shells they own
 DROP POLICY IF EXISTS quests_insert_spontaneous ON public.quests;
 CREATE POLICY quests_insert_spontaneous ON public.quests FOR INSERT TO authenticated
@@ -183,7 +176,6 @@ WITH CHECK (
   is_spontaneous = TRUE
   AND created_by = auth.uid()
 );
-
 DROP POLICY IF EXISTS quests_delete_own_spontaneous ON public.quests;
 CREATE POLICY quests_delete_own_spontaneous ON public.quests FOR DELETE TO authenticated
 USING (is_spontaneous = TRUE AND created_by = auth.uid());

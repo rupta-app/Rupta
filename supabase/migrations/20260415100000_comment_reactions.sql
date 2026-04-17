@@ -8,16 +8,11 @@ CREATE TABLE public.comment_reactions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, comment_id)
 );
-
 CREATE INDEX idx_comment_reactions_comment ON public.comment_reactions (comment_id);
-
 ALTER TABLE public.comment_reactions ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY comment_reactions_select ON public.comment_reactions
   FOR SELECT TO authenticated USING (true);
-
 CREATE POLICY comment_reactions_insert_own ON public.comment_reactions
   FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
-
 CREATE POLICY comment_reactions_delete_own ON public.comment_reactions
   FOR DELETE TO authenticated USING (user_id = auth.uid());

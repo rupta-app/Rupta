@@ -26,21 +26,47 @@ async function uploadFile(opts: {
 }
 
 function mimeExt(mimeType: string): string {
-  return mimeType.includes('png') ? 'png' : 'jpg';
+  if (mimeType.includes('png')) return 'png';
+  if (mimeType.includes('webp')) return 'webp';
+  if (mimeType.includes('quicktime')) return 'mov';
+  if (mimeType.includes('mp4')) return 'mp4';
+  if (mimeType.startsWith('video/')) return 'mp4';
+  return 'jpg';
 }
 
-export async function uploadCompletionPhoto(
+function randomSuffix(): string {
+  return Math.random().toString(36).slice(2, 8);
+}
+
+export async function uploadCompletionMedia(
   userId: string,
   fileUri: string,
   mimeType: string,
 ): Promise<string> {
   return uploadFile({
-    path: `${userId}/${Date.now()}.${mimeExt(mimeType)}`,
+    path: `${userId}/${Date.now()}-${randomSuffix()}.${mimeExt(mimeType)}`,
     fileUri,
     mimeType,
     upsert: false,
     cacheBust: false,
   });
+}
+
+/**
+ * Best-effort deletion of completion media blobs. Used to clean up
+ * orphaned uploads when the DB insert that references them fails.
+ */
+export async function deleteCompletionMedia(publicUrls: string[]): Promise<void> {
+  if (publicUrls.length === 0) return;
+  const prefix = supabase.storage.from('completion-media').getPublicUrl('').data.publicUrl;
+  const paths = publicUrls
+    .map((url) => {
+      const stripped = url.startsWith(prefix) ? url.slice(prefix.length) : url;
+      return stripped.split('?')[0];
+    })
+    .filter(Boolean);
+  if (paths.length === 0) return;
+  await supabase.storage.from('completion-media').remove(paths);
 }
 
 /** Stored under the uploader's folder so existing storage RLS (folder = user id) applies. */

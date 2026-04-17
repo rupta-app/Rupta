@@ -1,11 +1,14 @@
 import type { AchievementVisibility, Database } from '@/types/database';
 
+import type { MediaKind } from '@/lib/mediaLimits';
 import { supabase } from '@/lib/supabase';
 import type { ProfileBasic } from '@/services/_profiles';
 import { enrichWithProfiles, PROFILE_COLS_BASIC } from '@/services/_profiles';
 
 type CompletionRow = Database['public']['Tables']['quest_completions']['Row'];
 type CommentRow = Database['public']['Tables']['comments']['Row'];
+
+export type CompletionMediaInput = { url: string; kind: MediaKind };
 
 function parseOptionalRating(raw: number | null | undefined): number | null {
   if (raw == null) return null;
@@ -23,15 +26,19 @@ function parseOptionalRating(raw: number | null | undefined): number | null {
 async function insertMediaAndParticipants(
   completionId: string,
   userId: string,
-  mediaUrl: string,
+  media: CompletionMediaInput[],
   participantIds: string[],
 ) {
-  const { error: mErr } = await supabase.from('quest_media').insert({
+  if (media.length === 0) {
+    throw new Error('At least one media item is required');
+  }
+  const rows = media.map((m, i) => ({
     completion_id: completionId,
-    media_url: mediaUrl,
-    media_type: 'photo',
-    order_index: 0,
-  });
+    media_url: m.url,
+    media_type: m.kind,
+    order_index: i,
+  }));
+  const { error: mErr } = await supabase.from('quest_media').insert(rows);
   if (mErr) throw mErr;
 
   const participantRows = participantIds
@@ -50,7 +57,7 @@ export async function createCompletion(payload: {
   questId: string;
   caption?: string | null;
   rating?: number | null;
-  mediaUrl: string;
+  media: CompletionMediaInput[];
   participantIds: string[];
   groupId?: string | null;
   challengeId?: string | null;
@@ -77,7 +84,7 @@ export async function createCompletion(payload: {
 
   if (cErr) throw cErr;
 
-  await insertMediaAndParticipants(completion.id, payload.userId, payload.mediaUrl, payload.participantIds);
+  await insertMediaAndParticipants(completion.id, payload.userId, payload.media, payload.participantIds);
   return completion;
 }
 
@@ -87,7 +94,7 @@ export async function createGroupQuestCompletion(payload: {
   groupId: string;
   caption?: string | null;
   rating?: number | null;
-  mediaUrl: string;
+  media: CompletionMediaInput[];
   participantIds: string[];
   challengeId?: string | null;
   visibility?: AchievementVisibility;
@@ -113,7 +120,7 @@ export async function createGroupQuestCompletion(payload: {
 
   if (cErr) throw cErr;
 
-  await insertMediaAndParticipants(completion.id, payload.userId, payload.mediaUrl, payload.participantIds);
+  await insertMediaAndParticipants(completion.id, payload.userId, payload.media, payload.participantIds);
   return completion;
 }
 
@@ -126,7 +133,7 @@ export async function createSpontaneousCompletion(payload: {
   suggestedAura: number;
   caption?: string | null;
   rating?: number | null;
-  mediaUrl: string;
+  media: CompletionMediaInput[];
   participantIds: string[];
   visibility?: AchievementVisibility;
 }): Promise<CompletionRow> {
@@ -189,7 +196,7 @@ export async function createSpontaneousCompletion(payload: {
     throw cErr;
   }
 
-  await insertMediaAndParticipants(completion.id, payload.userId, payload.mediaUrl, payload.participantIds);
+  await insertMediaAndParticipants(completion.id, payload.userId, payload.media, payload.participantIds);
   return completion;
 }
 
@@ -198,13 +205,15 @@ export async function deleteCompletion(completionId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function fetchCompletionById(id: string): Promise<CompletionRow & {
+export type CompletionDetail = CompletionRow & {
   profiles: { id: string; username: string; display_name: string; avatar_url: string | null } | null;
   quests: Database['public']['Tables']['quests']['Row'] | null;
   group_quests: Database['public']['Tables']['group_quests']['Row'] | null;
   groups: { id: string; name: string } | null;
   quest_media: Database['public']['Tables']['quest_media']['Row'][];
-}> {
+};
+
+export async function fetchCompletionById(id: string): Promise<CompletionDetail> {
   const { data: row, error } = await supabase.from('quest_completions').select('*').eq('id', id).single();
   if (error) throw error;
 

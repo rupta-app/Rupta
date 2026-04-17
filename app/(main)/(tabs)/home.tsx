@@ -1,11 +1,19 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  View,
+  type ViewToken,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight, Compass, Plus } from 'lucide-react-native';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
+import { FeedViewabilityProvider } from '@/components/feed/FeedViewability';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { PillToggleGroup } from '@/components/ui/PillToggle';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -63,6 +71,24 @@ export default function HomeScreen() {
   );
 
   const keyExtractor = useCallback((item: FeedPost) => item.id, []);
+
+  const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set());
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    const next = new Set<string>();
+    for (const token of viewableItems) {
+      const id = (token.item as FeedPost | undefined)?.id;
+      if (id) next.add(id);
+    }
+    setVisibleIds((prev) => {
+      if (prev.size === next.size) {
+        let same = true;
+        for (const id of next) if (!prev.has(id)) { same = false; break; }
+        if (same) return prev;
+      }
+      return next;
+    });
+  }).current;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
 
   const onEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -123,20 +149,24 @@ export default function HomeScreen() {
   return (
     <View className="flex-1 bg-background">
       <MainAppHeader variant="home" />
-      <FlatList
-        data={posts}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        contentContainerStyle={HOME_CONTENT_STYLE}
-        ListHeaderComponent={listHeader}
-        ListFooterComponent={listFooter}
-        ListEmptyComponent={listEmpty}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.primary} />
-        }
-      />
+      <FeedViewabilityProvider value={visibleIds}>
+        <FlatList
+          data={posts}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          contentContainerStyle={HOME_CONTENT_STYLE}
+          ListHeaderComponent={listHeader}
+          ListFooterComponent={listFooter}
+          ListEmptyComponent={listEmpty}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.primary} />
+          }
+        />
+      </FeedViewabilityProvider>
 
       <PressableScale
         onPress={() => router.push('/(main)/spontaneous-sidequest' as never)}

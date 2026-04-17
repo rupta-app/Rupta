@@ -50,7 +50,6 @@ BEGIN
   RETURN OLD;
 END;
 $$;
-
 DROP TRIGGER IF EXISTS trg_quest_completion_delete_aura ON public.quest_completions;
 CREATE TRIGGER trg_quest_completion_delete_aura
   BEFORE DELETE ON public.quest_completions

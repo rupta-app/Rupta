@@ -15,11 +15,9 @@ AS $$
       AND m.user_id = p_user_id
   );
 $$;
-
 REVOKE ALL ON FUNCTION public.is_group_member(uuid, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.is_group_member(uuid, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_group_member(uuid, uuid) TO service_role;
-
 DROP POLICY IF EXISTS gm_select ON public.group_members;
 CREATE POLICY gm_select ON public.group_members FOR SELECT TO authenticated USING (
   public.is_group_member(group_members.group_id, auth.uid())

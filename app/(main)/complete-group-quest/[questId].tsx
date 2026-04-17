@@ -46,14 +46,14 @@ export default function CompleteGroupQuestScreen() {
         userId={uid}
         friends={friends}
         isPending={create.isPending}
-        onSubmit={async ({ mediaUrl, caption, rating, participantIds }) => {
+        onSubmit={async ({ media, caption, rating, participantIds }) => {
           const completion = await create.mutateAsync({
             userId: uid,
             groupQuestId: gq.id,
             groupId: gq.group_id,
             caption,
             rating,
-            mediaUrl,
+            media,
             participantIds,
             challengeId: challengeId ?? null,
             visibility,

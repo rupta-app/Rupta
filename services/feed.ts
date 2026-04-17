@@ -1,5 +1,6 @@
 import type { Database } from '@/types/database';
 
+import { isVideoMedia } from '@/lib/mediaLimits';
 import { supabase } from '@/lib/supabase';
 
 type QuestRow = Database['public']['Tables']['quests']['Row'];
@@ -26,6 +27,12 @@ export async function fetchBlockedIds(userId: string): Promise<Set<string>> {
 
 export type HomeFeedFilter = 'all' | 'official' | 'unofficial';
 
+type FeedViewMediaItem = {
+  url: string;
+  type: string | null;
+  order_index: number;
+};
+
 type FeedViewRow = {
   id: string;
   user_id: string;
@@ -47,11 +54,29 @@ type FeedViewRow = {
   group_quest_title: string | null;
   group_name: string | null;
   media_url: string | null;
+  media_type: string | null;
+  media_count: number | null;
+  media: FeedViewMediaItem[] | null;
 };
 
 export type FeedPost = ReturnType<typeof mapViewRow>;
 
 function mapViewRow(r: FeedViewRow) {
+  const mediaItems: { media_url: string; media_type: 'photo' | 'video' }[] =
+    r.media && r.media.length > 0
+      ? r.media.map((m) => ({
+          media_url: m.url,
+          media_type: isVideoMedia(m.url, m.type) ? 'video' : 'photo',
+        }))
+      : r.media_url
+        ? [
+            {
+              media_url: r.media_url,
+              media_type: isVideoMedia(r.media_url, r.media_type) ? 'video' : 'photo',
+            },
+          ]
+        : [];
+
   return {
     id: r.id,
     user_id: r.user_id,
@@ -73,7 +98,8 @@ function mapViewRow(r: FeedViewRow) {
       : undefined,
     group_quests: r.group_quest_title ? { title: r.group_quest_title } : undefined,
     groups: r.group_name && r.group_id ? { id: r.group_id, name: r.group_name } : undefined,
-    quest_media: r.media_url ? [{ media_url: r.media_url }] : [],
+    quest_media: mediaItems,
+    media_count: r.media_count ?? mediaItems.length,
   };
 }
 
