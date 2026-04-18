@@ -344,11 +344,20 @@ npm run android             # Android
 npm run ios                 # iOS
 npm run web                 # Web
 npm run admin               # Admin dashboard (Vite)
-npx supabase start          # Local Supabase
-npx supabase db reset       # Reset local DB (runs all migrations)
-npx supabase gen types typescript --local > types/database.ts  # Regenerate types
 node scripts/build-quest-seed.mjs  # Regenerate quest seed SQL
 ```
+
+## Supabase Workflow
+
+**No local Supabase / Docker.** This project targets Supabase Cloud directly via the CLI against the linked project. All migrations are applied to the remote DB and types are generated from the linked instance — never use `--local` or `npx supabase start`.
+
+```bash
+npx supabase db push                                          # Apply pending migrations in supabase/migrations/ to the linked cloud project
+npx supabase gen types typescript --linked > types/database.ts  # Regenerate types from the linked cloud schema
+npx supabase migration list --linked                          # Show which migrations are applied remotely vs. local
+```
+
+After writing a new migration, the required sequence is always `db push` then `gen types --linked`. Never run `db reset`, `--local`, or assume the RPC/table exists in code before the push completes — the app will silently 404 on missing RPCs.
 
 ## Git Conventions
 
