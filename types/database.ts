@@ -1271,6 +1271,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      delete_current_user: { Args: never; Returns: undefined }
       fetch_comments_ranked: {
         Args: { p_completion_id: string; p_limit?: number; p_offset?: number }
         Returns: {
