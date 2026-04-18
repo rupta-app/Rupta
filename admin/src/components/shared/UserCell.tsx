@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { imageUrl } from '@/lib/mediaUrls';
 
 interface UserCellProps {
   displayName: string | null;
@@ -10,6 +11,7 @@ interface UserCellProps {
 
 export function UserCell({ displayName, username, avatarUrl, onClick, size = 'sm' }: UserCellProps) {
   const avatarSize = size === 'sm' ? 'h-7 w-7 text-xs' : 'h-9 w-9 text-sm';
+  const resolvedAvatar = imageUrl(avatarUrl, 'avatar');
 
   return (
     <div
@@ -19,9 +21,9 @@ export function UserCell({ displayName, username, avatarUrl, onClick, size = 'sm
       )}
       onClick={onClick}
     >
-      {avatarUrl ? (
+      {resolvedAvatar ? (
         <img
-          src={avatarUrl}
+          src={resolvedAvatar}
           alt=""
           className={cn('rounded-full object-cover', avatarSize)}
         />

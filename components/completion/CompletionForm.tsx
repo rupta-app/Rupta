@@ -24,7 +24,7 @@ import {
   pickCompletionMedia,
   type PickedMedia,
 } from '@/lib/pickMedia';
-import { deleteCompletionMedia, uploadCompletionMedia } from '@/lib/storage';
+import { uploadImageToCloudflare, uploadVideoToCloudflare } from '@/lib/cloudflareMedia';
 import { supabaseErrorMessage } from '@/lib/supabaseErrorMessage';
 
 type Slot = {
@@ -41,7 +41,6 @@ type SubmitData = {
 };
 
 type Props = {
-  userId: string;
   friends: { id: string; display_name: string }[];
   onSubmit: (data: SubmitData) => Promise<void>;
   isPending: boolean;
@@ -55,7 +54,6 @@ type Props = {
 };
 
 export function CompletionForm({
-  userId,
   friends,
   onSubmit,
   isPending,
@@ -164,13 +162,14 @@ export function CompletionForm({
     }
     submitLock.current = true;
     setErr('');
-    const uploaded: string[] = [];
     try {
       const media = await Promise.all(
         slots.map(async (s) => {
-          const url = await uploadCompletionMedia(userId, s.uri, s.mime);
-          uploaded.push(url);
-          return { url, kind: s.kind };
+          const id =
+            s.kind === 'video'
+              ? await uploadVideoToCloudflare(s.uri, s.mime)
+              : await uploadImageToCloudflare(s.uri, s.mime, 'completion-photo');
+          return { url: id, kind: s.kind };
         }),
       );
       await onSubmit({
@@ -181,9 +180,7 @@ export function CompletionForm({
       });
     } catch (e: unknown) {
       submitLock.current = false;
-      if (uploaded.length > 0) {
-        void deleteCompletionMedia(uploaded);
-      }
+      // Failed submissions may leave orphan Cloudflare assets; cleanup runs out-of-band.
       setErr(supabaseErrorMessage(e, t('common.error')));
     }
   };

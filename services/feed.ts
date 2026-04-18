@@ -1,6 +1,5 @@
 import type { Database } from '@/types/database';
 
-import { isVideoMedia } from '@/lib/mediaLimits';
 import { supabase } from '@/lib/supabase';
 
 type QuestRow = Database['public']['Tables']['quests']['Row'];
@@ -66,13 +65,13 @@ function mapViewRow(r: FeedViewRow) {
     r.media && r.media.length > 0
       ? r.media.map((m) => ({
           media_url: m.url,
-          media_type: isVideoMedia(m.url, m.type) ? 'video' : 'photo',
+          media_type: m.type === 'video' ? 'video' : 'photo',
         }))
       : r.media_url
         ? [
             {
               media_url: r.media_url,
-              media_type: isVideoMedia(r.media_url, r.media_type) ? 'video' : 'photo',
+              media_type: r.media_type === 'video' ? 'video' : 'photo',
             },
           ]
         : [];

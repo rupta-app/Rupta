@@ -13,6 +13,7 @@ import { useAsyncData } from '@/hooks/useAsyncData';
 import { fetchGroups } from '@/services/groups';
 import type { AdminGroup } from '@/services/groups';
 import { PAGE_SIZE } from '@/lib/constants';
+import { imageUrl } from '@/lib/mediaUrls';
 
 interface GroupsFilters {
   search: string;
@@ -36,7 +37,7 @@ export function GroupsPage() {
       render: (row) => (
         <div className="flex items-center gap-3">
           {row.avatar_url ? (
-            <img src={row.avatar_url} alt="" className="h-8 w-8 rounded-lg object-cover" />
+            <img src={imageUrl(row.avatar_url, 'avatar')} alt="" className="h-8 w-8 rounded-lg object-cover" />
           ) : (
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary-light">
               {row.name.charAt(0).toUpperCase()}

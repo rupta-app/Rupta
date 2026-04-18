@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 
 import { colors } from '@/constants/theme';
-import { isVideoMedia } from '@/lib/mediaLimits';
+import { imageUrl, videoHlsUrl } from '@/lib/mediaUrls';
 import { setCarouselIndex, useCarouselIndex } from '@/stores/carouselIndexStore';
 
 import { FeedVideoThumb } from './FeedVideoThumb';
@@ -34,13 +34,17 @@ function SingleSlide({
   isCurrentSlide: boolean;
   onTap?: () => void;
 }) {
-  const content = isVideoMedia(item.media_url, item.media_type) ? (
+  const content = item.media_type === 'video' ? (
     <View style={{ width, height }}>
-      <FeedVideoThumb uri={item.media_url} postId={postId} isCurrentSlide={isCurrentSlide} />
+      <FeedVideoThumb
+        uri={videoHlsUrl(item.media_url)}
+        postId={postId}
+        isCurrentSlide={isCurrentSlide}
+      />
     </View>
   ) : (
     <Image
-      source={{ uri: item.media_url }}
+      source={{ uri: imageUrl(item.media_url, 'public') }}
       style={{ width, height }}
       contentFit="cover"
       transition={{ effect: 'cross-dissolve', duration: 200 }}

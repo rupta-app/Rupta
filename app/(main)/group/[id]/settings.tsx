@@ -13,8 +13,9 @@ import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Card } from '@/components/ui/Card';
 import { useGroupDetail, useGroupSettings, useUpdateGroup, useUpdateGroupSettings } from '@/hooks/useGroups';
+import { uploadImageToCloudflare } from '@/lib/cloudflareMedia';
+import { imageUrl } from '@/lib/mediaUrls';
 import { PICKER_IMAGES } from '@/lib/pickImage';
-import { uploadGroupAvatar } from '@/lib/storage';
 import { useAuth } from '@/providers/AuthProvider';
 
 export default function GroupSettingsScreen() {
@@ -44,8 +45,8 @@ export default function GroupSettingsScreen() {
     const asset = res.assets[0];
     setPhotoBusy(true);
     try {
-      const url = await uploadGroupAvatar(uid, id, asset.uri, asset.mimeType ?? 'image/jpeg');
-      await updateGroup.mutateAsync({ avatar_url: url });
+      const imageId = await uploadImageToCloudflare(asset.uri, asset.mimeType ?? 'image/jpeg', 'group-avatar');
+      await updateGroup.mutateAsync({ avatar_url: imageId });
     } catch (e) {
       Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e));
     } finally {
@@ -94,7 +95,7 @@ export default function GroupSettingsScreen() {
           <Text className="text-foreground font-semibold mb-3 self-start w-full px-1">{t('groups.groupPhoto')}</Text>
           {group.avatar_url ? (
             <Image
-              source={{ uri: group.avatar_url }}
+              source={{ uri: imageUrl(group.avatar_url, 'avatar') }}
               style={{ width: 112, height: 112, borderRadius: 16, backgroundColor: colors.surfaceElevated, marginBottom: 16 }}
             />
           ) : (

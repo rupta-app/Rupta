@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { MediaThumbnail } from '@/components/shared/MediaPreview';
+import { imageUrl } from '@/lib/mediaUrls';
 import { USER_STATUSES, STATUS_LABELS } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
 import { updateUserStatus, updateUserAdmin } from '@/services/users';
@@ -86,7 +87,7 @@ export function UserDetailSheet({ user, onClose, onUpdated }: UserDetailSheetPro
         {/* Profile header */}
         <div className="flex items-center gap-4 mb-6">
           {user.avatar_url ? (
-            <img src={user.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />
+            <img src={imageUrl(user.avatar_url, 'avatar')} alt="" className="h-14 w-14 rounded-full object-cover" />
           ) : (
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/20 text-lg font-bold text-primary-light">
               {(user.display_name ?? user.username ?? '?').charAt(0).toUpperCase()}

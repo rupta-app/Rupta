@@ -17,6 +17,7 @@
   ],
   "exclude": [
     "admin",
-    "node_modules"
+    "node_modules",
+    "supabase/functions"
   ]
 }

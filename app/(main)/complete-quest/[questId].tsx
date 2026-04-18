@@ -34,7 +34,6 @@ export default function CompleteQuestScreen() {
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('complete.title')} />
       <CompletionForm
-        userId={uid}
         friends={friends}
         isPending={create.isPending}
         onSubmit={async ({ media, caption, rating, participantIds }) => {

@@ -411,7 +411,7 @@ export const es: TranslationKeys = {
   },
   errors: {
     rlsOrStorage:
-      'No se pudo guardar la foto o el perfil (permisos). Aplica la migración de Supabase para storage o prueba sin foto.',
-    avatarUpload: 'Falló la subida de la foto. Puedes continuar sin foto o revisar las políticas de Storage en Supabase.',
+      'No se pudo guardar tu perfil. Probá de nuevo o seguí sin foto.',
+    avatarUpload: 'Falló la subida de la foto. Tocá abajo para seguir sin foto.',
   },
 };

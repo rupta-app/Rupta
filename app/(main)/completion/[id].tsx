@@ -25,6 +25,7 @@ import {
   useDeleteCompletion,
   useToggleRespect,
 } from '@/hooks/useCompletion';
+import { imageUrl } from '@/lib/mediaUrls';
 import { buildCompletionShareMessage, shareCompletionGeneric, shareToWhatsApp } from '@/lib/shareLinks';
 import { useAuth } from '@/providers/AuthProvider';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
@@ -94,8 +95,10 @@ export default function CompletionDetailScreen() {
 
   const mediaItems = data.quest_media ?? [];
   const firstMedia = mediaItems[0];
-  const firstIsPhoto = !firstMedia || firstMedia.media_type !== 'video';
-  const downloadableUrl = firstIsPhoto ? firstMedia?.media_url ?? null : null;
+  const downloadableUrl =
+    firstMedia && firstMedia.media_type !== 'video'
+      ? imageUrl(firstMedia.media_url, 'public')
+      : null;
   const qTitle = data.group_quests?.title
     ? data.group_quests.title
     : data.quests
@@ -125,8 +128,7 @@ export default function CompletionDetailScreen() {
     if (!downloadableUrl) return;
     const { status } = await MediaLibrary.requestPermissionsAsync();
     if (status !== 'granted') return;
-    const ext = downloadableUrl.toLowerCase().includes('.png') ? 'png' : 'jpg';
-    const dest = new File(Paths.cache, `rupta-${Date.now()}.${ext}`);
+    const dest = new File(Paths.cache, `rupta-${Date.now()}.jpg`);
     const downloaded = await File.downloadFileAsync(downloadableUrl, dest);
     await MediaLibrary.createAssetAsync(downloaded.uri);
   };
