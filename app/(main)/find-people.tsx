@@ -12,6 +12,7 @@ import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { InlineLoader } from '@/components/ui/InlineLoader';
 import { Input } from '@/components/ui/Input';
 import { useSendFriendRequest } from '@/hooks/useFriends';
 import { searchProfiles } from '@/services/profile';
@@ -31,7 +32,7 @@ export default function FindPeopleScreen() {
   const [q, setQ] = useState('');
   const send = useSendFriendRequest();
 
-  const { data: people = [], refetch: refetchPeople, isError: peopleError } = useQuery({
+  const { data: people = [], refetch: refetchPeople, isError: peopleError, isFetching: peopleFetching } = useQuery({
     queryKey: ['find-people', q, uid],
     queryFn: () => searchProfiles(q, uid),
     enabled: q.trim().length >= 2,
@@ -94,6 +95,7 @@ export default function FindPeopleScreen() {
         ) : null}
       </View>
 
+      {q.trim().length >= 2 && peopleFetching && people.length === 0 ? <InlineLoader /> : null}
       <FlatList
         data={rows}
         keyExtractor={(item, i) =>

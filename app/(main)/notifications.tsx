@@ -10,6 +10,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { FullScreenLoader } from '@/components/ui/FullScreenLoader';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { useClearAllNotifications, useMarkNotificationRead, useNotifications } from '@/hooks/useNotifications';
 import { useIncomingFriendRequests, useRespondFriendRequest } from '@/hooks/useFriends';
@@ -27,7 +28,7 @@ export default function NotificationsScreen() {
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id;
-  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } = useNotifications(uid);
+  const { data, hasNextPage, fetchNextPage, isFetchingNextPage, isLoading } = useNotifications(uid);
   const items = useMemo(() => data?.pages.flat() ?? [], [data]);
   const { data: incomingFriendReqs = [] } = useIncomingFriendRequests(uid);
   const canClearInbox = items.length > 0 || incomingFriendReqs.length > 0;
@@ -104,6 +105,15 @@ export default function NotificationsScreen() {
       },
     );
   };
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('notifications.title')} />
+        <FullScreenLoader label={t('common.loading')} />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">

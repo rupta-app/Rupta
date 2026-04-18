@@ -16,6 +16,7 @@ import { colors } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
+import { FullScreenLoader } from '@/components/ui/FullScreenLoader';
 import { auraLevelFromTotal, auraProgressInCurrentLevel, auraToNextLevel } from '@/lib/aura';
 import { isLifeListRowDone, lifeListDoneCount } from '@/lib/questCompletionRules';
 import { useAuth } from '@/providers/AuthProvider';
@@ -197,7 +198,14 @@ export default function ProfileTab() {
     [lifeCounts, router, lang, t, uid, toggle],
   );
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <View className="flex-1 bg-background">
+        <MainAppHeader variant="profile" />
+        <FullScreenLoader label={t('common.loading')} />
+      </View>
+    );
+  }
 
   const level = auraLevelFromTotal(profile.total_aura);
   const next = auraToNextLevel(profile.total_aura);

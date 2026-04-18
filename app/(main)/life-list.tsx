@@ -6,6 +6,7 @@ import { BookmarkPlus } from 'lucide-react-native';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { FullScreenLoader } from '@/components/ui/FullScreenLoader';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { useLifeList } from '@/hooks/useQuests';
 import { useAuth } from '@/providers/AuthProvider';
@@ -18,7 +19,16 @@ export default function LifeListScreen() {
   const lang = appLang(i18n);
   const { session } = useAuth();
   const uid = session?.user?.id;
-  const { data: rows = [] } = useLifeList(uid);
+  const { data: rows = [], isLoading } = useLifeList(uid);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('common.lifeList')} />
+        <FullScreenLoader label={t('common.loading')} />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">
