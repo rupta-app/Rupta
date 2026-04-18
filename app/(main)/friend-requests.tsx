@@ -5,6 +5,7 @@ import { UserCheck } from 'lucide-react-native';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { FriendRequestActions } from '@/components/social/FriendRequestActions';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { FullScreenLoader } from '@/components/ui/FullScreenLoader';
 import { UserListItem } from '@/components/social/UserListItem';
 import { useIncomingFriendRequests } from '@/hooks/useFriends';
 import { useAuth } from '@/providers/AuthProvider';
@@ -13,7 +14,16 @@ export default function FriendRequestsScreen() {
   const { t } = useTranslation();
   const { session } = useAuth();
   const uid = session?.user?.id;
-  const { data: reqs = [] } = useIncomingFriendRequests(uid);
+  const { data: reqs = [], isLoading } = useIncomingFriendRequests(uid);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('friends.requests')} />
+        <FullScreenLoader label={t('common.loading')} />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">

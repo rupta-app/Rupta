@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { InlineLoader } from '@/components/ui/InlineLoader';
 import { Input } from '@/components/ui/Input';
 import { useSendFriendRequest } from '@/hooks/useFriends';
 import { searchMyGroups } from '@/services/groups';
@@ -31,13 +32,13 @@ export default function UnifiedSearchScreen() {
   const [q, setQ] = useState('');
   const send = useSendFriendRequest();
 
-  const { data: people = [], refetch: refetchPeople, isError: peopleError } = useQuery({
+  const { data: people = [], refetch: refetchPeople, isError: peopleError, isFetching: peopleFetching } = useQuery({
     queryKey: ['unified-search-people', q, uid],
     queryFn: () => searchProfiles(q, uid),
     enabled: q.trim().length >= 2,
   });
 
-  const { data: groups = [], refetch: refetchGroups, isError: groupsError } = useQuery({
+  const { data: groups = [], refetch: refetchGroups, isError: groupsError, isFetching: groupsFetching } = useQuery({
     queryKey: ['unified-search-groups', q, uid],
     queryFn: () => searchMyGroups(uid, q),
     enabled: Boolean(uid),
@@ -107,6 +108,10 @@ export default function UnifiedSearchScreen() {
         </Button>
       </View>
 
+      {(groupsFetching && groups.length === 0) ||
+      (q.trim().length >= 2 && peopleFetching && people.length === 0) ? (
+        <InlineLoader />
+      ) : null}
       <FlatList
         data={rows}
         keyExtractor={(item, i) =>
