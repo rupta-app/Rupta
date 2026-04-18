@@ -1,4 +1,4 @@
-import type { Database, QuestCreationRule } from '@/types/database';
+import type { Database, GroupRole, QuestCreationRule } from '@/types/database';
 
 import { supabase } from '@/lib/supabase';
 import { paginateQuery } from '@/services/_pagination';
@@ -7,7 +7,12 @@ import { enrichWithProfiles, fetchProfilesByIds, PROFILE_COLS_AURA, PROFILE_COLS
 import { type LeaderboardPeriod, periodSinceIso } from '@/services/leaderboard';
 
 type GroupRow = Database['public']['Tables']['groups']['Row'];
+type GroupMemberRow = Database['public']['Tables']['group_members']['Row'];
 type GroupSettingsRow = Database['public']['Tables']['group_settings']['Row'];
+
+export type GroupMemberWithProfile = GroupMemberRow & { profiles: ProfileWithAura | undefined };
+
+export const GROUP_MEMBERS_PAGE_SIZE = 25;
 
 export async function createGroup(ownerId: string, name: string, description?: string): Promise<GroupRow> {
   const { data, error } = await supabase
@@ -47,16 +52,79 @@ export async function fetchMyGroups(userId: string): Promise<GroupRow[]> {
 
 export async function fetchGroupDetail(groupId: string): Promise<{
   group: Pick<GroupRow, 'id' | 'name' | 'description' | 'avatar_url' | 'owner_id' | 'created_at'>;
-  members: (Database['public']['Tables']['group_members']['Row'] & { profiles: ProfileWithAura | undefined })[];
 }> {
-  const [{ data: group, error }, { data: members, error: mErr }] = await Promise.all([
-    supabase.from('groups').select('id, name, description, avatar_url, owner_id, created_at').eq('id', groupId).single(),
-    supabase.from('group_members').select('*').eq('group_id', groupId),
-  ]);
+  const { data: group, error } = await supabase
+    .from('groups')
+    .select('id, name, description, avatar_url, owner_id, created_at')
+    .eq('id', groupId)
+    .single();
   if (error) throw error;
-  if (mErr) throw mErr;
-  const enriched = await enrichWithProfiles(members ?? [], 'user_id', PROFILE_COLS_AURA);
-  return { group, members: enriched };
+  return { group };
+}
+
+export async function fetchMyGroupRole(groupId: string, userId: string): Promise<GroupRole | null> {
+  const { data, error } = await supabase
+    .from('group_members')
+    .select('role')
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.role as GroupRole | undefined) ?? null;
+}
+
+export async function fetchGroupMembersPage(
+  groupId: string,
+  from: number,
+  limit: number = GROUP_MEMBERS_PAGE_SIZE,
+): Promise<{ rows: GroupMemberWithProfile[]; hasMore: boolean }> {
+  const to = from + limit - 1;
+  const { data, error } = await supabase
+    .from('group_members')
+    .select('*')
+    .eq('group_id', groupId)
+    .order('joined_at', { ascending: true })
+    .range(from, to);
+  if (error) throw error;
+  const rows = data ?? [];
+  const enriched = await enrichWithProfiles(rows, 'user_id', PROFILE_COLS_AURA);
+  return { rows: enriched, hasMore: rows.length === limit };
+}
+
+export async function leaveGroup(groupId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('group_members')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function deleteGroup(groupId: string): Promise<void> {
+  const { error } = await supabase.from('groups').delete().eq('id', groupId);
+  if (error) throw error;
+}
+
+export async function removeGroupMember(groupId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('group_members')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function updateGroupMemberRole(
+  groupId: string,
+  userId: string,
+  role: Exclude<GroupRole, 'owner'>,
+): Promise<void> {
+  const { error } = await supabase
+    .from('group_members')
+    .update({ role })
+    .eq('group_id', groupId)
+    .eq('user_id', userId);
+  if (error) throw error;
 }
 
 export async function inviteToGroup(groupId: string, inviterId: string, inviteeId: string): Promise<void> {
@@ -220,22 +288,39 @@ export async function updateGroupSettings(
   return data;
 }
 
-export async function fetchPublicGroups(search?: string): Promise<GroupRow[]> {
-  const { data: settings, error } = await supabase
-    .from('group_settings')
-    .select('group_id')
-    .eq('is_public', true);
+export type PublicGroupRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  avatar_url: string | null;
+  owner_id: string;
+  created_at: string;
+  owner_username: string | null;
+  owner_display_name: string | null;
+  owner_avatar_url: string | null;
+  member_count: number;
+};
+
+export const PUBLIC_GROUPS_PAGE_SIZE = 20;
+
+export async function fetchPublicGroupsPage(
+  search: string | undefined,
+  offset: number,
+  limit: number = PUBLIC_GROUPS_PAGE_SIZE,
+): Promise<{ rows: PublicGroupRow[]; hasMore: boolean }> {
+  const term = search?.trim() || null;
+  const { data, error } = await supabase.rpc('fetch_public_groups', {
+    p_search: term,
+    p_limit: limit,
+    p_offset: offset,
+  });
   if (error) throw error;
-  const ids = (settings ?? []).map((s) => s.group_id);
-  if (ids.length === 0) return [];
-  let q = supabase.from('groups').select('*').in('id', ids);
-  const term = search?.trim();
-  if (term) {
-    q = q.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
-  }
-  const { data: groups, error: gErr } = await q.limit(40);
-  if (gErr) throw gErr;
-  return groups ?? [];
+  const raw = (data ?? []) as PublicGroupRow[];
+  const rows = raw.map((row) => ({
+    ...row,
+    member_count: Number(row.member_count ?? 0),
+  }));
+  return { rows, hasMore: raw.length === limit };
 }
 
 export async function joinPublicGroup(groupId: string, userId: string): Promise<void> {

@@ -18,7 +18,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
-import { useGroupDetail, useGroupLeaderboard } from '@/hooks/useGroups';
+import { useGroupDetail, useGroupLeaderboard, useMyGroupPermissions } from '@/hooks/useGroups';
 import { useGroupFeed } from '@/hooks/useFeed';
 import { useGroupQuestsList } from '@/hooks/useGroupQuests';
 import { useFeedWithCounts } from '@/hooks/useFeedWithCounts';
@@ -38,15 +38,13 @@ export default function GroupDetailScreen() {
   const [section, setSection] = useState<Section>('rankings');
 
   const { data, isLoading, isError } = useGroupDetail(id);
+  const { canAdmin } = useMyGroupPermissions(id, uid);
   const { data: lb = [] } = useGroupLeaderboard(id);
   const { data: gQuests = [] } = useGroupQuestsList(id, uid);
   const { data: feedData, isLoading: feedLoading } = useGroupFeed(id);
   const feed = useMemo(() => feedData?.pages.flatMap((p) => p.posts) ?? [], [feedData]);
 
   const posts = useFeedWithCounts(feed, 'group', uid);
-
-  const myMember = data?.members.find((m: { user_id: string }) => m.user_id === uid);
-  const canAdmin = myMember?.role === 'owner' || myMember?.role === 'admin';
 
   if (isLoading) {
     return (
