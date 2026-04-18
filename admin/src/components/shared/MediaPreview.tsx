@@ -11,7 +11,7 @@ interface MediaItem {
 
 function previewThumbUrl(item: MediaItem): string | null {
   if (item.media_type === 'video') return videoThumbUrl(item.media_url, { height: 120 });
-  return imageUrl(item.media_url, 'thumbnail');
+  return imageUrl(item.media_url, 'public');
 }
 
 // Videos show a still frame in the lightbox (no player here).

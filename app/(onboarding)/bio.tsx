@@ -36,8 +36,7 @@ export default function BioOnboarding() {
 
       if (tryAvatarUpload && local?.startsWith('file')) {
         try {
-          const mime = local.toLowerCase().includes('png') ? 'image/png' : 'image/jpeg';
-          avatarUrl = await uploadImageToCloudflare(local, mime, 'avatar');
+          avatarUrl = await uploadImageToCloudflare(local, draft.avatarMime, 'avatar');
         } catch (uploadErr: unknown) {
           const um = uploadErr instanceof Error ? uploadErr.message : '';
           console.warn('[onboarding] avatar upload failed', uploadErr);

@@ -30,7 +30,7 @@ export default function ProfileSetupOnboarding() {
       quality: 0.85,
     });
     if (!res.canceled && res.assets[0]) {
-      setDraft({ avatarUrl: res.assets[0].uri });
+      setDraft({ avatarUrl: res.assets[0].uri, avatarMime: res.assets[0].mimeType ?? 'image/jpeg' });
     }
   };
 

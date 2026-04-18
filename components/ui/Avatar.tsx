@@ -18,7 +18,7 @@ export function Avatar({
   if (url) {
     return (
       <Image
-        source={{ uri: imageUrl(url, 'avatar') }}
+        source={{ uri: imageUrl(url, 'public') }}
         contentFit="cover"
         style={{
           width: size,

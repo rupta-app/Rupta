@@ -25,6 +25,7 @@ export default function EditProfileScreen() {
   const [bio, setBio] = useState('');
   const [city, setCity] = useState('');
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
+  const [localAvatarMime, setLocalAvatarMime] = useState<string>('image/jpeg');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function EditProfileScreen() {
     });
     if (!res.canceled && res.assets[0]) {
       setLocalAvatarUri(res.assets[0].uri);
+      setLocalAvatarMime(res.assets[0].mimeType ?? 'image/jpeg');
     }
   };
 
@@ -76,8 +78,7 @@ export default function EditProfileScreen() {
             try {
               let avatar_url: string | undefined;
               if (localAvatarUri) {
-                const mime = localAvatarUri.toLowerCase().includes('png') ? 'image/png' : 'image/jpeg';
-                avatar_url = await uploadImageToCloudflare(localAvatarUri, mime, 'avatar');
+                avatar_url = await uploadImageToCloudflare(localAvatarUri, localAvatarMime, 'avatar');
               }
               await updateProfile(uid, {
                 display_name: displayName.trim(),

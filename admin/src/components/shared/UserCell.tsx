@@ -11,7 +11,7 @@ interface UserCellProps {
 
 export function UserCell({ displayName, username, avatarUrl, onClick, size = 'sm' }: UserCellProps) {
   const avatarSize = size === 'sm' ? 'h-7 w-7 text-xs' : 'h-9 w-9 text-sm';
-  const resolvedAvatar = imageUrl(avatarUrl, 'avatar');
+  const resolvedAvatar = imageUrl(avatarUrl, 'public');
 
   return (
     <div

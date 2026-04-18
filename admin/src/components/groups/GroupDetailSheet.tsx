@@ -101,7 +101,7 @@ export function GroupDetailSheet({ group, onClose, onUpdated }: GroupDetailSheet
         {/* Group info */}
         <div className="flex items-center gap-4 mb-6">
           {group.avatar_url ? (
-            <img src={imageUrl(group.avatar_url, 'avatar')} alt="" className="h-12 w-12 rounded-xl object-cover" />
+            <img src={imageUrl(group.avatar_url, 'public')} alt="" className="h-12 w-12 rounded-xl object-cover" />
           ) : (
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-lg font-bold text-primary-light">
               {group.name.charAt(0).toUpperCase()}
