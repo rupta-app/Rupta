@@ -97,6 +97,10 @@ export const qk = {
   search: {
     users: (q: string, uid: string) => ['search-users', q, uid] as const,
   },
+  blocked: {
+    list: (userId: string) => ['blocked-users', userId] as const,
+    listAll: ['blocked-users'] as const,
+  },
 } as const;
 
 // -- Invalidation presets ------------------------------------------------------

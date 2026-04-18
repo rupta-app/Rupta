@@ -38,6 +38,8 @@ export default function MainLayout() {
       <Stack.Screen name="notifications" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="edit-profile" />
+      <Stack.Screen name="edit-preferences" />
+      <Stack.Screen name="blocked-users" />
       <Stack.Screen name="life-list" />
       <Stack.Screen name="unified-search" />
       <Stack.Screen name="find-people" />
