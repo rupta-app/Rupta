@@ -16,6 +16,7 @@ import { CATEGORY_CONFIG, QUEST_CATEGORIES } from '@/constants/categories';
 import { colors } from '@/constants/theme';
 import type { Database } from '@/types/database';
 import { useAuth } from '@/providers/AuthProvider';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useInfiniteQuests, usePrefetchCategoryPages, useSavedQuestIds, useToggleSave } from '@/hooks/useQuests';
 import { formatCategoryLabel } from '@/utils/categoryLabel';
 import { appLang } from '@/utils/lang';
@@ -41,10 +42,8 @@ type ExploreSearchAndFiltersProps = {
   onDebouncedSearchChange: (query: string) => void;
 };
 
-/**
- * Local draft + debounced query keeps the list header reference stable so FlatList does not
- * remount the TextInput on every keystroke (which was dismissing the keyboard).
- */
+// Local draft + debounced query keeps the list header reference stable so FlatList does not
+// remount the TextInput on every keystroke (which was dismissing the keyboard).
 const ExploreSearchAndFilters = memo(function ExploreSearchAndFilters({
   placeholder,
   category,
@@ -53,13 +52,11 @@ const ExploreSearchAndFilters = memo(function ExploreSearchAndFilters({
   onDebouncedSearchChange,
 }: ExploreSearchAndFiltersProps) {
   const [draft, setDraft] = useState('');
+  const debounced = useDebouncedValue(draft, SEARCH_DEBOUNCE_MS);
 
   useEffect(() => {
-    const id = setTimeout(() => {
-      onDebouncedSearchChange(draft);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(id);
-  }, [draft, onDebouncedSearchChange]);
+    onDebouncedSearchChange(debounced);
+  }, [debounced, onDebouncedSearchChange]);
 
   return (
     <View className="bg-background">

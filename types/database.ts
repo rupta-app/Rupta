@@ -1193,6 +1193,9 @@ export type Database = {
           group_quest_id: string | null
           group_quest_title: string | null
           id: string | null
+          media: Json | null
+          media_count: number | null
+          media_type: string | null
           media_url: string | null
           profile_avatar_url: string | null
           profile_display_name: string | null
@@ -1249,6 +1252,17 @@ export type Database = {
       }
     }
     Functions: {
+      can_view_completion: {
+        Args: {
+          p_group_id: string
+          p_owner_id: string
+          p_quest_source_type: string
+          p_status: string
+          p_viewer_id: string
+          p_visibility: string
+        }
+        Returns: boolean
+      }
       completion_counts_for_challenge: {
         Args: {
           p_aura_scope: string
@@ -1268,6 +1282,21 @@ export type Database = {
           user_id: string
         }[]
       }
+      fetch_public_groups: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          description: string
+          id: string
+          member_count: number
+          name: string
+          owner_avatar_url: string
+          owner_display_name: string
+          owner_id: string
+          owner_username: string
+        }[]
+      }
       is_group_admin: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
@@ -1275,6 +1304,18 @@ export type Database = {
       is_group_member: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
+      }
+      leaderboard_global_page: {
+        Args: { p_limit: number; p_offset: number; p_since: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+          period_aura: number
+          total_aura: number
+          username: string
+          yearly_aura: number
+        }[]
       }
     }
     Enums: {

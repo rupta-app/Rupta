@@ -46,6 +46,10 @@ export const qk = {
     questsAll: ['group-quests'] as const,
     lb: (groupId: string, period: string) => ['group-lb', groupId, period] as const,
     lbAll: ['group-lb'] as const,
+    members: (groupId: string) => ['group-members', groupId] as const,
+    membersAll: ['group-members'] as const,
+    myRole: (groupId: string, userId: string) => ['group-my-role', groupId, userId] as const,
+    myRoleAll: ['group-my-role'] as const,
   },
   friends: {
     list: (userId: string) => ['friends', userId] as const,

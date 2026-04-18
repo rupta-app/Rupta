@@ -1,15 +1,28 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { MoreHorizontal } from 'lucide-react-native';
+import { useCallback, useMemo } from 'react';
+import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { colors } from '@/constants/theme';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { useFriendsList } from '@/hooks/useFriends';
-import { useGroupDetail, useInviteToGroup } from '@/hooks/useGroups';
+import {
+  useGroupDetail,
+  useGroupMembers,
+  useInviteToGroup,
+  useMyGroupPermissions,
+  useRemoveGroupMember,
+  useUpdateGroupMemberRole,
+} from '@/hooks/useGroups';
+import { useInfiniteEndReached } from '@/hooks/useInfiniteEndReached';
 import { useAuth } from '@/providers/AuthProvider';
+import type { GroupMemberWithProfile } from '@/services/groups';
 
 export default function GroupPeopleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,8 +31,94 @@ export default function GroupPeopleScreen() {
   const { session } = useAuth();
   const uid = session?.user?.id!;
   const { data, isLoading, isError } = useGroupDetail(id);
+  const { canAdmin } = useMyGroupPermissions(id, uid);
+  const membersQuery = useGroupMembers(id);
+  const { data: membersData, isFetchingNextPage } = membersQuery;
   const { data: friends = [] } = useFriendsList(uid);
   const invite = useInviteToGroup();
+  const removeMember = useRemoveGroupMember(id);
+  const updateRole = useUpdateGroupMemberRole(id);
+
+  const members = useMemo<GroupMemberWithProfile[]>(
+    () => membersData?.pages.flatMap((p) => p.rows) ?? [],
+    [membersData],
+  );
+  const memberCount = members.length;
+
+  const onEndReached = useInfiniteEndReached(membersQuery);
+
+  const openMemberActions = useCallback(
+    (member: GroupMemberWithProfile) => {
+      if (!canAdmin || member.role === 'owner' || member.user_id === uid) return;
+      const name = member.profiles?.display_name ?? member.profiles?.username ?? '';
+      const toggleRoleLabel =
+        member.role === 'admin' ? t('groups.demoteToMember') : t('groups.promoteToAdmin');
+      Alert.alert(t('groups.memberActionsTitle'), name, [
+        {
+          text: toggleRoleLabel,
+          onPress: () =>
+            updateRole.mutate({
+              userId: member.user_id,
+              role: member.role === 'admin' ? 'member' : 'admin',
+            }),
+        },
+        {
+          text: t('groups.removeMember'),
+          style: 'destructive',
+          onPress: () =>
+            Alert.alert(t('groups.removeMember'), t('groups.removeConfirmBody', { name }), [
+              { text: t('common.cancel'), style: 'cancel' },
+              {
+                text: t('groups.removeMember'),
+                style: 'destructive',
+                onPress: () => removeMember.mutate({ userId: member.user_id }),
+              },
+            ]),
+        },
+        { text: t('common.cancel'), style: 'cancel' },
+      ]);
+    },
+    [canAdmin, uid, t, updateRole, removeMember],
+  );
+
+  const renderMember = useCallback(
+    ({ item: m }: { item: GroupMemberWithProfile }) => {
+      const canActOn = canAdmin && m.role !== 'owner' && m.user_id !== uid;
+      return (
+        <View className="flex-row items-center gap-2">
+          <Pressable className="flex-1" onPress={() => router.push(`/(main)/user/${m.user_id}`)}>
+            <Card className="mb-3 flex-row items-center gap-3 py-3">
+              <Avatar url={m.profiles?.avatar_url} name={m.profiles?.display_name ?? '?'} size={48} />
+              <View className="flex-1">
+                <Text className="text-foreground font-semibold text-base">
+                  {m.profiles?.display_name ?? m.profiles?.username ?? ''}
+                </Text>
+                <Text className="text-muted text-xs mt-1">
+                  {m.role === 'owner'
+                    ? t('groups.memberOwner')
+                    : m.role === 'admin'
+                      ? t('groups.memberAdmin')
+                      : m.role}
+                </Text>
+              </View>
+            </Card>
+          </Pressable>
+          {canActOn ? (
+            <PressableScale
+              onPress={() => openMemberActions(m)}
+              className="p-2.5 mb-3"
+              hitSlop={8}
+              scaleValue={0.9}
+              accessibilityLabel={t('groups.memberActionsTitle')}
+            >
+              <MoreHorizontal color={colors.muted} size={22} strokeWidth={2} />
+            </PressableScale>
+          ) : null}
+        </View>
+      );
+    },
+    [canAdmin, uid, router, t, openMemberActions],
+  );
 
   if (isLoading) {
     return (
@@ -38,63 +137,52 @@ export default function GroupPeopleScreen() {
     );
   }
 
-  const { group, members } = data;
-  const memberCount = members.length;
-
   return (
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('groups.people')} />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
-        <Text className="text-muted text-sm mb-4">
-          {t('groups.peopleSubtitle', { count: memberCount })}
-        </Text>
+      <FlatList
+        data={members}
+        keyExtractor={(item) => item.user_id}
+        renderItem={renderMember}
+        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
+        ListHeaderComponent={
+          <>
+            <Text className="text-muted text-sm mb-4">
+              {t('groups.peopleSubtitle', { count: memberCount })}
+            </Text>
 
-        <Text className="text-foreground font-bold text-base mb-2">{t('groups.invite')}</Text>
-        <Text className="text-muted text-sm mb-3">{t('groups.invitePick')}</Text>
-        {friends.length === 0 ? (
-          <Text className="text-muted text-sm mb-8">{t('feed.empty')}</Text>
-        ) : (
-          friends.map((f: { id: string; display_name: string }) => (
-            <Pressable
-              key={f.id}
-              className="py-4 border-b border-border/30"
-              onPress={() =>
-                invite.mutate({ groupId: id, inviterId: uid, inviteeId: f.id })
-              }
-            >
-              <Text className="text-foreground font-medium">{f.display_name}</Text>
-            </Pressable>
-          ))
-        )}
+            <Text className="text-foreground font-bold text-base mb-2">{t('groups.invite')}</Text>
+            <Text className="text-muted text-sm mb-3">{t('groups.invitePick')}</Text>
+            {friends.length === 0 ? (
+              <Text className="text-muted text-sm mb-8">{t('feed.empty')}</Text>
+            ) : (
+              friends.map((f: { id: string; display_name: string }) => (
+                <Pressable
+                  key={f.id}
+                  className="py-4 border-b border-border/30"
+                  onPress={() => invite.mutate({ groupId: id, inviterId: uid, inviteeId: f.id })}
+                >
+                  <Text className="text-foreground font-medium">{f.display_name}</Text>
+                </Pressable>
+              ))
+            )}
 
-        <Text className="text-foreground font-bold text-base mt-8 mb-3">
-          {t('groups.members')} ({memberCount})
-        </Text>
-        {members.map(
-          (m: {
-            user_id: string;
-            role: string;
-            profiles?: { display_name: string; avatar_url: string | null };
-          }) => (
-            <Pressable key={m.user_id} onPress={() => router.push(`/(main)/user/${m.user_id}`)}>
-              <Card className="mb-3 flex-row items-center gap-3 py-3">
-                <Avatar url={m.profiles?.avatar_url} name={m.profiles?.display_name ?? '?'} size={48} />
-                <View className="flex-1">
-                  <Text className="text-foreground font-semibold text-base">{m.profiles?.display_name}</Text>
-                  <Text className="text-muted text-xs mt-1">
-                    {m.role === 'owner'
-                      ? t('groups.memberOwner')
-                      : m.role === 'admin'
-                        ? t('groups.memberAdmin')
-                        : m.role}
-                  </Text>
-                </View>
-              </Card>
-            </Pressable>
-          ),
-        )}
-      </ScrollView>
+            <Text className="text-foreground font-bold text-base mt-8 mb-3">
+              {t('groups.members')} ({memberCount})
+            </Text>
+          </>
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator color={colors.primary} />
+            </View>
+          ) : null
+        }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.4}
+      />
     </View>
   );
 }
