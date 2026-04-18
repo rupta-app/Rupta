@@ -95,7 +95,7 @@ export default function GroupSettingsScreen() {
           <Text className="text-foreground font-semibold mb-3 self-start w-full px-1">{t('groups.groupPhoto')}</Text>
           {group.avatar_url ? (
             <Image
-              source={{ uri: imageUrl(group.avatar_url, 'avatar') }}
+              source={{ uri: imageUrl(group.avatar_url, 'public') }}
               style={{ width: 112, height: 112, borderRadius: 16, backgroundColor: colors.surfaceElevated, marginBottom: 16 }}
             />
           ) : (

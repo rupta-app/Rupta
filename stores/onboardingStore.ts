@@ -8,6 +8,7 @@ export type OnboardingDraft = {
   username: string;
   displayName: string;
   avatarUrl: string | null;
+  avatarMime: string;
   city: string;
   dateOfBirth: string;
   preferredCategories: QuestCategory[];
@@ -20,6 +21,7 @@ const initial: OnboardingDraft = {
   username: '',
   displayName: '',
   avatarUrl: null,
+  avatarMime: 'image/jpeg',
   city: '',
   dateOfBirth: '',
   preferredCategories: [],
