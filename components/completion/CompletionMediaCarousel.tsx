@@ -16,7 +16,7 @@ import {
 
 import { colors } from '@/constants/theme';
 import { useSharedVideoPlayer } from '@/hooks/useSharedVideoPlayer';
-import { isVideoMedia } from '@/lib/mediaLimits';
+import { imageUrl, videoHlsUrl } from '@/lib/mediaUrls';
 import { getCarouselIndex, setCarouselIndex } from '@/stores/carouselIndexStore';
 import { useVideoMuteStore } from '@/stores/videoMuteStore';
 
@@ -222,16 +222,16 @@ export function CompletionMediaCarousel({ items, postId, onPhotoLoad, aspectRati
         getItemLayout={(_data, i) => ({ length: width, offset: width * i, index: i })}
         initialScrollIndex={index > 0 ? index : undefined}
         renderItem={({ item, index: i }) =>
-          isVideoMedia(item.media_url, item.media_type) ? (
+          item.media_type === 'video' ? (
             <VideoSlide
-              uri={item.media_url}
+              uri={videoHlsUrl(item.media_url)}
               width={width}
               height={height}
               isActive={i === index}
             />
           ) : (
             <Image
-              source={{ uri: item.media_url }}
+              source={{ uri: imageUrl(item.media_url, 'public') }}
               style={{ width, height, backgroundColor: colors.surfaceElevated }}
               contentFit="cover"
               onLoad={i === 0 ? onPhotoLoad : undefined}

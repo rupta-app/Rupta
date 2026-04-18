@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { colors } from '@/constants/theme';
 import { useCompletion } from '@/hooks/useCompletion';
+import { imageUrl } from '@/lib/mediaUrls';
 import { openShareSheet, shareImageToInstagramStories } from '@/lib/share';
 import { appLang } from '@/utils/lang';
 
@@ -140,7 +141,10 @@ export default function ShareCardScreen() {
   }
 
   const firstMedia = data.quest_media?.[0];
-  const bg = firstMedia && firstMedia.media_type !== 'video' ? firstMedia.media_url : undefined;
+  const bg =
+    firstMedia && firstMedia.media_type !== 'video'
+      ? imageUrl(firstMedia.media_url, 'public')
+      : undefined;
   const simpleTitle = data.group_quests?.title;
   const simpleCategory = data.group_quests ? t('feed.groupQuest') : undefined;
 

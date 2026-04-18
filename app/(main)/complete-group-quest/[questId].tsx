@@ -43,7 +43,6 @@ export default function CompleteGroupQuestScreen() {
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('groups.completeGroupQuest')} />
       <CompletionForm
-        userId={uid}
         friends={friends}
         isPending={create.isPending}
         onSubmit={async ({ media, caption, rating, participantIds }) => {

@@ -11,8 +11,8 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { PressableScale } from '@/components/ui/PressableScale';
+import { uploadImageToCloudflare } from '@/lib/cloudflareMedia';
 import { PICKER_IMAGES } from '@/lib/pickImage';
-import { uploadAvatar } from '@/lib/storage';
 import { updateProfile } from '@/services/profile';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -77,7 +77,7 @@ export default function EditProfileScreen() {
               let avatar_url: string | undefined;
               if (localAvatarUri) {
                 const mime = localAvatarUri.toLowerCase().includes('png') ? 'image/png' : 'image/jpeg';
-                avatar_url = await uploadAvatar(uid, localAvatarUri, mime);
+                avatar_url = await uploadImageToCloudflare(localAvatarUri, mime, 'avatar');
               }
               await updateProfile(uid, {
                 display_name: displayName.trim(),

@@ -30,7 +30,6 @@ export default function SpontaneousSidequestScreen() {
     <View className="flex-1 bg-background">
       <ScreenHeader title={t('spontaneous.title')} />
       <CompletionForm
-        userId={uid}
         friends={friends}
         isPending={create.isPending}
         submitLabel={t('spontaneous.post')}

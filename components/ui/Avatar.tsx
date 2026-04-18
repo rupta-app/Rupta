@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { Text, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
+import { imageUrl } from '@/lib/mediaUrls';
 
 export function Avatar({
   url,
@@ -17,7 +18,7 @@ export function Avatar({
   if (url) {
     return (
       <Image
-        source={{ uri: url }}
+        source={{ uri: imageUrl(url, 'avatar') }}
         contentFit="cover"
         style={{
           width: size,

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { OnboardingStepShell } from '@/components/onboarding/OnboardingStepShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { uploadAvatar } from '@/lib/storage';
+import { uploadImageToCloudflare } from '@/lib/cloudflareMedia';
 import type { Database } from '@/types/database';
 import { updateProfile } from '@/services/profile';
 import { useAuth } from '@/providers/AuthProvider';
@@ -14,8 +14,8 @@ import { useOnboardingStore } from '@/stores/onboardingStore';
 
 const TOTAL = 6;
 
-function isRlsOrStorageError(message: string) {
-  return /row-level security|violates row-level security|storage|bucket|RLS/i.test(message);
+function isRlsError(message: string) {
+  return /row-level security|violates row-level security|RLS/i.test(message);
 }
 
 export default function BioOnboarding() {
@@ -37,15 +37,11 @@ export default function BioOnboarding() {
       if (tryAvatarUpload && local?.startsWith('file')) {
         try {
           const mime = local.toLowerCase().includes('png') ? 'image/png' : 'image/jpeg';
-          avatarUrl = await uploadAvatar(session.user.id, local, mime);
+          avatarUrl = await uploadImageToCloudflare(local, mime, 'avatar');
         } catch (uploadErr: unknown) {
           const um = uploadErr instanceof Error ? uploadErr.message : '';
           console.warn('[onboarding] avatar upload failed', uploadErr);
-          if (isRlsOrStorageError(um)) {
-            setErr(t('errors.avatarUpload'));
-          } else {
-            setErr(um || t('errors.avatarUpload'));
-          }
+          setErr(um || t('errors.avatarUpload'));
           setLoading(false);
           return;
         }
@@ -73,7 +69,7 @@ export default function BioOnboarding() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '';
       console.warn('[onboarding] finish failed', e);
-      if (isRlsOrStorageError(msg)) {
+      if (isRlsError(msg)) {
         setErr(t('errors.rlsOrStorage'));
       } else {
         setErr(msg || t('common.error'));

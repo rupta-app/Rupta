@@ -409,8 +409,8 @@ export const en = {
   },
   errors: {
     rlsOrStorage:
-      'Could not save your photo or profile (permissions). If you added a picture, apply the latest Supabase migration for storage policies, or try again without a photo.',
-    avatarUpload: 'Photo upload failed. You can tap below to finish without a photo, or fix Storage policies in Supabase.',
+      'Could not save your profile. Try again, or continue without a photo.',
+    avatarUpload: 'Photo upload failed. Tap below to finish without a photo.',
   },
 };
 

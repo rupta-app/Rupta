@@ -20,12 +20,4 @@ export function mediaKindFromAsset(asset: {
   return 'photo';
 }
 
-const VIDEO_EXT_RE = /\.(mp4|mov|m4v|webm)(\?|$)/i;
-
-export function isVideoMedia(url: string, type?: string | null): boolean {
-  if (type === 'video') return true;
-  if (type === 'photo') return false;
-  return VIDEO_EXT_RE.test(url);
-}
-
 export const MB = 1024 * 1024;
