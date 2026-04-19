@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { FileText, Settings, Swords, Trophy, UserPlus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -11,13 +11,12 @@ import { colors } from '@/constants/theme';
 
 import { FeedPostCard } from '@/components/feed/FeedPostCard';
 import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
-import { Badge } from '@/components/ui/Badge';
+import { GroupQuestCard } from '@/components/social/GroupQuestCard';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { FeedPostSkeleton } from '@/components/ui/SkeletonLoader';
+import { FeedPostSkeleton, Skeleton } from '@/components/ui/SkeletonLoader';
 import { useGroupDetail, useGroupLeaderboard, useMyGroupPermissions } from '@/hooks/useGroups';
 import { useGroupFeed } from '@/hooks/useFeed';
 import { useGroupQuestsList } from '@/hooks/useGroupQuests';
@@ -37,10 +36,10 @@ export default function GroupDetailScreen() {
   const uid = session?.user?.id ?? profile?.id;
   const [section, setSection] = useState<Section>('rankings');
 
-  const { data, isLoading, isError } = useGroupDetail(id);
+  const { data, isLoading, isError, refetch, isRefetching } = useGroupDetail(id);
   const { canAdmin } = useMyGroupPermissions(id, uid);
-  const { data: lb = [] } = useGroupLeaderboard(id);
-  const { data: gQuests = [] } = useGroupQuestsList(id, uid);
+  const { data: lb = [], isLoading: lbLoading } = useGroupLeaderboard(id);
+  const { data: gQuests = [], isLoading: questsLoading } = useGroupQuestsList(id, uid, canAdmin);
   const { data: feedData, isLoading: feedLoading } = useGroupFeed(id);
   const feed = useMemo(() => feedData?.pages.flatMap((p) => p.posts) ?? [], [feedData]);
 
@@ -48,8 +47,14 @@ export default function GroupDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-background justify-center items-center">
-        <Text className="text-muted">{t('common.loading')}</Text>
+      <View className="flex-1 bg-background">
+        <ScreenHeader title="" />
+        <View className="p-4 gap-3">
+          <Skeleton width="100%" height={56} rounded="lg" />
+          <Skeleton width="100%" height={72} rounded="lg" />
+          <Skeleton width="100%" height={72} rounded="lg" />
+          <Skeleton width="100%" height={72} rounded="lg" />
+        </View>
       </View>
     );
   }
@@ -93,11 +98,26 @@ export default function GroupDetailScreen() {
         onChange={setSection}
       />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => refetch()}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {section === 'rankings' ? (
           <Animated.View entering={FadeIn.duration(200)} key="rankings">
             <Text className="text-foreground font-bold mb-3">{t('groups.groupAuraRanks')}</Text>
-            {lb.length === 0 ? (
+            {lbLoading ? (
+              <View className="gap-2">
+                <Skeleton width="100%" height={64} rounded="lg" />
+                <Skeleton width="100%" height={64} rounded="lg" />
+                <Skeleton width="100%" height={64} rounded="lg" />
+              </View>
+            ) : lb.length === 0 ? (
               <EmptyState icon={Trophy} title={t('empty.noResults')} />
             ) : (
               lb.map((item, index) => (
@@ -135,26 +155,25 @@ export default function GroupDetailScreen() {
             <Button className="mb-4" onPress={() => go(`/(main)/group/${id}/create-quest`)}>
               {t('groups.createQuest')}
             </Button>
-            {gQuests.length === 0 ? (
-              <EmptyState icon={Swords} title={t('empty.noResults')} />
-            ) : null}
-            {gQuests.map(
-              (q: {
-                id: string;
-                title: string;
-                aura_reward: number;
-                status: string;
-              }) => (
-                <PressableScale key={q.id} onPress={() => go(`/(main)/group-quest/${q.id}`)} scaleValue={0.98}>
-                  <Card className="mb-2 py-3">
-                    <View className="flex-row justify-between items-start gap-2">
-                      <Text className="text-foreground font-bold flex-1">{q.title}</Text>
-                      <Badge tone="respect">+{q.aura_reward}</Badge>
-                    </View>
-                    <Text className="text-muted text-xs mt-2 uppercase">{q.status}</Text>
-                  </Card>
-                </PressableScale>
-              ),
+            {questsLoading ? (
+              <View className="gap-2">
+                <Skeleton width="100%" height={72} rounded="lg" />
+                <Skeleton width="100%" height={72} rounded="lg" />
+              </View>
+            ) : gQuests.length === 0 ? (
+              <EmptyState
+                icon={Swords}
+                title={t('groups.noQuestsYet')}
+                subtitle={t('groups.noQuestsYetCta')}
+              />
+            ) : (
+              gQuests.map((q) => (
+                <GroupQuestCard
+                  key={q.id}
+                  quest={q}
+                  onPress={() => go(`/(main)/group-quest/${q.id}`)}
+                />
+              ))
             )}
           </Animated.View>
         ) : null}

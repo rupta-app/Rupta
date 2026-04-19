@@ -8,6 +8,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { MainAppHeader } from '@/components/navigation/MainAppHeader';
 import { DiscoverGroupsPanel } from '@/components/social/DiscoverGroupsPanel';
 import { GroupCard } from '@/components/social/GroupCard';
+import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -59,32 +60,48 @@ export default function GroupsTabScreen() {
 
             {invites.length > 0 ? (
               <View className="px-4 pt-6">
-                <Text className="text-muted text-xs uppercase mb-2">{t('groups.invitesSection')}</Text>
-                {invites.map(
-                  (inv: { id: string; groups?: { name: string }; inviter?: { username: string } }) => (
-                    <Card key={inv.id} className="mb-2 flex-row items-center justify-between">
-                      <View className="flex-1 pr-2">
-                        <Text className="text-foreground font-semibold">{inv.groups?.name}</Text>
-                        <Text className="text-muted text-xs">from @{inv.inviter?.username}</Text>
-                      </View>
-                      <View className="gap-1">
-                        <Button
-                          className="py-1 px-2 min-h-0"
-                          onPress={() => respond.mutate({ inviteId: inv.id, accept: true })}
+                <Text className="text-muted text-xs uppercase mb-2 font-semibold tracking-wide">
+                  {t('groups.invitesSection')}
+                </Text>
+                {invites.map((inv) => (
+                  <Card key={inv.id} className="mb-2 py-3">
+                    <View className="flex-row items-center gap-3">
+                      <Avatar
+                        url={inv.groups?.avatar_url ?? null}
+                        name={inv.groups?.name ?? '?'}
+                        size={44}
+                      />
+                      <View className="flex-1 min-w-0">
+                        <Text
+                          className="text-foreground font-semibold text-base"
+                          numberOfLines={1}
                         >
-                          {t('friends.accept')}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          className="py-1 px-2 min-h-0"
-                          onPress={() => respond.mutate({ inviteId: inv.id, accept: false })}
-                        >
-                          {t('friends.reject')}
-                        </Button>
+                          {inv.groups?.name}
+                        </Text>
+                        {inv.inviter ? (
+                          <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                            {t('groups.inviteFrom', { handle: inv.inviter.username })}
+                          </Text>
+                        ) : null}
                       </View>
-                    </Card>
-                  ),
-                )}
+                    </View>
+                    <View className="flex-row gap-2 mt-3">
+                      <Button
+                        className="flex-1 py-2 min-h-0"
+                        onPress={() => respond.mutate({ inviteId: inv.id, accept: true })}
+                      >
+                        {t('friends.accept')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="flex-1 py-2 min-h-0"
+                        onPress={() => respond.mutate({ inviteId: inv.id, accept: false })}
+                      >
+                        {t('friends.reject')}
+                      </Button>
+                    </View>
+                  </Card>
+                ))}
               </View>
             ) : null}
 

@@ -137,6 +137,20 @@ export async function inviteToGroup(groupId: string, inviterId: string, inviteeI
   if (error) throw error;
 }
 
+export async function fetchGroupPendingInviteeIds(
+  groupId: string,
+  inviterId: string,
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('group_invites')
+    .select('invitee_id')
+    .eq('group_id', groupId)
+    .eq('inviter_id', inviterId)
+    .eq('status', 'pending');
+  if (error) throw error;
+  return (data ?? []).map((r) => r.invitee_id);
+}
+
 export async function respondGroupInvite(inviteId: string, accept: boolean): Promise<void> {
   const { error } = await supabase
     .from('group_invites')

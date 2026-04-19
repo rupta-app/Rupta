@@ -14,6 +14,7 @@ import { FullScreenLoader } from '@/components/ui/FullScreenLoader';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { useClearAllNotifications, useMarkNotificationRead, useNotifications } from '@/hooks/useNotifications';
 import { useIncomingFriendRequests, useRespondFriendRequest } from '@/hooks/useFriends';
+import { useRespondGroupInvite } from '@/hooks/useGroups';
 import { useAuth } from '@/providers/AuthProvider';
 import { findPendingIncomingRequestId } from '@/services/friends';
 import type { NotificationListItem } from '@/services/notifications';
@@ -35,6 +36,7 @@ export default function NotificationsScreen() {
   const markOne = useMarkNotificationRead();
   const clearAll = useClearAllNotifications(uid);
   const respond = useRespondFriendRequest();
+  const respondInvite = useRespondGroupInvite();
 
   const onOpen = (row: NotificationListItem) => {
     markOne.mutate(row.id);
@@ -43,8 +45,6 @@ export default function NotificationsScreen() {
       if (d.completion_id) router.push(`/(main)/completion/${d.completion_id}`);
     } else if (row.type === 'friend_request' && d.sender_id) {
       router.push(`/(main)/user/${d.sender_id}`);
-    } else if (row.type === 'group_invite' && d.group_id) {
-      router.push(`/(main)/group/${d.group_id}`);
     } else if (row.type === 'weekly_quest' && d.quest_id) {
       router.push(`/(main)/quest/${d.quest_id}`);
     }
@@ -106,6 +106,28 @@ export default function NotificationsScreen() {
     );
   };
 
+  const onRespondInvite = (row: NotificationListItem, accept: boolean) => {
+    const d = asNotificationData(row.data);
+    if (!d.invite_id) {
+      Alert.alert(t('common.error'), t('common.errorSubtitle'));
+      return;
+    }
+    respondInvite.mutate(
+      { inviteId: d.invite_id, accept },
+      {
+        onSuccess: () => {
+          markOne.mutate(row.id);
+          if (accept) {
+            Alert.alert(t('groups.joinedTitle'), t('groups.joinedBody', { groupName: d.group_name ?? '' }));
+          }
+        },
+        onError: (e) => {
+          Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e));
+        },
+      },
+    );
+  };
+
   if (isLoading) {
     return (
       <View className="flex-1 bg-background">
@@ -149,10 +171,8 @@ export default function NotificationsScreen() {
         initialNumToRender={12}
         maxToRenderPerBatch={8}
         renderItem={({ item }: { item: NotificationListItem }) => {
-          const isFriendRequest = item.type === 'friend_request';
-          const sender = item.friendRequestSender;
-
-          if (isFriendRequest) {
+          if (item.type === 'friend_request') {
+            const sender = item.friendRequestSender;
             return (
               <Card className={`mb-2 ${item.is_read ? 'opacity-60' : ''}`}>
                 <PressableScale onPress={() => onOpen(item)} scaleValue={0.98}>
@@ -184,6 +204,47 @@ export default function NotificationsScreen() {
                     variant="ghost"
                     loading={respond.isPending}
                     onPress={() => void onRejectFriend(item)}
+                    className="flex-1 py-2 px-3 min-h-0"
+                  >
+                    {t('friends.reject')}
+                  </Button>
+                </View>
+              </Card>
+            );
+          }
+
+          if (item.type === 'group_invite') {
+            const d = asNotificationData(item.data);
+            const inviter = item.groupInviteInviter;
+            const groupName = d.group_name ?? '';
+            return (
+              <Card className={`mb-2 ${item.is_read ? 'opacity-60' : ''}`}>
+                <View className="flex-row gap-3 items-center">
+                  {inviter ? (
+                    <Avatar url={inviter.avatar_url} name={inviter.display_name} size={48} />
+                  ) : null}
+                  <View className="flex-1 min-w-0">
+                    <Text className="text-foreground font-semibold">
+                      {inviter?.display_name ?? item.title}
+                    </Text>
+                    {inviter ? <Text className="text-muted text-xs">@{inviter.username}</Text> : null}
+                    <Text className="text-muted text-sm mt-1">
+                      {t('notifications.groupInviteMessage', { groupName })}
+                    </Text>
+                  </View>
+                </View>
+                <View className="flex-row gap-2 mt-3">
+                  <Button
+                    loading={respondInvite.isPending}
+                    onPress={() => onRespondInvite(item, true)}
+                    className="flex-1 py-2 px-3 min-h-0"
+                  >
+                    {t('friends.accept')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    loading={respondInvite.isPending}
+                    onPress={() => onRespondInvite(item, false)}
                     className="flex-1 py-2 px-3 min-h-0"
                   >
                     {t('friends.reject')}

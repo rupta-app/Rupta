@@ -34,6 +34,9 @@ export const qk = {
     settings: (groupId: string) => ['group-settings', groupId] as const,
     invitesAll: ['group-invites'] as const,
     invites: (userId: string) => ['group-invites', userId] as const,
+    pendingInviteesAll: ['group-pending-invitees'] as const,
+    pendingInvitees: (groupId: string, inviterId: string) =>
+      ['group-pending-invitees', groupId, inviterId] as const,
     owned: (userId: string) => ['groups-owned', userId] as const,
     public: (search: string) => ['public-groups', search] as const,
     publicAll: ['public-groups'] as const,
@@ -41,8 +44,8 @@ export const qk = {
     challenges: (groupId: string) => ['group-challenges', groupId] as const,
     groupQuest: (questId: string) => ['group-quest', questId] as const,
     groupQuestAll: ['group-quest'] as const,
-    quests: (groupId: string, viewerId?: string) =>
-      ['group-quests', groupId, viewerId] as const,
+    quests: (groupId: string, viewerId?: string, viewerIsAdmin?: boolean) =>
+      ['group-quests', groupId, viewerId, viewerIsAdmin] as const,
     questsAll: ['group-quests'] as const,
     lb: (groupId: string, period: string) => ['group-lb', groupId, period] as const,
     lbAll: ['group-lb'] as const,
