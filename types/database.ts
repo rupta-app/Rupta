@@ -641,6 +641,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           id: string
           name: string
@@ -649,6 +650,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           name: string
@@ -657,12 +659,20 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           name?: string
           owner_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "groups_owner_id_fkey"
             columns: ["owner_id"]
@@ -1317,6 +1327,10 @@ export type Database = {
           username: string
           yearly_aura: number
         }[]
+      }
+      transfer_group_ownership: {
+        Args: { p_group_id: string; p_new_owner_id: string }
+        Returns: undefined
       }
     }
     Enums: {
