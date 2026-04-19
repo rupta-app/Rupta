@@ -31,7 +31,8 @@ export type NotificationType =
   | 'comment'
   | 'respect'
   | 'weekly_quest'
-  | 'group_invite';
+  | 'group_invite'
+  | 'group_ownership_transferred';
 
 export type Json =
   | string
