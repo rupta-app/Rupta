@@ -1,5 +1,5 @@
 import { Crown } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -25,6 +25,13 @@ export function TransferOwnershipSheet({
 }: Props) {
   const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (visible) setSelectedId(null);
+  }, [visible]);
+
+  const selectionValid =
+    selectedId !== null && members.some((m) => m.user_id === selectedId);
 
   const handleClose = () => {
     setSelectedId(null);
@@ -55,7 +62,7 @@ export function TransferOwnershipSheet({
 
           <ScrollView className="max-h-96">
             {members.length === 0 ? (
-              <Text className="text-muted text-sm py-4">{t('groups.peopleSubtitle', { count: 0 })}</Text>
+              <Text className="text-muted text-sm py-4">{t('groups.transferOwnershipEmpty')}</Text>
             ) : (
               members.map((m) => {
                 const name = m.profiles?.display_name ?? m.profiles?.username ?? '';
@@ -74,7 +81,7 @@ export function TransferOwnershipSheet({
                         {name}
                       </Text>
                       <Text className="text-muted text-xs">
-                        {m.role === 'admin' ? t('groups.memberAdmin') : m.role}
+                        {m.role === 'admin' ? t('groups.memberAdmin') : t('groups.memberRoleMember')}
                       </Text>
                     </View>
                     {isSelected ? (
@@ -97,8 +104,8 @@ export function TransferOwnershipSheet({
             <View className="flex-1">
               <Button
                 variant="danger"
-                onPress={() => selectedId && onConfirm(selectedId)}
-                disabled={!selectedId || isSubmitting}
+                onPress={() => selectionValid && onConfirm(selectedId!)}
+                disabled={!selectionValid || isSubmitting}
               >
                 {isSubmitting ? (
                   <ActivityIndicator color="white" size="small" />
