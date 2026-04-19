@@ -1,8 +1,10 @@
 import type { AchievementVisibility, Database, GroupQuestStatus, QuestCreationRule } from '@/types/database';
 
 import { supabase } from '@/lib/supabase';
+import { fetchProfilesByIds, type ProfileBasic } from '@/services/_profiles';
 
 type GroupQuestRow = Database['public']['Tables']['group_quests']['Row'];
+export type GroupQuestWithCreator = GroupQuestRow & { creator: ProfileBasic | undefined };
 
 export type CreateGroupQuestInput = {
   title: string;
@@ -94,14 +96,18 @@ export async function createGroupQuest(
   return data;
 }
 
-export async function fetchGroupQuests(groupId: string, includeDraftsForUserId?: string): Promise<GroupQuestRow[]> {
+export async function fetchGroupQuests(
+  groupId: string,
+  includeDraftsForUserId?: string,
+  viewerIsAdmin?: boolean,
+): Promise<GroupQuestRow[]> {
   let q = supabase
     .from('group_quests')
     .select('*')
     .eq('group_id', groupId)
     .order('created_at', { ascending: false });
 
-  if (!includeDraftsForUserId) {
+  if (!viewerIsAdmin && !includeDraftsForUserId) {
     q = q.in('status', ['active', 'submitted_for_review']);
   }
 
@@ -109,6 +115,7 @@ export async function fetchGroupQuests(groupId: string, includeDraftsForUserId?:
   if (error) throw error;
   const rows = data ?? [];
 
+  if (viewerIsAdmin) return rows;
   if (includeDraftsForUserId) {
     return rows.filter(
       (r) =>
@@ -125,6 +132,12 @@ export async function fetchGroupQuestById(id: string): Promise<GroupQuestRow> {
   if (error) throw error;
   if (!data) throw new Error('Group quest not found or access denied');
   return data;
+}
+
+export async function fetchGroupQuestWithCreator(id: string): Promise<GroupQuestWithCreator> {
+  const row = await fetchGroupQuestById(id);
+  const [creator] = await fetchProfilesByIds([row.creator_id]);
+  return { ...row, creator: creator as ProfileBasic | undefined };
 }
 
 export async function updateGroupQuestStatus(id: string, status: GroupQuestStatus): Promise<GroupQuestRow> {
@@ -147,4 +160,11 @@ export async function activateDraftQuest(questId: string, adminUserId: string, g
   if (row.group_id !== groupId) throw new Error('Wrong group');
   if (row.status !== 'draft') throw new Error('Not a draft');
   return updateGroupQuestStatus(questId, 'active');
+}
+
+export async function deleteGroupQuest(questId: string, adminUserId: string, groupId: string): Promise<void> {
+  const role = await fetchMemberRole(groupId, adminUserId);
+  if (role !== 'owner' && role !== 'admin') throw new Error('Not allowed');
+  const { error } = await supabase.from('group_quests').delete().eq('id', questId);
+  if (error) throw error;
 }

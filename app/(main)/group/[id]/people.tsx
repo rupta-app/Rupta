@@ -11,10 +11,12 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PressableScale } from '@/components/ui/PressableScale';
+import { Skeleton } from '@/components/ui/SkeletonLoader';
 import { useFriendsList } from '@/hooks/useFriends';
 import {
   useGroupDetail,
   useGroupMembers,
+  useGroupPendingInviteeIds,
   useInviteToGroup,
   useMyGroupPermissions,
   useRemoveGroupMember,
@@ -35,6 +37,8 @@ export default function GroupPeopleScreen() {
   const membersQuery = useGroupMembers(id);
   const { data: membersData, isFetchingNextPage } = membersQuery;
   const { data: friends = [] } = useFriendsList(uid);
+  const { data: pendingInviteeIds = [] } = useGroupPendingInviteeIds(id, uid);
+  const pendingInviteeSet = useMemo(() => new Set(pendingInviteeIds), [pendingInviteeIds]);
   const invite = useInviteToGroup();
   const removeMember = useRemoveGroupMember(id);
   const updateRole = useUpdateGroupMemberRole(id);
@@ -44,6 +48,7 @@ export default function GroupPeopleScreen() {
     [membersData],
   );
   const memberCount = members.length;
+  const memberIds = useMemo(() => new Set(members.map((m) => m.user_id)), [members]);
 
   const onEndReached = useInfiniteEndReached(membersQuery);
 
@@ -122,8 +127,13 @@ export default function GroupPeopleScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-background justify-center items-center">
-        <Text className="text-muted">{t('common.loading')}</Text>
+      <View className="flex-1 bg-background">
+        <ScreenHeader title={t('groups.people')} />
+        <View className="p-4 gap-3">
+          <Skeleton width="100%" height={64} rounded="lg" />
+          <Skeleton width="100%" height={64} rounded="lg" />
+          <Skeleton width="100%" height={64} rounded="lg" />
+        </View>
       </View>
     );
   }
@@ -157,15 +167,76 @@ export default function GroupPeopleScreen() {
             {friends.length === 0 ? (
               <Text className="text-muted text-sm mb-8">{t('feed.empty')}</Text>
             ) : (
-              friends.map((f: { id: string; display_name: string }) => (
-                <Pressable
-                  key={f.id}
-                  className="py-4 border-b border-border/30"
-                  onPress={() => invite.mutate({ groupId: id, inviterId: uid, inviteeId: f.id })}
-                >
-                  <Text className="text-foreground font-medium">{f.display_name}</Text>
-                </Pressable>
-              ))
+              friends.map((f) => {
+                const isMember = memberIds.has(f.id);
+                const isInvited = pendingInviteeSet.has(f.id);
+                const isSending = invite.isPending && invite.variables?.inviteeId === f.id;
+                const disabled = isMember || isInvited || isSending;
+                return (
+                  <Pressable
+                    key={f.id}
+                    disabled={disabled}
+                    onPress={() =>
+                      invite.mutate(
+                        { groupId: id, inviterId: uid, inviteeId: f.id },
+                        {
+                          onError: (e) => {
+                            const err = e as { message?: string; code?: string } | Error;
+                            const msg =
+                              (err as { message?: string }).message ??
+                              (e instanceof Error ? e.message : String(e));
+                            const code = (err as { code?: string }).code;
+                            const duplicate =
+                              code === '23505' ||
+                              /duplicate key|group_invites_one_pending/i.test(msg);
+                            if (duplicate) return;
+                            Alert.alert(t('groups.inviteFailedTitle'), msg);
+                          },
+                        },
+                      )
+                    }
+                  >
+                    <Card className="mb-2 flex-row items-center gap-3 py-3">
+                      <Avatar url={f.avatar_url} name={f.display_name} size={40} />
+                      <View className="flex-1 min-w-0">
+                        <Text
+                          className={
+                            disabled
+                              ? 'text-muted font-semibold'
+                              : 'text-foreground font-semibold'
+                          }
+                          numberOfLines={1}
+                        >
+                          {f.display_name}
+                        </Text>
+                        <Text className="text-muted text-xs" numberOfLines={1}>
+                          @{f.username}
+                        </Text>
+                      </View>
+                      {isMember ? (
+                        <Text className="text-muted text-xs font-semibold">
+                          {t('groups.alreadyMember')}
+                        </Text>
+                      ) : isInvited ? (
+                        <View
+                          className="rounded-full px-2.5 py-1"
+                          style={{ backgroundColor: 'rgba(139,92,246,0.15)' }}
+                        >
+                          <Text className="text-primary text-xs font-bold">
+                            {t('groups.invited')}
+                          </Text>
+                        </View>
+                      ) : isSending ? (
+                        <ActivityIndicator color={colors.primary} size="small" />
+                      ) : (
+                        <Text className="text-primary text-xs font-bold">
+                          {t('groups.invite').toUpperCase()}
+                        </Text>
+                      )}
+                    </Card>
+                  </Pressable>
+                );
+              })
             )}
 
             <Text className="text-foreground font-bold text-base mt-8 mb-3">

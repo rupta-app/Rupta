@@ -8,6 +8,7 @@ import {
   fetchGroupDetail,
   fetchGroupLeaderboard,
   fetchGroupMembersPage,
+  fetchGroupPendingInviteeIds,
   fetchGroupSettings,
   fetchMyGroupRole,
   fetchMyGroups,
@@ -98,6 +99,17 @@ export function useCreateGroup() {
   });
 }
 
+export function useGroupPendingInviteeIds(
+  groupId: string | undefined,
+  inviterId: string | undefined,
+) {
+  return useQuery({
+    queryKey: qk.groups.pendingInvitees(groupId ?? '', inviterId ?? ''),
+    queryFn: () => fetchGroupPendingInviteeIds(groupId!, inviterId!),
+    enabled: Boolean(groupId && inviterId),
+  });
+}
+
 export function useInviteToGroup() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -113,6 +125,9 @@ export function useInviteToGroup() {
     onSuccess: (_d, vars) => {
       void queryClient.invalidateQueries({ queryKey: qk.groups.invitesAll });
       void queryClient.invalidateQueries({ queryKey: qk.groups.detail(vars.groupId) });
+      void queryClient.invalidateQueries({
+        queryKey: qk.groups.pendingInvitees(vars.groupId, vars.inviterId),
+      });
     },
   });
 }
@@ -126,6 +141,7 @@ export function useRespondGroupInvite() {
       void queryClient.invalidateQueries({ queryKey: qk.groups.invitesAll });
       void queryClient.invalidateQueries({ queryKey: qk.groups.all });
       void queryClient.invalidateQueries({ queryKey: qk.groups.detailAll });
+      void queryClient.invalidateQueries({ queryKey: qk.notifications.prefix });
     },
   });
 }
