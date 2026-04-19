@@ -21,6 +21,7 @@ import {
   PUBLIC_GROUPS_PAGE_SIZE,
   removeGroupMember,
   respondGroupInvite,
+  transferGroupOwnership,
   updateGroup,
   updateGroupMemberRole,
   updateGroupSettings,
@@ -268,6 +269,23 @@ export function useUpdateGroupMemberRole(groupId: string | undefined) {
       if (!groupId) return;
       void queryClient.invalidateQueries({ queryKey: qk.groups.members(groupId) });
       void queryClient.invalidateQueries({ queryKey: qk.groups.myRoleAll });
+    },
+  });
+}
+
+export function useTransferGroupOwnership(groupId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ newOwnerId }: { newOwnerId: string }) => {
+      if (!groupId) throw new Error('No group');
+      return transferGroupOwnership(groupId, newOwnerId);
+    },
+    onSuccess: () => {
+      if (!groupId) return;
+      void queryClient.invalidateQueries({ queryKey: qk.groups.detail(groupId) });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.members(groupId) });
+      void queryClient.invalidateQueries({ queryKey: qk.groups.myRoleAll });
+      void queryClient.invalidateQueries({ queryKey: qk.notifications.prefix });
     },
   });
 }
