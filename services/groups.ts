@@ -127,6 +127,17 @@ export async function updateGroupMemberRole(
   if (error) throw error;
 }
 
+export async function transferGroupOwnership(
+  groupId: string,
+  newOwnerId: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('transfer_group_ownership', {
+    p_group_id: groupId,
+    p_new_owner_id: newOwnerId,
+  });
+  if (error) throw error;
+}
+
 export async function inviteToGroup(groupId: string, inviterId: string, inviteeId: string): Promise<void> {
   const { error } = await supabase.from('group_invites').insert({
     group_id: groupId,
