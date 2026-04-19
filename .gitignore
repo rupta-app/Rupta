@@ -56,3 +56,4 @@ Thumbs.db
 
 # Vite (admin app; dist/ above covers admin/dist)
 admin/.vite
+docs/
