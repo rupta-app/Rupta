@@ -20,6 +20,7 @@ import {
   useInviteToGroup,
   useMyGroupPermissions,
   useRemoveGroupMember,
+  useTransferGroupOwnership,
   useUpdateGroupMemberRole,
 } from '@/hooks/useGroups';
 import { useInfiniteEndReached } from '@/hooks/useInfiniteEndReached';
@@ -33,7 +34,7 @@ export default function GroupPeopleScreen() {
   const { session } = useAuth();
   const uid = session?.user?.id!;
   const { data, isLoading, isError } = useGroupDetail(id);
-  const { canAdmin } = useMyGroupPermissions(id, uid);
+  const { canAdmin, isOwner } = useMyGroupPermissions(id, uid);
   const membersQuery = useGroupMembers(id);
   const { data: membersData, isFetchingNextPage } = membersQuery;
   const { data: friends = [] } = useFriendsList(uid);
@@ -42,6 +43,7 @@ export default function GroupPeopleScreen() {
   const invite = useInviteToGroup();
   const removeMember = useRemoveGroupMember(id);
   const updateRole = useUpdateGroupMemberRole(id);
+  const transferOwnership = useTransferGroupOwnership(id);
 
   const members = useMemo<GroupMemberWithProfile[]>(
     () => membersData?.pages.flatMap((p) => p.rows) ?? [],
@@ -58,32 +60,66 @@ export default function GroupPeopleScreen() {
       const name = member.profiles?.display_name ?? member.profiles?.username ?? '';
       const toggleRoleLabel =
         member.role === 'admin' ? t('groups.demoteToMember') : t('groups.promoteToAdmin');
-      Alert.alert(t('groups.memberActionsTitle'), name, [
-        {
-          text: toggleRoleLabel,
+
+      const buttons: Parameters<typeof Alert.alert>[2] = [];
+
+      if (isOwner) {
+        buttons.push({
+          text: t('groups.makeOwner'),
           onPress: () =>
-            updateRole.mutate({
-              userId: member.user_id,
-              role: member.role === 'admin' ? 'member' : 'admin',
-            }),
-        },
-        {
-          text: t('groups.removeMember'),
-          style: 'destructive',
-          onPress: () =>
-            Alert.alert(t('groups.removeMember'), t('groups.removeConfirmBody', { name }), [
-              { text: t('common.cancel'), style: 'cancel' },
-              {
-                text: t('groups.removeMember'),
-                style: 'destructive',
-                onPress: () => removeMember.mutate({ userId: member.user_id }),
-              },
-            ]),
-        },
-        { text: t('common.cancel'), style: 'cancel' },
-      ]);
+            Alert.alert(
+              t('groups.makeOwnerConfirmTitle'),
+              t('groups.makeOwnerConfirmBody', { name }),
+              [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                  text: t('groups.transferOwnershipCta'),
+                  style: 'destructive',
+                  onPress: () =>
+                    transferOwnership.mutate(
+                      { newOwnerId: member.user_id },
+                      {
+                        onError: (e) =>
+                          Alert.alert(
+                            t('groups.transferFailedTitle'),
+                            e instanceof Error ? e.message : String(e),
+                          ),
+                      },
+                    ),
+                },
+              ],
+            ),
+        });
+      }
+
+      buttons.push({
+        text: toggleRoleLabel,
+        onPress: () =>
+          updateRole.mutate({
+            userId: member.user_id,
+            role: member.role === 'admin' ? 'member' : 'admin',
+          }),
+      });
+
+      buttons.push({
+        text: t('groups.removeMember'),
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert(t('groups.removeMember'), t('groups.removeConfirmBody', { name }), [
+            { text: t('common.cancel'), style: 'cancel' },
+            {
+              text: t('groups.removeMember'),
+              style: 'destructive',
+              onPress: () => removeMember.mutate({ userId: member.user_id }),
+            },
+          ]),
+      });
+
+      buttons.push({ text: t('common.cancel'), style: 'cancel' });
+
+      Alert.alert(t('groups.memberActionsTitle'), name, buttons);
     },
-    [canAdmin, uid, t, updateRole, removeMember],
+    [canAdmin, isOwner, uid, t, updateRole, removeMember, transferOwnership],
   );
 
   const renderMember = useCallback(
