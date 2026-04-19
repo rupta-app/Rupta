@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { ActivityIndicator, Alert, FlatList, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Bell } from 'lucide-react-native';
+import { Bell, Crown } from 'lucide-react-native';
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { colors } from '@/constants/theme';
@@ -47,6 +47,8 @@ export default function NotificationsScreen() {
       router.push(`/(main)/user/${d.sender_id}`);
     } else if (row.type === 'weekly_quest' && d.quest_id) {
       router.push(`/(main)/quest/${d.quest_id}`);
+    } else if (row.type === 'group_ownership_transferred' && d.group_id) {
+      router.push(`/(main)/group/${d.group_id}`);
     }
   };
 
@@ -251,6 +253,30 @@ export default function NotificationsScreen() {
                   </Button>
                 </View>
               </Card>
+            );
+          }
+
+          if (item.type === 'group_ownership_transferred') {
+            const d = asNotificationData(item.data);
+            return (
+              <PressableScale onPress={() => onOpen(item)} scaleValue={0.98}>
+                <Card className={`mb-2 ${item.is_read ? 'opacity-60' : ''}`}>
+                  <View className="flex-row items-center gap-3">
+                    <Crown color={colors.primary} size={22} />
+                    <View className="flex-1">
+                      <Text className="text-foreground font-semibold">
+                        {t('groups.notifOwnershipTitle')}
+                      </Text>
+                      <Text className="text-muted text-sm mt-1">
+                        {t('groups.notifOwnershipBody', {
+                          actor: d.actor_username ?? '',
+                          group: d.group_name ?? '',
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </PressableScale>
             );
           }
 
