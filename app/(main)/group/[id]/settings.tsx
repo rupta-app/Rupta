@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { TransferOwnershipSheet } from '@/components/group/TransferOwnershipSheet';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { colors } from '@/constants/theme';
 
@@ -17,9 +18,11 @@ import { PillToggleGroup } from '@/components/ui/PillToggle';
 import {
   useDeleteGroup,
   useGroupDetail,
+  useGroupMembers,
   useGroupSettings,
   useLeaveGroup,
   useMyGroupPermissions,
+  useTransferGroupOwnership,
   useUpdateGroup,
   useUpdateGroupSettings,
 } from '@/hooks/useGroups';
@@ -43,6 +46,13 @@ export default function GroupSettingsScreen() {
   const leaveGroup = useLeaveGroup();
   const deleteGroup = useDeleteGroup();
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [transferSheetOpen, setTransferSheetOpen] = useState(false);
+  const transferOwnership = useTransferGroupOwnership(id);
+  const membersQuery = useGroupMembers(id);
+  const transferCandidates = useMemo(() => {
+    const all = membersQuery.data?.pages.flatMap((p) => p.rows) ?? [];
+    return all.filter((m) => m.role !== 'owner');
+  }, [membersQuery.data]);
 
   const [nameDraft, setNameDraft] = useState('');
   const [descDraft, setDescDraft] = useState('');
@@ -217,26 +227,70 @@ export default function GroupSettingsScreen() {
           </>
         ) : null}
 
-        <Card className="mb-3 py-4">
-          {isOwner ? (
-            <>
-              <Text className="text-foreground font-semibold mb-1">{t('groups.deleteGroup')}</Text>
+        {isOwner ? (
+          <>
+            <Card className="mb-3 py-4">
+              <Text className="text-foreground font-semibold mb-1">
+                {t('groups.transferOwnership')}
+              </Text>
+              <Text className="text-muted text-xs mb-3">
+                {t('groups.transferOwnershipHint')}
+              </Text>
+              <Button
+                variant="secondary"
+                onPress={() => setTransferSheetOpen(true)}
+                disabled={transferCandidates.length === 0}
+              >
+                {t('groups.transferOwnership')}
+              </Button>
+            </Card>
+
+            <Card className="mb-3 py-4">
+              <Text className="text-foreground font-semibold mb-1">
+                {t('groups.deleteGroup')}
+              </Text>
               <Text className="text-muted text-xs mb-3">{t('groups.deleteConfirmBody')}</Text>
               <Button variant="danger" onPress={confirmDelete} loading={deleteGroup.isPending}>
                 {t('groups.deleteGroup')}
               </Button>
-            </>
-          ) : (
-            <>
-              <Text className="text-foreground font-semibold mb-1">{t('groups.leaveGroup')}</Text>
-              <Text className="text-muted text-xs mb-3">{t('groups.leaveConfirmBody')}</Text>
-              <Button variant="danger" onPress={confirmLeave} loading={leaveGroup.isPending}>
-                {t('groups.leaveGroup')}
-              </Button>
-            </>
-          )}
-        </Card>
+            </Card>
+
+            <Card className="mb-3 py-4">
+              <Text className="text-muted text-xs">{t('groups.ownerLeaveHint')}</Text>
+            </Card>
+          </>
+        ) : (
+          <Card className="mb-3 py-4">
+            <Text className="text-foreground font-semibold mb-1">{t('groups.leaveGroup')}</Text>
+            <Text className="text-muted text-xs mb-3">{t('groups.leaveConfirmBody')}</Text>
+            <Button variant="danger" onPress={confirmLeave} loading={leaveGroup.isPending}>
+              {t('groups.leaveGroup')}
+            </Button>
+          </Card>
+        )}
       </ScrollView>
+
+      <TransferOwnershipSheet
+        visible={transferSheetOpen}
+        onClose={() => setTransferSheetOpen(false)}
+        members={transferCandidates}
+        isSubmitting={transferOwnership.isPending}
+        onConfirm={(newOwnerId) =>
+          transferOwnership.mutate(
+            { newOwnerId },
+            {
+              onSuccess: () => {
+                setTransferSheetOpen(false);
+              },
+              onError: (e) =>
+                Alert.alert(
+                  t('groups.transferFailedTitle'),
+                  e instanceof Error ? e.message : String(e),
+                ),
+            },
+          )
+        }
+      />
     </View>
   );
 }
